@@ -39,7 +39,17 @@ export async function executePythonScript(scriptPath, scriptDir, venvDir) {
     if (validatedCode !== pythonCode) {
       await fs.writeFile(scriptPath, validatedCode);
     }
-    const venvPath = path.join( venvDir, 'Scripts', 'python.exe');
+
+    // Wenn Windows, dann den Pfad zum Python-Interpreter im virtuellen Environment anpassen
+    let venvPath;
+    if (process.platform === 'win32') {
+      venvPath = path.join(venvDir, 'Scripts', 'python.exe');
+    } else if (process.platform === 'linux' || process.platform === 'darwin') {
+      venvPath = path.join(venvDir, 'bin', 'python');
+    } else {
+      throw new Error('Unsupported operating system');
+    }
+    console.log(`Operating System: ${process.platform}, venvPath: ${venvPath}`);
     // console.log(venvPath);
     const { stdout, stderr } = await execAsync(`${venvPath} "${scriptPath}"`, {
       cwd: scriptDir

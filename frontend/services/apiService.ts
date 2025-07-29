@@ -1,4 +1,4 @@
-const API_BASE_URL = 'http://localhost:3001/api';
+const API_BASE_URL = 'https://opulent-couscous-qwvpv9g7q6399pq-3001.app.github.dev/api';
 
 export interface ApiProject {
   id: string;
