@@ -1,0 +1,37 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Backend starten",
+            "skipFiles": [
+                "<node_internals>/**"
+            ],
+            "program": "${workspaceFolder}/backend/server.js",
+            "cwd": "${workspaceFolder}/backend",
+            "envFile": "${workspaceFolder}/.env.local",
+            "env": {
+                "PORT": "3001"
+            }
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Frontend starten",
+            "cwd": "${workspaceFolder}/frontend",
+            "runtimeExecutable": "npm",
+            "runtimeArgs": ["run", "dev"],
+            "envFile": "${workspaceFolder}/.env.local",
+            "env": {
+                "VITE_API_URL": "http://localhost:3001"
+            }
+        },
+    ],
+    "compounds": [
+        {
+            "name": "Full Stack",
+            "configurations": ["Backend starten", "Frontend starten"]
+        }
+    ]
+} 

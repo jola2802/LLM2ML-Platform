@@ -1,0 +1,5 @@
+{
+  "name": "No-Code ML Platform",
+  "description": "A web-based no-code development environment for creating and deploying machine learning models. Users can upload data, configure projects, and automatically generate UIs for predictions.",
+  "requestFramePermissions": []
+}
