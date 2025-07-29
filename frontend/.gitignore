@@ -29,3 +29,6 @@ backend/modules
 backend/uploads
 backend/node_modules
 backend/scripts
+backend/logs
+
+frontend/node_modules
