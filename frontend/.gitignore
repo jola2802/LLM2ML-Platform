@@ -22,3 +22,10 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Folgende Ordner sollen nicht hochgeladen werden
+backend/node_modules
+backend/modules
+backend/uploads
+backend/node_modules
+backend/scripts

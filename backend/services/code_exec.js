@@ -61,28 +61,36 @@ export function extractMetricsFromOutput(output, modelType) {
       names: ['mae', 'mean_absolute_error'], 
       regexes: [
         /(?:Mean Absolute Error|MAE)(?:\s*\(MAE\))?:\s*([\d.]+)/i,
-        /(?:Mean Absolute Error|MAE):\s*([\d.]+)/i
+        /(?:Mean Absolute Error|MAE):\s*([\d.]+)/i,
+        /(?:MAE)(?:\s*\(MAE\))?:\s*([\d.]+)/i,
+        /(?:MAE):\s*([\d.]+)/i
       ]
     },
     { 
       names: ['mse', 'mean_squared_error'], 
       regexes: [
         /(?:Mean Squared Error|MSE)(?:\s*\(MSE\))?:\s*([\d.]+)/i,
-        /(?:Mean Squared Error|MSE):\s*([\d.]+)/i
+        /(?:Mean Squared Error|MSE):\s*([\d.]+)/i,
+        /(?:MSE)(?:\s*\(MSE\))?:\s*([\d.]+)/i,
+        /(?:MSE):\s*([\d.]+)/i
       ]
     },
     { 
       names: ['rmse', 'root_mean_squared_error'], 
       regexes: [
         /(?:Root Mean Squared Error|RMSE)(?:\s*\(RMSE\))?:\s*([\d.]+)/i,
-        /(?:Root Mean Squared Error|RMSE):\s*([\d.]+)/i
+        /(?:Root Mean Squared Error|RMSE):\s*([\d.]+)/i,
+        /(?:RMSE)(?:\s*\(RMSE\))?:\s*([\d.]+)/i,
+        /(?:RMSE):\s*([\d.]+)/i
       ]
     },
     { 
       names: ['r2', 'r_squared'], 
       regexes: [
         /(?:R-squared|R2|R²)(?:\s*\(R2\))?:\s*([\d.]+)/i,
-        /(?:R-squared|R2|R²):\s*([\d.]+)/i
+        /(?:R-squared|R2|R²):\s*([\d.]+)/i,
+        /(?:R²)(?:\s*\(R2\))?:\s*([\d.]+)/i,
+        /(?:R²):\s*([\d.]+)/i
       ]
     },
     { 

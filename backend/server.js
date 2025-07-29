@@ -96,9 +96,7 @@ async function trainModelAsync(projectId) {
   try {
     const project = await getProject(projectId);
     if (!project) return;
-    
-    // console.log(`Training model for project: ${project.name}`);
-    
+        
     // Python Script mit LLM generieren
     const pythonCode = await generatePythonScriptWithLLM(project);
 

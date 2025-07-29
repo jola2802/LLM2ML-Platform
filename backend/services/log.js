@@ -39,9 +39,9 @@ export async function logLLMCommunication(type, data) {
   };
 
   // Konsolenausgabe
-  console.log(`${colors[type]}[LLM ${type.toUpperCase()}]${colors.reset}`);
-  console.log(JSON.stringify(data, null, 2));
-  console.log('-'.repeat(80));
+  // console.log(`${colors[type]}[LLM ${type.toUpperCase()}]${colors.reset}`);
+  // console.log(JSON.stringify(data, null, 2));
+  // console.log('-'.repeat(80));
 
   try {
     // An Log-Datei anhängen

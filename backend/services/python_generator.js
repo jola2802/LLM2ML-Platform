@@ -91,7 +91,7 @@ ANFORDERUNGEN:
 2. Implementiere eine vollständige Preprocessing-Pipeline (Skalierung, Encoding, etc.)
 3. Verwende den angegebenen Algorithmus mit den Hyperparametern
 4. Führe ein ordentliches Train-Test-Split durch
-5. Trainiere das Modell und berechne relevante Metriken
+5. Trainiere das Modell und berechne relevante Metriken (mindestens 3 Metriken, gerne so viele wie sinnvoll sind)
 6. Speichere das trainierte Modell als 'model.pkl'
 7. Speichere Label-Encoder falls nötig als 'target_encoder.pkl'
 8. Gib detaillierte Logs und Performance-Metriken aus
