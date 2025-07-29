@@ -54,11 +54,13 @@ export async function executePythonScript(scriptPath, scriptDir, venvDir) {
 // Metriken aus Python-Ausgabe extrahieren
 export function extractMetricsFromOutput(output, modelType) {
   const metrics = {};
+  const foundMetrics = new Set(); // Track bereits gefundene Metriken
   
-  // Erweiterte Metriken-Extraktionsmuster mit flexibleren Regex
+  // Erweiterte Metriken-Extraktionsmuster mit Priorität für ausgeschriebene Namen
   const metricPatterns = [
     { 
-      names: ['mae', 'mean_absolute_error'], 
+      primaryName: 'mean_absolute_error',
+      aliases: ['mae'],
       regexes: [
         /(?:Mean Absolute Error|MAE)(?:\s*\(MAE\))?:\s*([\d.]+)/i,
         /(?:Mean Absolute Error|MAE):\s*([\d.]+)/i,
@@ -67,7 +69,8 @@ export function extractMetricsFromOutput(output, modelType) {
       ]
     },
     { 
-      names: ['mse', 'mean_squared_error'], 
+      primaryName: 'mean_squared_error',
+      aliases: ['mse'],
       regexes: [
         /(?:Mean Squared Error|MSE)(?:\s*\(MSE\))?:\s*([\d.]+)/i,
         /(?:Mean Squared Error|MSE):\s*([\d.]+)/i,
@@ -76,7 +79,8 @@ export function extractMetricsFromOutput(output, modelType) {
       ]
     },
     { 
-      names: ['rmse', 'root_mean_squared_error'], 
+      primaryName: 'root_mean_squared_error',
+      aliases: ['rmse'],
       regexes: [
         /(?:Root Mean Squared Error|RMSE)(?:\s*\(RMSE\))?:\s*([\d.]+)/i,
         /(?:Root Mean Squared Error|RMSE):\s*([\d.]+)/i,
@@ -85,7 +89,8 @@ export function extractMetricsFromOutput(output, modelType) {
       ]
     },
     { 
-      names: ['r2', 'r_squared'], 
+      primaryName: 'r_squared',
+      aliases: ['r2'],
       regexes: [
         /(?:R-squared|R2|R²)(?:\s*\(R2\))?:\s*([\d.]+)/i,
         /(?:R-squared|R2|R²):\s*([\d.]+)/i,
@@ -94,7 +99,8 @@ export function extractMetricsFromOutput(output, modelType) {
       ]
     },
     { 
-      names: ['accuracy'], 
+      primaryName: 'accuracy',
+      aliases: [],
       regexes: [
         /^Accuracy:\s*([\d.]+)/im,
         /(?:^|\n)Accuracy:\s*([\d.]+)/i,
@@ -103,21 +109,24 @@ export function extractMetricsFromOutput(output, modelType) {
       ]
     },
     { 
-      names: ['precision'], 
+      primaryName: 'precision',
+      aliases: [],
       regexes: [
         /(?:Precision)(?:\s*\(Precision\))?:\s*([\d.]+)/i,
         /(?:Precision):\s*([\d.]+)/i
       ]
     },
     { 
-      names: ['recall'], 
+      primaryName: 'recall',
+      aliases: [],
       regexes: [
         /(?:Recall)(?:\s*\(Recall\))?:\s*([\d.]+)/i,
         /(?:Recall):\s*([\d.]+)/i
       ]
     },
     { 
-      names: ['f1', 'f1_score'], 
+      primaryName: 'f1_score',
+      aliases: ['f1'],
       regexes: [
         /(?:F1 Score|F1)(?:\s*\(F1\))?:\s*([\d.]+)/i,
         /(?:F1 Score|F1):\s*([\d.]+)/i
@@ -125,15 +134,32 @@ export function extractMetricsFromOutput(output, modelType) {
     }
   ];
 
-  // Extrahiere Metriken mit flexiblen Mustern
+  // Extrahiere Metriken mit Priorität für ausgeschriebene Namen
   metricPatterns.forEach(metricGroup => {
+    // Prüfe ob diese Metrik bereits gefunden wurde
+    const allNames = [metricGroup.primaryName, ...metricGroup.aliases];
+    const alreadyFound = allNames.some(name => foundMetrics.has(name));
+    
+    if (alreadyFound) {
+      return; // Überspringe diese Metrik-Gruppe
+    }
+    
     for (const regex of metricGroup.regexes) {
       const match = output.match(regex);
       if (match) {
-        // Speichere den Wert für jeden möglichen Namen
-        metricGroup.names.forEach(name => {
-          metrics[name] = parseFloat(match[1]);
-        });
+        const value = parseFloat(match[1]);
+        
+        // Validiere den Wert
+        if (isNaN(value)) {
+          continue; // Überspringe ungültige Werte
+        }
+        
+        // Speichere nur den primären Namen (ausgeschrieben)
+        metrics[metricGroup.primaryName] = value;
+        
+        // Markiere alle Aliase als gefunden
+        allNames.forEach(name => foundMetrics.add(name));
+        
         break; // Stoppe nach dem ersten erfolgreichen Match
       }
     }
