@@ -17,11 +17,11 @@ dist-ssr
 *.local
 
 # Backend folders to exclude
-backend/node_modules
-backend/models
-backend/uploads
-backend/scripts
-backend/logs
+backend/node_modules/*
+backend/models/*
+backend/uploads/*
+backend/scripts/*
+backend/logs/*
 
 # Frontend folders to exclude
 frontend/node_modules
