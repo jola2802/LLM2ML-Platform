@@ -1,9 +1,32 @@
-# Environment variables
-.env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
 
-# Database
-projects.db
+# Dependencies
+node_modules
+*/node_modules
+
+# Build outputs
+dist
+dist-ssr
+*.local
+
+# Backend folders to exclude
+backend/node_modules
+backend/models
+backend/uploads
+backend/scripts
+backend/logs
+
+# Frontend folders to exclude
+frontend/node_modules
+frontend/dist
+frontend/dist-ssr
+
+# Python virtual environment
+backend/services/python/venv/
