@@ -191,13 +191,3 @@ curl -X POST 'http://localhost:3001/api/projects/{PROJECT_ID}/predict' \
 ## 📄 Lizenz
 
 Dieses Projekt steht unter der MIT-Lizenz. Siehe `LICENSE` Datei für Details.
-
-## 🙏 Danksagungen
-
-- **scikit-learn** für die exzellente ML-Bibliothek
-- **React** für das moderne Frontend-Framework
-- **Express.js** für den robusten Backend-Server
-
----
-
-**Entwickelt mit ❤️ für No-Code Machine Learning** 
