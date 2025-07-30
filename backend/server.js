@@ -43,6 +43,23 @@ const PORT = process.env.PORT;
 app.use(cors());
 app.use(express.json());
 
+// Vercel serverless function export
+if (process.env.NODE_ENV === 'production') {
+  // In Vercel: keine statischen Dateien servieren, nur API
+  console.log('Running in Vercel production mode');
+} else {
+  // Serve static files from frontend build (for local development)
+  const frontendPath = path.join(__dirname, '../frontend/dist');
+  app.use(express.static(frontendPath));
+  
+  // Serve index.html for all non-API routes (SPA routing)
+  app.get('*', (req, res) => {
+    if (!req.path.startsWith('/api')) {
+      res.sendFile(path.join(frontendPath, 'index.html'));
+    }
+  });
+}
+
 // Upload-Ordner erstellen falls nicht vorhanden
 const uploadDir = path.join(__dirname, 'uploads');
 const modelDir = path.join(__dirname, 'models');
@@ -268,3 +285,6 @@ async function retrainModelAsync(projectId, customPythonCode) {
 app.listen(PORT, () => {
   console.log(`Server läuft auf Port ${PORT}`);
 });
+
+// Export für Vercel
+module.exports = app;

@@ -1,4 +1,15 @@
-const API_BASE_URL = import.meta.env.BASE_URL || 'http://localhost:3001/api';
+// API-URL für Vercel Deployment
+const getApiBaseUrl = () => {
+  // In der Entwicklung: localhost:3001
+  if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+    return 'http://localhost:3001/api';
+  }
+  
+  // In Vercel: gleiche Domain mit /api prefix
+  return '/api';
+};
+
+const API_BASE_URL = getApiBaseUrl();
 
 export interface ApiProject {
   id: string;

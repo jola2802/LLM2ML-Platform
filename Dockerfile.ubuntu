@@ -1,0 +1,27 @@
+# Alternative Dockerfile mit Ubuntu (falls Alpine Probleme macht)
+FROM node:18 AS frontend-builder
+
+WORKDIR /app/frontend
+COPY frontend/package*.json ./
+RUN npm ci
+
+COPY frontend/ ./
+RUN npm run build
+
+# Backend stage
+FROM node:18 AS backend
+
+WORKDIR /app
+COPY backend/package*.json ./
+RUN npm ci --only=production
+
+COPY backend/ ./
+COPY --from=frontend-builder /app/frontend/dist ./frontend/dist
+
+# Python dependencies
+RUN apt-get update && apt-get install -y python3 python3-pip
+RUN pip3 install pandas scikit-learn joblib numpy xgboost -break-system-packages
+
+EXPOSE 3001
+
+CMD ["npm", "start"] 
