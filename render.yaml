@@ -1,0 +1,63 @@
+services:
+  # Backend Service (Node.js/Express)
+  - type: web
+    name: ml-platform-backend
+    env: node
+    region: oregon
+    buildCommand: |
+      cd backend && npm install && pip install -r ../requirements.txt
+    startCommand: cd backend && npm start
+    healthCheckPath: /
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: GEMINI_API_KEY
+        sync: false  # Setzen Sie dies in der Render-Konsole
+    plan: starter
+    autoDeploy: true
+    
+  # Frontend Service (React/Vite als statische Website)
+  - type: web
+    name: ml-platform-frontend
+    env: node
+    region: oregon
+    buildCommand: |
+      cd frontend && npm install && npm run build
+    staticPublishPath: ./frontend/dist
+    envVars:
+      - key: VITE_API_URL
+        fromService:
+          type: web
+          name: ml-platform-backend
+          property: host
+      - key: GEMINI_API_KEY
+        sync: false  # Setzen Sie dies in der Render-Konsole
+    plan: starter
+    autoDeploy: true
+    headers:
+      - path: /*
+        name: X-Frame-Options
+        value: DENY
+      - path: /*
+        name: X-Content-Type-Options
+        value: nosniff
+      - path: /*
+        name: Referrer-Policy
+        value: strict-origin-when-cross-origin
+
+# Datenbank (SQLite wird im Backend-Container gespeichert)
+# Für persistente Datenbank in Produktion sollten Sie PostgreSQL verwenden:
+databases:
+  - name: ml-platform-db
+    databaseName: ml_platform
+    user: ml_platform_user
+    plan: starter
+    region: oregon
+
+# Für persistente Datenspeicherung (Uploads, Modelle, Scripts)
+disks:
+  - name: ml-platform-storage
+    mountPath: /opt/render/project/src/backend/uploads
+    sizeGB: 10
