@@ -5,21 +5,21 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build",
-    "vercel-build": "tsc && vite build",
+    "build": "npx tsc && vite build",
+    "vercel-build": "npx tsc && vite build",
     "preview": "vite preview"
   },
   "dependencies": {
     "@google/genai": "^1.11.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
-    "recharts": "^3.1.0"
+    "recharts": "^3.1.0",
+    "typescript": "~5.7.2"
   },
   "devDependencies": {
     "@types/node": "^22.14.0",
     "@types/react": "^19.1.9",
     "@types/react-dom": "^19.1.7",
-    "typescript": "~5.7.2",
     "vite": "^6.2.0"
   }
 }
