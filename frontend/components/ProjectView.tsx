@@ -49,12 +49,12 @@ const ProjectView: React.FC<ProjectViewProps> = ({ project, onBack, onProjectUpd
     setPredictionError(null);
     setPredictionResult(null);
     try {
-      // Konvertiere Input zu korrekten Datentypen
-      const processedInput: { [key: string]: string | number } = {};
+      // Konvertiere Input zu Strings für die API
+      const processedInput: { [key: string]: string } = {};
       Object.entries(predictionInput).forEach(([key, value]) => {
         // Versuche als Zahl zu parsen, falls möglich
         const numberValue = parseFloat(value);
-        processedInput[key] = isNaN(numberValue) ? value : numberValue;
+        processedInput[key] = isNaN(numberValue) ? value : numberValue.toString();
       });
       
       const response = await apiService.predict(project.id, processedInput);
