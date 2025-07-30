@@ -1,0 +1,14 @@
+{
+  "name": "ml-platform",
+  "version": "1.0.0",
+  "description": "No-Code ML Platform",
+  "scripts": {
+    "build": "cd frontend && npm install && npm run build",
+    "vercel-build": "cd frontend && npm install && npm run build",
+    "dev": "concurrently \"cd backend && npm run dev\" \"cd frontend && npm run dev\"",
+    "install-deps": "npm install && cd frontend && npm install && cd ../backend && npm install"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+} 
