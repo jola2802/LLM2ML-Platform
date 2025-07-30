@@ -14,3 +14,5 @@ backend/services/python/*
 
 # Python virtual environment
 # backend/services/python/venv/
+.env
+.env.local
