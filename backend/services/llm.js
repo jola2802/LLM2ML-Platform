@@ -2,11 +2,39 @@ import { GoogleGenAI } from '@google/genai';
 import path from 'path';
 import { logLLMCommunication } from './log.js';
 
+// Verfügbare Gemini-Modelle
+export const GEMINI_MODELS = {
+  'gemini-1.5-flash': 'gemini-1.5-flash',
+  'gemini-2.0-flash': 'gemini-2.0-flash', 
+  'gemini-2.5-flash': 'gemini-2.5-flash'
+};
+
+// Aktuell gewähltes Modell (Standard)
+let currentModel = 'gemini-2.0-flash';
+
+// Modell setzen
+export function setCurrentGeminiModel(model) {
+  currentModel = model;
+}
+
+// Aktuelles Modell abrufen
+export function getCurrentGeminiModel() {
+  return currentModel;
+}
+
+// Alle verfügbaren Modelle abrufen
+export function getAvailableGeminiModels() {
+  return Object.keys(GEMINI_MODELS);
+}
+
 // LLM API Call für Script-Generierung (filePath optional)
-export async function callLLMAPI(prompt, filePath = null) {  
+export async function callLLMAPI(prompt, filePath = null, customModel = null) {  
   const API_KEY = process.env.GEMINI_API_KEY;
   
   const genAI = new GoogleGenAI({apiKey: API_KEY});
+  
+  // Verwende custom Model oder aktuell gewähltes Modell
+  const modelToUse = customModel || currentModel;
   
   try {
     let contents = [{ role: "user", parts: [{ text: prompt }] }];
@@ -15,6 +43,7 @@ export async function callLLMAPI(prompt, filePath = null) {
     await logLLMCommunication('prompt', {
       prompt,
       filePath,
+      model: modelToUse,
       timestamp: new Date().toISOString()
     });
 
@@ -111,7 +140,7 @@ export async function callLLMAPI(prompt, filePath = null) {
     }
     
     const result = await genAI.models.generateContent({ 
-      model: "gemini-2.5-flash",
+      model: modelToUse,
       contents: contents,
       generationConfig: {
         temperature: 0.1
@@ -121,7 +150,7 @@ export async function callLLMAPI(prompt, filePath = null) {
     // Log die Antwort
     await logLLMCommunication('response', {
       response: result.text,
-      model: "gemini-2.5-flash",
+      model: modelToUse,
       temperature: 0.1
     });
 
@@ -133,7 +162,8 @@ export async function callLLMAPI(prompt, filePath = null) {
       error: 'LLM API Error',
       message: error.message,
       prompt,
-      filePath
+      filePath,
+      model: modelToUse
     });
 
     console.error('LLM API Error:', error);
@@ -141,7 +171,7 @@ export async function callLLMAPI(prompt, filePath = null) {
     if (!filePath) {
       try {
         const result = await genAI.models.generateContent({ 
-          model: "gemini-2.5-flash",
+          model: modelToUse,
           contents: prompt,
           generationConfig: {
             temperature: 0.1
@@ -151,7 +181,7 @@ export async function callLLMAPI(prompt, filePath = null) {
         // Log die Fallback-Antwort
         await logLLMCommunication('response', {
           response: result.text,
-          model: "gemini-2.5-flash",
+          model: modelToUse,
           temperature: 0.1,
           fallback: true
         });
@@ -172,4 +202,20 @@ export async function callLLMAPI(prompt, filePath = null) {
     
     return 'LLM-Analyse nicht verfügbar';
   }
+}
+
+export async function testLLMAPI(prompt) {  
+  const API_KEY = process.env.GEMINI_API_KEY;
+  
+  const genAI = new GoogleGenAI({apiKey: API_KEY});
+    
+  const result = await genAI.models.generateContent({ 
+    model: "gemini-2.5-flash",
+    contents: prompt,
+    generationConfig: {
+      temperature: 0.0
+    }
+  });
+
+  return result.text || '';
 }

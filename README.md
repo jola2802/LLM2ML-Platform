@@ -180,14 +180,6 @@ curl -X POST 'http://localhost:3001/api/projects/{PROJECT_ID}/predict' \
 ### API-Integration
 ![API](docs/api.png)
 
-## 🤝 Beitragen
-
-1. Fork das Repository
-2. Feature-Branch erstellen (`git checkout -b feature/amazing-feature`)
-3. Änderungen committen (`git commit -m 'Add amazing feature'`)
-4. Branch pushen (`git push origin feature/amazing-feature`)
-5. Pull Request erstellen
-
 ## 📄 Lizenz
 
-Dieses Projekt steht unter der MIT-Lizenz. Siehe `LICENSE` Datei für Details.
+Dieses Projekt steht unter der MIT-Lizenz.

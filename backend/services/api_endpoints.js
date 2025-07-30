@@ -298,6 +298,186 @@ export function setupAPIEndpoints(app, upload, scriptDir, venvDir) {
     }
   });
 
+  // Gemini-Verbindungsstatus prüfen
+  app.get('/api/gemini/status', async (req, res) => {
+    try {
+      const API_KEY = process.env.GEMINI_API_KEY;
+      
+      if (!API_KEY) {
+        return res.json({ 
+          connected: false, 
+          error: 'Kein API-Key konfiguriert',
+          hasApiKey: false 
+        });
+      }
+
+      // Teste die Verbindung mit einem einfachen Prompt
+      try {
+        const { testLLMAPI } = await import('./llm.js');
+        const testResponse = await testLLMAPI('Antworte nur mit "OK" wenn du diese Nachricht erhältst.');
+        
+        const isConnected = testResponse && testResponse.toLowerCase().includes('ok');
+        
+        res.json({ 
+          connected: isConnected, 
+          hasApiKey: true,
+          lastTested: new Date().toISOString()
+        });
+      } catch (error) {
+        res.json({ 
+          connected: false, 
+          error: error.message,
+          hasApiKey: true
+        });
+      }
+    } catch (error) {
+      console.error('Gemini status check error:', error);
+      res.status(500).json({ error: 'Status check failed: ' + error.message });
+    }
+  });
+
+  // API-Key setzen (temporär für die Session)
+  app.post('/api/gemini/api-key', async (req, res) => {
+    try {
+      const { apiKey } = req.body;
+      
+      if (!apiKey || typeof apiKey !== 'string') {
+        return res.status(400).json({ error: 'Gültiger API-Key erforderlich' });
+      }
+
+      // Setze den API-Key als Umgebungsvariable
+      process.env.GEMINI_API_KEY = apiKey;
+      
+      // Teste die Verbindung mit dem neuen API-Key
+      try {
+        const { callLLMAPI } = await import('./llm.js');
+        const testResponse = await callLLMAPI('Antworte nur mit "OK" wenn du diese Nachricht erhältst.');
+        
+        const isConnected = testResponse && testResponse.toLowerCase().includes('ok');
+        
+        if (isConnected) {
+          res.json({ 
+            success: true, 
+            connected: true,
+            message: 'API-Key erfolgreich gesetzt und getestet'
+          });
+        } else {
+          res.json({ 
+            success: false, 
+            connected: false,
+            error: 'API-Key gesetzt, aber Verbindung fehlgeschlagen'
+          });
+        }
+      } catch (error) {
+        res.json({ 
+          success: false, 
+          connected: false,
+          error: 'API-Key gesetzt, aber Test fehlgeschlagen: ' + error.message
+        });
+      }
+    } catch (error) {
+      console.error('API-Key setup error:', error);
+      res.status(500).json({ error: 'API-Key setup failed: ' + error.message });
+    }
+  });
+
+  // Aktuellen API-Key-Status abrufen (ohne den Key preiszugeben)
+  app.get('/api/gemini/api-key-status', (req, res) => {
+    const API_KEY = process.env.GEMINI_API_KEY;
+    const hasApiKey = Boolean(API_KEY && API_KEY.length > 0);
+    const keyPreview = hasApiKey ? `${API_KEY.substring(0, 8)}...${API_KEY.substring(API_KEY.length - 4)}` : null;
+    
+    res.json({ 
+      hasApiKey,
+      keyPreview
+    });
+  });
+
+  // Verfügbare Gemini-Modelle abrufen
+  app.get('/api/gemini/models', async (req, res) => {
+    try {
+      const { getAvailableGeminiModels, getCurrentGeminiModel } = await import('./llm.js');
+      const availableModels = getAvailableGeminiModels();
+      const currentModel = getCurrentGeminiModel();
+      
+      res.json({
+        availableModels,
+        currentModel,
+        customModelSupported: true
+      });
+    } catch (error) {
+      console.error('Error getting Gemini models:', error);
+      res.status(500).json({ error: 'Failed to get models: ' + error.message });
+    }
+  });
+
+  // Gemini-Modell setzen
+  app.post('/api/gemini/model', async (req, res) => {
+    try {
+      const { model } = req.body;
+      
+      if (!model || typeof model !== 'string') {
+        return res.status(400).json({ error: 'Gültiges Modell erforderlich' });
+      }
+
+      const { setCurrentGeminiModel, getAvailableGeminiModels } = await import('./llm.js');
+      const availableModels = getAvailableGeminiModels();
+      
+      // Prüfe ob es ein vordefiniertes Modell ist oder ein custom Model
+      const isCustomModel = !availableModels.includes(model);
+      
+      // Setze das Modell
+      setCurrentGeminiModel(model);
+      
+      // Teste das Modell mit einem einfachen Prompt
+      try {
+        const { callLLMAPI } = await import('./llm.js');
+        const testResponse = await callLLMAPI('Antworte nur mit "OK" wenn du diese Nachricht erhältst.', null, model);
+        
+        const isWorking = testResponse && testResponse.toLowerCase().includes('ok');
+        
+        res.json({
+          success: true,
+          model,
+          isCustomModel,
+          tested: true,
+          working: isWorking,
+          message: isWorking ? 'Modell erfolgreich gesetzt und getestet' : 'Modell gesetzt, aber Test fehlgeschlagen'
+        });
+      } catch (error) {
+        res.json({
+          success: true,
+          model,
+          isCustomModel,
+          tested: false,
+          working: false,
+          error: 'Modell gesetzt, aber Test fehlgeschlagen: ' + error.message
+        });
+      }
+    } catch (error) {
+      console.error('Error setting Gemini model:', error);
+      res.status(500).json({ error: 'Failed to set model: ' + error.message });
+    }
+  });
+
+  // Aktuelles Gemini-Modell abrufen
+  app.get('/api/gemini/current-model', async (req, res) => {
+    try {
+      const { getCurrentGeminiModel, getAvailableGeminiModels } = await import('./llm.js');
+      const currentModel = getCurrentGeminiModel();
+      const availableModels = getAvailableGeminiModels();
+      const isCustomModel = !availableModels.includes(currentModel);
+      
+      res.json({
+        currentModel,
+        isCustomModel
+      });
+    } catch (error) {
+      console.error('Error getting current Gemini model:', error);
+      res.status(500).json({ error: 'Failed to get current model: ' + error.message });
+    }
+  });
+
 }
 
 // Prediction-Endpoint für echte API-Nutzung
@@ -306,6 +486,8 @@ export function setupPredictionEndpoint(app, scriptDir, venvDir) {
     try {
       const { id } = req.params;
       const inputs = req.body;
+
+      console.log('Inputs:', inputs);
 
       const project = await getProject(id);
       if (!project) {

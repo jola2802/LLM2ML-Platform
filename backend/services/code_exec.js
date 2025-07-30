@@ -178,6 +178,16 @@ export function extractMetricsFromOutput(output, modelType) {
   return metrics;
 }
 
+function convertInputFeatures(inputFeatures) {
+  if (typeof inputFeatures === 'object' && inputFeatures !== null && !Array.isArray(inputFeatures)) {
+    const firstKey = Object.keys(inputFeatures)[0];
+    if (typeof inputFeatures[firstKey] === 'object' && inputFeatures[firstKey] !== null && !Array.isArray(inputFeatures[firstKey])) {
+      return inputFeatures[firstKey];
+    }
+  }
+  return inputFeatures;
+}
+
 // Prediction-Script Generator
 export async function generatePredictionScript(project, inputFeatures, scriptDir) {
 
@@ -248,8 +258,7 @@ except Exception as e:
 
 export async function predictWithModel(project, inputFeatures, scriptDir, venvDir) {
   try {
-    const { features, ...rest } = inputFeatures;
-    const { predictionScript } = await generatePredictionScript(project, features, scriptDir);
+    const { predictionScript } = await generatePredictionScript(project, convertInputFeatures(inputFeatures), scriptDir);
     const scriptPath = path.join(scriptDir, `predict_${project.id}.py`);
     
     await fs.writeFile(scriptPath, predictionScript);
