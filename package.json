@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "No-Code ML Platform",
   "scripts": {
+    "start": "cd backend && npm run dev && cd ../frontend && npm run dev",
     "build": "cd frontend && npm install && npm run build",
     "vercel-build": "cd frontend && npm install && npm run build",
     "dev": "concurrently \"cd backend && npm run dev\" \"cd frontend && npm run dev\"",
