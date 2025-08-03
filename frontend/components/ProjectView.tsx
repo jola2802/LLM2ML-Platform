@@ -4,7 +4,8 @@ import { Project, ProjectStatus, PerformanceInsights as PerformanceInsightsType 
 import { apiService } from '../services/apiService';
 import { ChevronLeftIcon } from './icons/ChevronLeftIcon';
 import { Spinner } from './ui/Spinner';
-import PerformanceInsights from './PerformanceInsights';
+import ErrorBoundary from './ui/ErrorBoundary';
+import HyperparameterEditor from './HyperparameterEditor';
 
 interface ProjectViewProps {
   project: Project;
@@ -12,7 +13,7 @@ interface ProjectViewProps {
   onProjectUpdate?: (updatedProject: Project) => void;
 }
 
-type Tab = 'predict' | 'performance' | 'insights' | 'code' | 'api' | 'export';
+type Tab = 'predict' | 'performance' | 'data' | 'code' | 'api' | 'export';
 
 const ProjectView: React.FC<ProjectViewProps> = ({ project, onBack, onProjectUpdate }) => {
   const [activeTab, setActiveTab] = useState<Tab>('predict');
@@ -27,9 +28,29 @@ const ProjectView: React.FC<ProjectViewProps> = ({ project, onBack, onProjectUpd
   const [isSavingCode, setIsSavingCode] = useState(false);
   const [isRetraining, setIsRetraining] = useState(false);
   const [codeMessage, setCodeMessage] = useState<string | null>(null);
+  
+  // Hyperparameter States
+  const [currentHyperparameters, setCurrentHyperparameters] = useState<{ [key: string]: any }>(
+    project.hyperparameters || {}
+  );
+  const [showHyperparameterEditor, setShowHyperparameterEditor] = useState(false);
 
   // Performance Insights State
   const [currentProject, setCurrentProject] = useState<Project>(project);
+
+  // Update currentProject when project prop changes
+  React.useEffect(() => {
+    setCurrentProject(project);
+  }, [project]);
+
+  // Data Insights State
+  const [dataStatistics, setDataStatistics] = useState<any>(null);
+  const [isLoadingData, setIsLoadingData] = useState(false);
+  const [dataError, setDataError] = useState<string | null>(null);
+
+  // Performance Tab State (moved from render function)
+  const [isEvaluating, setIsEvaluating] = useState(false);
+  const [evaluationError, setEvaluationError] = useState<string | null>(null);
 
   const handleInsightsUpdate = useCallback((insights: PerformanceInsightsType) => {
     const updatedProject = { ...currentProject, performanceInsights: insights };
@@ -39,6 +60,105 @@ const ProjectView: React.FC<ProjectViewProps> = ({ project, onBack, onProjectUpd
       onProjectUpdate(updatedProject);
     }
   }, [currentProject, onProjectUpdate]);
+
+  const loadDataStatistics = useCallback(async () => {
+    setIsLoadingData(true);
+    setDataError(null);
+    
+    try {
+      const statistics = await apiService.getDataStatistics(project.id);
+      setDataStatistics(statistics);
+    } catch (error) {
+      setDataError(error instanceof Error ? error.message : 'Fehler beim Laden der Datenstatistiken');
+    } finally {
+      setIsLoadingData(false);
+    }
+  }, [project.id]);
+
+  // Performance evaluation handler (moved from render function)
+  const handleEvaluatePerformance = useCallback(async () => {
+    setIsEvaluating(true);
+    setEvaluationError(null);
+    
+    try {
+      const response = await apiService.evaluatePerformance(project.id);
+      const insights = response.insights;
+      
+      handleInsightsUpdate(insights);
+    } catch (error) {
+      setEvaluationError(error instanceof Error ? error.message : 'Evaluation fehlgeschlagen');
+    } finally {
+      setIsEvaluating(false);
+    }
+  }, [project.id, handleInsightsUpdate]);
+
+  // Load data statistics when data tab is accessed
+  React.useEffect(() => {
+    if (!dataStatistics && !isLoadingData && activeTab === 'data') {
+      loadDataStatistics();
+    }
+  }, [activeTab, dataStatistics, isLoadingData, loadDataStatistics]);
+
+  // Initialize hyperparameters when project changes
+  React.useEffect(() => {
+    if (project.hyperparameters) {
+      setCurrentHyperparameters(project.hyperparameters);
+    }
+  }, [project.hyperparameters]);
+
+  // Initialize python code when project changes
+  React.useEffect(() => {
+    if (project.pythonCode) {
+      setPythonCode(project.pythonCode);
+      setIsCodeModified(false); // Reset modification flag when project updates
+    } else if (project.status === ProjectStatus.Completed) {
+      // Falls Python-Code fehlt aber Training abgeschlossen ist, versuche ihn zu laden
+      loadPythonCodeFromServer();
+    }
+  }, [project.pythonCode, project.status]);
+
+  // Load Python code from server if missing
+  const loadPythonCodeFromServer = async () => {
+    try {
+      const updatedProject = await apiService.getProject(project.id);
+      if (updatedProject.pythonCode) {
+        setPythonCode(updatedProject.pythonCode);
+        setIsCodeModified(false);
+      }
+    } catch (error) {
+      console.error('Fehler beim Laden des Python-Codes:', error);
+    }
+  };
+
+  // Utility functions for styling (moved from render functions)
+  const getGradeColor = useCallback((grade: string) => {
+    switch (grade) {
+      case 'Excellent': return 'text-green-400 border-green-500/50 bg-green-900/30';
+      case 'Good': return 'text-blue-400 border-blue-500/50 bg-blue-900/30';
+      case 'Fair': return 'text-yellow-400 border-yellow-500/50 bg-yellow-900/30';
+      case 'Poor': return 'text-orange-400 border-orange-500/50 bg-orange-900/30';
+      case 'Critical': return 'text-red-400 border-red-500/50 bg-red-900/30';
+      default: return 'text-gray-400 border-gray-500/50 bg-gray-900/30';
+    }
+  }, []);
+
+  const getImpactColor = useCallback((impact: string) => {
+    switch (impact) {
+      case 'High': return 'bg-red-900/50 text-red-400 border border-red-500/50';
+      case 'Medium': return 'bg-yellow-900/50 text-yellow-400 border border-yellow-500/50';
+      case 'Low': return 'bg-green-900/50 text-green-400 border border-green-500/50';
+      default: return 'bg-gray-900/50 text-gray-400 border border-gray-500/50';
+    }
+  }, []);
+
+  const getReadinessColor = useCallback((readiness: string) => {
+    switch (readiness) {
+      case 'Production Ready': return 'text-green-400';
+      case 'Needs Improvement': return 'text-yellow-400';
+      case 'Not Ready': return 'text-red-400';
+      default: return 'text-gray-400';
+    }
+  }, []);
   
   const handleInputChange = (feature: string, value: string) => {
     setPredictionInput(prev => ({ ...prev, [feature]: value }));
@@ -78,14 +198,20 @@ const ProjectView: React.FC<ProjectViewProps> = ({ project, onBack, onProjectUpd
     setIsSavingCode(true);
     setCodeMessage(null);
     try {
-      await apiService.updatePythonCode(project.id, pythonCode);
-      setIsCodeModified(false);
-      setCodeMessage('✅ Code erfolgreich gespeichert');
+      // Speichere Code und Hyperparameter
+      await apiService.updateProjectCodeAndHyperparameters(project.id, pythonCode, currentHyperparameters);
       
-      // Update project in parent component
+      // Update project in parent component mit Hyperparametern
       if (onProjectUpdate) {
-        onProjectUpdate({ ...project, pythonCode });
+        onProjectUpdate({ 
+          ...project, 
+          pythonCode,
+          hyperparameters: currentHyperparameters 
+        });
       }
+      
+      setIsCodeModified(false);
+      setCodeMessage('✅ Code und Hyperparameter erfolgreich gespeichert');
     } catch (error) {
       setCodeMessage(`❌ Fehler beim Speichern: ${error instanceof Error ? error.message : 'Unbekannter Fehler'}`);
     } finally {
@@ -117,6 +243,78 @@ const ProjectView: React.FC<ProjectViewProps> = ({ project, onBack, onProjectUpd
       setIsCodeModified(project.originalPythonCode !== project.pythonCode);
       setCodeMessage('🔄 Code auf Original zurückgesetzt');
     }
+  };
+
+  const handleHyperparametersChange = (newHyperparameters: { [key: string]: any }) => {
+    // Hyperparameter korrekt konvertieren (numerische Werte als Zahlen, nicht als Strings)
+    const convertedHyperparameters: { [key: string]: any } = {};
+    for (const [key, value] of Object.entries(newHyperparameters)) {
+      // Prüfe ob der Wert eine Zahl sein sollte
+      if (typeof value === 'string' && !isNaN(Number(value)) && value.trim() !== '') {
+        convertedHyperparameters[key] = Number(value);
+      } else {
+        convertedHyperparameters[key] = value;
+      }
+    }
+    
+    setCurrentHyperparameters(convertedHyperparameters);
+    
+    // Automatisch den Python-Code mit den neuen Hyperparametern aktualisieren
+    const updatedCode = updateHyperparametersInCode(pythonCode, convertedHyperparameters);
+    setPythonCode(updatedCode);
+    setIsCodeModified(true);
+  };
+
+  const updateHyperparametersInCode = (code: string, hyperparameters: { [key: string]: any }): string => {
+    // JSON-String für Hyperparameter erstellen (mit korrekten Datentypen)
+    const hyperparametersJson = JSON.stringify(hyperparameters);
+    
+    // Suche nach verschiedenen hyperparameters-Formaten und ersetze sie
+    const lines = code.split('\n');
+    let found = false;
+    const updatedLines = lines.map(line => {
+      // Verschiedene Formate unterstützen
+      if (line.includes('hyperparameters = ')) {
+        found = true;
+        // Prüfe ob es bereits ein JSON-String ist
+        if (line.includes('"') && line.includes('{')) {
+          return `    hyperparameters = "${hyperparametersJson.replace(/"/g, '\\"')}"`;
+        } else {
+          return `    hyperparameters = "${hyperparametersJson.replace(/"/g, '\\"')}"`;
+        }
+      }
+      return line;
+    });
+    
+    // Falls keine hyperparameters-Zeile gefunden wurde, füge sie hinzu
+    if (!found) {
+      // Suche nach der main()-Funktion und füge hyperparameters hinzu
+      for (let i = 0; i < updatedLines.length; i++) {
+        if (updatedLines[i].includes('def main():')) {
+          // Füge hyperparameters nach der Funktionsdefinition hinzu
+          updatedLines.splice(i + 2, 0, `    hyperparameters = "${hyperparametersJson.replace(/"/g, '\\"')}"`);
+          break;
+        }
+      }
+      
+      // Falls main() nicht gefunden wurde, suche nach anderen Stellen
+      if (!found) {
+        // Suche nach der target_variable oder features Definition
+        for (let i = 0; i < updatedLines.length; i++) {
+          if (updatedLines[i].includes('target_variable = ') || updatedLines[i].includes('features = ')) {
+            // Füge hyperparameters nach dieser Zeile hinzu
+            updatedLines.splice(i + 1, 0, `    hyperparameters = "${hyperparametersJson.replace(/"/g, '\\"')}"`);
+            break;
+          }
+        }
+      }
+    }
+    
+    return updatedLines.join('\n');
+  };
+
+  const toggleHyperparameterEditor = () => {
+    setShowHyperparameterEditor(!showHyperparameterEditor);
   };
 
   const performanceData = useMemo(() => {
@@ -190,94 +388,257 @@ const ProjectView: React.FC<ProjectViewProps> = ({ project, onBack, onProjectUpd
     </div>
   );
 
-  const renderPerformanceTab = () => (
-    <div className="space-y-6">
-      {/* Quick Insights Summary */}
-      {currentProject.performanceInsights && (
-        <div className="bg-gradient-to-r from-purple-900/20 to-blue-900/20 border border-purple-500/30 rounded-lg p-4">
-          <div className="flex justify-between items-center mb-3">
-            <h4 className="text-purple-400 font-medium flex items-center">
-              <span className="mr-2">🤖</span>KI-Schnellanalyse
-            </h4>
-            <div className="flex items-center space-x-3">
-              <span className={`px-2 py-1 rounded text-xs font-medium ${
-                currentProject.performanceInsights.performanceGrade === 'Excellent' ? 'bg-green-900/50 text-green-400' :
-                currentProject.performanceInsights.performanceGrade === 'Good' ? 'bg-blue-900/50 text-blue-400' :
-                currentProject.performanceInsights.performanceGrade === 'Fair' ? 'bg-yellow-900/50 text-yellow-400' :
-                'bg-red-900/50 text-red-400'
-              }`}>
-                {currentProject.performanceInsights.performanceGrade}
-              </span>
-              <span className="text-purple-300 font-semibold">
-                {currentProject.performanceInsights.overallScore.toFixed(1)}/10
-              </span>
+  const renderPerformanceTab = () => {
+    return (
+      <div className="space-y-6">
+        {/* KI-Performance-Analyse Evaluation Control */}
+        {project.performanceMetrics && (
+          <div className="bg-gradient-to-r from-purple-900/30 to-blue-900/30 border border-purple-500/50 rounded-lg p-6">
+            <div className="flex justify-between items-center">
+              <div>
+                <h3 className="text-lg font-semibold text-white mb-2">🤖 KI-Performance-Analyse</h3>
+                <p className="text-purple-200 text-sm">
+                  Lasse die Performance deines Modells intelligent vom LLM bewerten und erhalte detaillierte Insights.
+                </p>
+              </div>
+              <button
+                onClick={handleEvaluatePerformance}
+                disabled={isEvaluating}
+                className="px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 disabled:from-gray-600 disabled:to-gray-700 text-white font-medium rounded-lg transition-all duration-200 flex items-center space-x-2"
+              >
+                {isEvaluating ? (
+                  <>
+                    <Spinner size="sm" />
+                    <span>Analysiere...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>🔍</span>
+                    <span>Performance analysieren</span>
+                  </>
+                )}
+              </button>
+            </div>
+            
+            {evaluationError && (
+              <div className="mt-4 p-4 bg-red-900/30 border border-red-500/50 rounded-lg">
+                <p className="text-red-400 text-sm">❌ {evaluationError}</p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* KI-Performance Insights Display */}
+        {currentProject.performanceInsights && (
+          <div className="space-y-6">
+            {/* Overall Score & Grade */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="bg-gray-800/50 rounded-lg p-6 text-center">
+                <h4 className="text-gray-400 text-sm font-medium mb-2">Gesamt-Score</h4>
+                <div className="text-4xl font-bold text-white mb-2">
+                  {currentProject.performanceInsights.overallScore.toFixed(1)}/10
+                </div>
+                <div className="w-full bg-gray-700 rounded-full h-2">
+                  <div
+                    className="bg-gradient-to-r from-blue-500 to-purple-500 h-2 rounded-full transition-all duration-500"
+                    style={{ width: `${(currentProject.performanceInsights.overallScore / 10) * 100}%` }}
+                  ></div>
+                </div>
+              </div>
+              
+              <div className="bg-gray-800/50 rounded-lg p-6 text-center">
+                <h4 className="text-gray-400 text-sm font-medium mb-2">Performance-Grade</h4>
+                <div className={`inline-flex items-center px-4 py-2 rounded-lg border text-lg font-semibold ${getGradeColor(currentProject.performanceInsights.performanceGrade)}`}>
+                  {currentProject.performanceInsights.performanceGrade}
+                </div>
+              </div>
+            </div>
+
+            {/* Summary */}
+            <div className="bg-blue-900/20 border border-blue-500/50 rounded-lg p-6">
+              <h4 className="text-blue-400 font-medium mb-3">📊 KI-Zusammenfassung</h4>
+              <p className="text-blue-100">{currentProject.performanceInsights.summary}</p>
+            </div>
+
+            {/* Detailed Analysis */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="bg-green-900/20 border border-green-500/50 rounded-lg p-6">
+                <h4 className="text-green-400 font-medium mb-3 flex items-center">
+                  <span className="mr-2">✅</span>Stärken
+                </h4>
+                <ul className="space-y-2">
+                  {currentProject.performanceInsights.detailedAnalysis.strengths.map((strength, index) => (
+                    <li key={index} className="text-green-100 text-sm flex items-start">
+                      <span className="text-green-400 mr-2 mt-1">•</span>
+                      {strength}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              <div className="bg-orange-900/20 border border-orange-500/50 rounded-lg p-6">
+                <h4 className="text-orange-400 font-medium mb-3 flex items-center">
+                  <span className="mr-2">⚠️</span>Schwächen
+                </h4>
+                <ul className="space-y-2">
+                  {currentProject.performanceInsights.detailedAnalysis.weaknesses.map((weakness, index) => (
+                    <li key={index} className="text-orange-100 text-sm flex items-start">
+                      <span className="text-orange-400 mr-2 mt-1">•</span>
+                      {weakness}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              <div className="bg-purple-900/20 border border-purple-500/50 rounded-lg p-6">
+                <h4 className="text-purple-400 font-medium mb-3 flex items-center">
+                  <span className="mr-2">🔍</span>Wichtige Erkenntnisse
+                </h4>
+                <ul className="space-y-2">
+                  {currentProject.performanceInsights.detailedAnalysis.keyFindings.map((finding, index) => (
+                    <li key={index} className="text-purple-100 text-sm flex items-start">
+                      <span className="text-purple-400 mr-2 mt-1">•</span>
+                      {finding}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+
+            {/* Improvement Suggestions */}
+            <div className="bg-gray-800/50 rounded-lg p-6">
+              <h4 className="text-white font-medium mb-4 flex items-center">
+                <span className="mr-2">💡</span>Verbesserungsvorschläge
+              </h4>
+              <div className="space-y-4">
+                {currentProject.performanceInsights.improvementSuggestions.map((suggestion, index) => (
+                  <div key={index} className="bg-gray-700/50 rounded-lg p-4">
+                    <div className="flex justify-between items-start mb-3">
+                      <div>
+                        <span className="text-blue-400 text-sm font-medium">{suggestion.category}</span>
+                        <div className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium ml-3 ${getImpactColor(suggestion.expectedImpact)}`}>
+                          {suggestion.expectedImpact} Impact
+                        </div>
+                      </div>
+                    </div>
+                    <p className="text-gray-300 mb-2">{suggestion.suggestion}</p>
+                    <details className="cursor-pointer">
+                      <summary className="text-gray-400 hover:text-gray-300 text-sm">Umsetzung anzeigen</summary>
+                      <p className="text-gray-400 text-sm mt-2 pl-4 border-l-2 border-gray-600">
+                        {suggestion.implementation}
+                      </p>
+                    </details>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Business Impact */}
+            <div className="bg-gray-800/50 rounded-lg p-6">
+              <h4 className="text-white font-medium mb-4 flex items-center">
+                <span className="mr-2">🏢</span>Business Impact
+              </h4>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="text-center">
+                  <h5 className="text-gray-400 text-sm mb-2">Produktionsbereitschaft</h5>
+                  <span className={`font-medium ${getReadinessColor(currentProject.performanceInsights.businessImpact.readiness)}`}>
+                    {currentProject.performanceInsights.businessImpact.readiness}
+                  </span>
+                </div>
+                <div className="text-center">
+                  <h5 className="text-gray-400 text-sm mb-2">Risikobewertung</h5>
+                  <span className={`font-medium ${currentProject.performanceInsights.businessImpact.riskAssessment === 'Low' ? 'text-green-400' : currentProject.performanceInsights.businessImpact.riskAssessment === 'Medium' ? 'text-yellow-400' : 'text-red-400'}`}>
+                    {currentProject.performanceInsights.businessImpact.riskAssessment}
+                  </span>
+                </div>
+                <div className="text-center md:col-span-1">
+                  <h5 className="text-gray-400 text-sm mb-2">Empfehlung</h5>
+                  <p className="text-gray-300 text-sm">{currentProject.performanceInsights.businessImpact.recommendation}</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Next Steps
+            <div className="bg-gray-800/50 rounded-lg p-6">
+              <h4 className="text-white font-medium mb-4 flex items-center">
+                <span className="mr-2">🚀</span>Nächste Schritte
+              </h4>
+              <ol className="space-y-2">
+                {currentProject.performanceInsights.nextSteps.map((step, index) => (
+                  <li key={index} className="text-gray-300 flex items-start">
+                    <span className="bg-blue-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm mr-3 mt-0.5 flex-shrink-0">
+                      {index + 1}
+                    </span>
+                    {step}
+                  </li>
+                ))}
+              </ol>
+            </div> */}
+
+            {/* Evaluation Metadata */}
+            <div className="bg-gray-800/30 rounded-lg p-4 text-center">
+              <p className="text-gray-400 text-sm">
+                Evaluiert am {new Date(currentProject.performanceInsights.evaluatedAt).toLocaleString('de-DE')} 
+                von {currentProject.performanceInsights.evaluatedBy} (v{currentProject.performanceInsights.version})
+              </p>
             </div>
           </div>
-          <p className="text-purple-100 text-sm mb-3">{currentProject.performanceInsights.summary}</p>
-          <button
-            onClick={() => setActiveTab('insights')}
-            className="text-purple-400 hover:text-purple-300 text-sm font-medium"
-          >
-            → Vollständige Analyse anzeigen
-          </button>
-        </div>
-      )}
+        )}
 
-      {/* Traditional Performance Metrics */}
-      {project.performanceMetrics ? (
-        <div>
-          <h4 className="text-white font-medium mb-4 flex items-center">
-            <span className="mr-2">📊</span>Performance-Metriken
-          </h4>
-          <div style={{ width: '100%', height: 400 }}>
-            <ResponsiveContainer>
-              <BarChart data={performanceData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                <XAxis dataKey="name" stroke="#9ca3af" />
-                <YAxis stroke="#9ca3af" />
-                <Tooltip
-                  contentStyle={{ backgroundColor: '#1f2937', border: '1px solid #374151' }}
-                  labelStyle={{ color: '#d1d5db' }}
-                />
-                <Legend wrapperStyle={{ color: '#d1d5db' }}/>
-                <Bar dataKey="value" fill="#60a5fa" />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-          
-          {/* Alle Performance-Metriken als Karten anzeigen */}
-          <div className="mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {performanceData.map((metric) => (
-              <div key={metric.name} className="bg-gray-800/50 rounded-lg p-4">
-                <div className="flex justify-between items-center mb-2">
-                  <h5 className="font-medium text-white">{metric.name}</h5>
-                  <span className="text-blue-400 font-mono font-semibold">{metric.rawValue}</span>
-                </div>
-                {/* Zeige LLM-Interpretation falls verfügbar */}
-                {currentProject.performanceInsights?.metricsInterpretation?.[metric.name.toLowerCase().replace(/\s+/g, '_').replace(/²/g, '2')] && (
-                  <div>
-                    <p className="text-gray-300 text-sm mb-1">
-                      {currentProject.performanceInsights.metricsInterpretation[metric.name.toLowerCase().replace(/\s+/g, '_').replace(/²/g, '2')].interpretation}
-                    </p>
-                    <p className="text-gray-400 text-xs">
-                      {currentProject.performanceInsights.metricsInterpretation[metric.name.toLowerCase().replace(/\s+/g, '_').replace(/²/g, '2')].benchmarkComparison}
-                    </p>
+        {/* Traditional Performance Metrics */}
+        {project.performanceMetrics ? (
+          <div>
+            <h4 className="text-white font-medium mb-4 flex items-center">
+              <span className="mr-2">📊</span>Performance-Metriken
+            </h4>
+            <div style={{ width: '100%', height: 400 }}>
+              <ResponsiveContainer>
+                <BarChart data={performanceData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                  <XAxis dataKey="name" stroke="#9ca3af" />
+                  <YAxis stroke="#9ca3af" />
+                  <Tooltip
+                    contentStyle={{ backgroundColor: '#1f2937', border: '1px solid #374151' }}
+                    labelStyle={{ color: '#d1d5db' }}
+                  />
+                  <Legend wrapperStyle={{ color: '#d1d5db' }}/>
+                  <Bar dataKey="value" fill="#60a5fa" />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+            
+            {/* Alle Performance-Metriken als Karten anzeigen */}
+            <div className="mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {performanceData.map((metric) => (
+                <div key={metric.name} className="bg-gray-800/50 rounded-lg p-4">
+                  <div className="flex justify-between items-center mb-2">
+                    <h5 className="font-medium text-white">{metric.name}</h5>
+                    <span className="text-blue-400 font-mono font-semibold">{metric.rawValue}</span>
                   </div>
-                )}
-              </div>
-            ))}
+                  {/* Zeige LLM-Interpretation falls verfügbar */}
+                  {currentProject.performanceInsights?.metricsInterpretation?.[metric.name.toLowerCase().replace(/\s+/g, '_').replace(/²/g, '2')] && (
+                    <div>
+                      <p className="text-gray-300 text-sm mb-1">
+                        {currentProject.performanceInsights.metricsInterpretation[metric.name.toLowerCase().replace(/\s+/g, '_').replace(/²/g, '2')].interpretation}
+                      </p>
+                      <p className="text-gray-400 text-xs">
+                        {currentProject.performanceInsights.metricsInterpretation[metric.name.toLowerCase().replace(/\s+/g, '_').replace(/²/g, '2')].benchmarkComparison}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
-      ) : (
-        <div className="text-center py-8">
-          <p className="text-gray-400 mb-4">Performance-Metriken sind für dieses Projekt noch nicht verfügbar.</p>
-          {!currentProject.performanceInsights && (
+        ) : (
+          <div className="text-center py-8">
+            <p className="text-gray-400 mb-4">Performance-Metriken sind für dieses Projekt noch nicht verfügbar.</p>
             <p className="text-gray-500 text-sm">Trainiere das Modell, um automatisch Performance-Metriken und KI-Insights zu erhalten.</p>
-          )}
-        </div>
-      )}
-    </div>
-  );
+          </div>
+        )}
+      </div>
+    );
+  };
 
   const renderCodeTab = () => (
     <div className="space-y-6">
@@ -321,8 +682,46 @@ const ProjectView: React.FC<ProjectViewProps> = ({ project, onBack, onProjectUpd
               '🚀 Re-Training'
             )}
           </button>
+          {!pythonCode && project.status === ProjectStatus.Completed && (
+            <button
+              onClick={loadPythonCodeFromServer}
+              className="px-4 py-2 border border-yellow-600 text-sm font-medium rounded-md text-yellow-300 hover:bg-yellow-700 disabled:opacity-50"
+            >
+              🔄 Code laden
+            </button>
+          )}
         </div>
       </div>
+
+      {/* Hyperparameter Editor - anzeigen wenn Training abgeschlossen ist oder Hyperparameter vorhanden sind */}
+      {(project.status === ProjectStatus.Completed || project.hyperparameters) && project.algorithm && project.status !== ProjectStatus.Training && (
+        <div className="bg-gradient-to-r from-purple-900/30 to-blue-900/30 border border-purple-500/50 rounded-lg p-4">
+          <div className="flex justify-between items-center mb-4">
+            <div>
+              <h4 className="text-lg font-medium text-white">⚙️ Hyperparameter anpassen</h4>
+              <p className="text-purple-200 text-sm">
+                Passe die Hyperparameter für {project.algorithm} an
+              </p>
+            </div>
+            <button
+              onClick={toggleHyperparameterEditor}
+              disabled={isRetraining}
+              className="px-4 py-2 border border-purple-500 text-sm font-medium rounded-md text-purple-300 hover:bg-purple-700 disabled:opacity-50"
+            >
+              {showHyperparameterEditor ? '🔽 Ausblenden' : '⚙️ Anzeigen'}
+            </button>
+          </div>
+          
+          {showHyperparameterEditor && (
+            <HyperparameterEditor
+              algorithm={project.algorithm}
+              currentHyperparameters={currentHyperparameters}
+              onHyperparametersChange={handleHyperparametersChange}
+              isRetraining={isRetraining}
+            />
+          )}
+        </div>
+      )}
 
       {codeMessage && (
         <div className={`p-4 rounded-lg ${codeMessage.includes('❌') ? 'bg-red-900/30 border border-red-500/50' : 'bg-green-900/30 border border-green-500/50'}`}>
@@ -452,81 +851,302 @@ const ProjectView: React.FC<ProjectViewProps> = ({ project, onBack, onProjectUpd
     </div>
   );
 
-  const renderInsightsTab = () => (
-    <PerformanceInsights 
-      project={currentProject} 
-      onInsightsUpdate={handleInsightsUpdate}
-    />
-  );
+  const renderDataTab = () => {
+    return (
+      <div className="space-y-6">
+        {/* Load Button */}
+        <div className="flex justify-between items-center">
+          <h3 className="text-lg font-semibold text-white flex items-center">
+            <span className="mr-2">📋</span>Data Insights
+          </h3>
+          <button
+            onClick={loadDataStatistics}
+            disabled={isLoadingData}
+            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 text-white rounded-lg transition-colors flex items-center space-x-2"
+          >
+            {isLoadingData ? (
+              <>
+                <Spinner size="sm" />
+                <span>Lade...</span>
+              </>
+            ) : (
+              <>
+                <span>🔄</span>
+                <span>Daten neu laden</span>
+              </>
+            )}
+          </button>
+        </div>
+
+        {/* Error Display */}
+        {dataError && (
+          <div className="bg-red-900/30 border border-red-500/50 rounded-lg p-4">
+            <p className="text-red-400">❌ {dataError}</p>
+          </div>
+        )}
+
+        {/* Loading State */}
+        {isLoadingData && !dataStatistics && (
+          <div className="bg-blue-900/30 border border-blue-500/50 rounded-lg p-6">
+            <div className="flex items-center space-x-4">
+              <Spinner size="sm" />
+              <div>
+                <h4 className="text-blue-400 font-medium">📊 Lade Datenstatistiken...</h4>
+                <p className="text-blue-300 text-sm">Analysiere ursprüngliche Datei und extrahiere Kennzahlen</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Data Statistics Display */}
+        {dataStatistics && (
+          <>
+            {/* Basic Info */}
+            <div className="bg-gray-800/50 rounded-lg p-6">
+              <h4 className="text-white font-medium mb-4 flex items-center">
+                <span className="mr-2">📋</span>Grundlegende Dateiinformationen
+              </h4>
+              
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div className="bg-gray-700/50 rounded-lg p-4 text-center">
+                  <h5 className="text-gray-400 text-sm font-medium mb-1">Dateiname</h5>
+                  <p className="text-white font-semibold text-sm">{dataStatistics.basicInfo.fileName}</p>
+                </div>
+                <div className="bg-gray-700/50 rounded-lg p-4 text-center">
+                  <h5 className="text-gray-400 text-sm font-medium mb-1">Zeilen</h5>
+                  <p className="text-blue-400 font-semibold">{dataStatistics.basicInfo.rowCount.toLocaleString()}</p>
+                </div>
+                <div className="bg-gray-700/50 rounded-lg p-4 text-center">
+                  <h5 className="text-gray-400 text-sm font-medium mb-1">Spalten</h5>
+                  <p className="text-green-400 font-semibold">{dataStatistics.basicInfo.columnCount}</p>
+                </div>
+                <div className="bg-gray-700/50 rounded-lg p-4 text-center">
+                  <h5 className="text-gray-400 text-sm font-medium mb-1">Datentypen</h5>
+                  <p className="text-purple-400 font-semibold">
+                    {Object.values(dataStatistics.basicInfo.dataTypes).filter(t => t === 'numeric').length}N / 
+                    {Object.values(dataStatistics.basicInfo.dataTypes).filter(t => t === 'categorical').length}C
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Column Analysis */}
+            <div className="bg-gray-800/50 rounded-lg p-6">
+              <h4 className="text-white font-medium mb-4 flex items-center">
+                <span className="mr-2">🔢</span>Spalten-Analyse
+              </h4>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {dataStatistics.columnAnalysis.map((column: any, index: number) => (
+                  <div key={column.name} className="bg-gray-700/50 rounded-lg p-4">
+                    <div className="flex justify-between items-center mb-2">
+                      <h5 className="font-medium text-white">{column.name}</h5>
+                      <div className="flex space-x-1">
+                        {column.isTarget && (
+                          <span className="text-xs px-2 py-1 bg-green-900/50 text-green-400 rounded">Target</span>
+                        )}
+                        {column.isFeature && (
+                          <span className="text-xs px-2 py-1 bg-blue-900/50 text-blue-400 rounded">Feature</span>
+                        )}
+                      </div>
+                    </div>
+                    <div className="text-xs space-y-1">
+                      <p className="text-gray-400">
+                        Typ: <span className={`font-medium ${column.dataType === 'numeric' ? 'text-blue-300' : 'text-green-300'}`}>
+                          {column.dataType}
+                        </span>
+                      </p>
+                      {column.sampleValues.length > 0 && (
+                        <div>
+                          <p className="text-gray-400">Beispielwerte:</p>
+                          <p className="text-gray-300 font-mono text-xs truncate">
+                            {column.sampleValues.slice(0, 3).join(', ')}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* ML Configuration */}
+            <div className="bg-gray-800/50 rounded-lg p-6">
+              <h4 className="text-white font-medium mb-4 flex items-center">
+                <span className="mr-2">⚙️</span>ML-Konfiguration
+              </h4>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <h5 className="text-gray-400 text-sm font-medium mb-3">Algorithmus-Details</h5>
+                  <div className="space-y-3">
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Algorithmus:</span>
+                      <span className="text-white font-medium">{dataStatistics.mlConfig.algorithm || 'Standard'}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Modell-Typ:</span>
+                      <span className="text-purple-400">{dataStatistics.mlConfig.modelType}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Zielvariable:</span>
+                      <span className="text-green-400">{dataStatistics.mlConfig.targetVariable}</span>
+                    </div>
+                  </div>
+                </div>
+                
+                <div>
+                  <h5 className="text-gray-400 text-sm font-medium mb-3">Feature-Auswahl</h5>
+                  <div className="space-y-3">
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Verwendete Features:</span>
+                      <span className="text-blue-400 font-semibold">{dataStatistics.mlConfig.features.length}</span>
+                    </div>
+                    {dataStatistics.mlConfig.excludedColumns.length > 0 && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-400">Entfernte Spalten:</span>
+                        <span className="text-red-400 font-semibold">{dataStatistics.mlConfig.excludedColumns.length}</span>
+                      </div>
+                    )}
+                    {dataStatistics.mlConfig.excludedFeatures.length > 0 && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-400">Ausgeschlossene Features:</span>
+                        <span className="text-orange-400 font-semibold">{dataStatistics.mlConfig.excludedFeatures.length}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Sample Data Preview */}
+            <div className="bg-gray-800/50 rounded-lg p-6">
+              <h4 className="text-white font-medium mb-4 flex items-center">
+                <span className="mr-2">👀</span>Datenvorschau (erste {dataStatistics.sampleData.rows.length} Zeilen)
+              </h4>
+              
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-gray-600">
+                      {dataStatistics.sampleData.headers.map((header: string) => (
+                        <th key={header} className="text-left py-2 px-3 text-gray-400 font-medium">
+                          {header}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {dataStatistics.sampleData.rows.map((row: any[], index: number) => (
+                      <tr key={index} className="border-b border-gray-700 hover:bg-gray-700/30">
+                        {row.map((cell: any, cellIndex: number) => (
+                          <td key={cellIndex} className="py-2 px-3 text-gray-300 font-mono text-xs">
+                            {String(cell).length > 30 ? String(cell).substring(0, 30) + '...' : String(cell)}
+                          </td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* No Data State */}
+        {!dataStatistics && !isLoadingData && !dataError && (
+          <div className="bg-gray-800/50 rounded-lg p-6 text-center">
+            <div className="flex flex-col items-center space-y-4">
+              <span className="text-4xl">📊</span>
+              <div>
+                <h4 className="text-white font-medium">Keine Datenstatistiken geladen</h4>
+                <p className="text-gray-400 text-sm mt-1">
+                  Klicken Sie auf "Daten neu laden", um die Analyse zu starten.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
 
   const tabs: {id: Tab, name: string, badge?: string}[] = [
       { id: 'predict', name: 'Predict' },
       { id: 'performance', name: 'Performance' },
-      { id: 'insights', name: 'KI-Insights' },
+      { id: 'data', name: 'Data Insights' },
       { id: 'code', name: 'Code Editor' },
       { id: 'api', name: 'API Info' },
       { id: 'export', name: 'Export' }
   ];
 
   return (
-    <div className="bg-gray-800/50 rounded-lg shadow-xl p-6 sm:p-8 animate-fade-in">
-      <button onClick={onBack} className="flex items-center text-sm text-blue-400 hover:text-blue-300 mb-6">
-        <ChevronLeftIcon className="h-5 w-5 mr-1" />
-        Back to Dashboard
-      </button>
+    <ErrorBoundary>
+      <div className="bg-gray-800/50 rounded-lg shadow-xl p-6 sm:p-8 animate-fade-in">
+        <button onClick={onBack} className="flex items-center text-sm text-blue-400 hover:text-blue-300 mb-6">
+          <ChevronLeftIcon className="h-5 w-5 mr-1" />
+          Back to Dashboard
+        </button>
 
-      <div className="mb-6">
-        <div className="flex justify-between items-start">
-          <div>
-            <h2 className="text-3xl font-bold tracking-tight text-white">{project.name}</h2>
-            <p className="text-gray-400 mt-1">Model Type: {project.modelType}</p>
-            <div className="flex items-center mt-2 space-x-4">
-              <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                project.status === ProjectStatus.Completed ? 'bg-green-900/50 text-green-400 border border-green-500/50' :
-                project.status === ProjectStatus.Training || project.status === ProjectStatus['Re-Training'] ? 'bg-blue-900/50 text-blue-400 border border-blue-500/50' :
-                'bg-red-900/50 text-red-400 border border-red-500/50'
-              }`}>
-                {project.status}
-              </span>
-              {project.algorithm && (
-                <span className="text-gray-400 text-sm">Algorithm: {project.algorithm}</span>
-              )}
+        <div className="mb-6">
+          <div className="flex justify-between items-start">
+            <div>
+              <h2 className="text-3xl font-bold tracking-tight text-white">{project.name}</h2>
+              <p className="text-gray-400 mt-1">Model Type: {project.modelType}</p>
+              <div className="flex items-center mt-2 space-x-4">
+                <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                  project.status === ProjectStatus.Completed ? 'bg-green-900/50 text-green-400 border border-green-500/50' :
+                  project.status === ProjectStatus.Training || project.status === ProjectStatus['Re-Training'] ? 'bg-blue-900/50 text-blue-400 border border-blue-500/50' :
+                  'bg-red-900/50 text-red-400 border border-red-500/50'
+                }`}>
+                  {project.status}
+                </span>
+                {project.algorithm && (
+                  <span className="text-gray-400 text-sm">Algorithm: {project.algorithm}</span>
+                )}
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      <div className="border-b border-gray-700">
-        <nav className="-mb-px flex space-x-8" aria-label="Tabs">
-          {tabs.map(tab => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`${
-                activeTab === tab.id
-                  ? 'border-blue-500 text-blue-400'
-                  : 'border-transparent text-gray-400 hover:text-gray-200 hover:border-gray-500'
-              } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors`}
-            >
-              {tab.name}
-              {tab.id === 'code' && isCodeModified && (
-                <span className="ml-1 w-2 h-2 bg-yellow-400 rounded-full inline-block"></span>
-              )}
-              {tab.badge && <span className="ml-2 text-xs font-semibold text-blue-400">{tab.badge}</span>}
-            </button>
-          ))}
-        </nav>
+        <div className="border-b border-gray-700">
+          <nav className="-mb-px flex space-x-8" aria-label="Tabs">
+            {tabs.map(tab => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`${
+                  activeTab === tab.id
+                    ? 'border-blue-500 text-blue-400'
+                    : 'border-transparent text-gray-400 hover:text-gray-200 hover:border-gray-500'
+                } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors`}
+              >
+                {tab.name}
+                {tab.id === 'code' && isCodeModified && (
+                  <span className="ml-1 w-2 h-2 bg-yellow-400 rounded-full inline-block"></span>
+                )}
+                {tab.badge && <span className="ml-2 text-xs font-semibold text-blue-400">{tab.badge}</span>}
+              </button>
+            ))}
+          </nav>
+        </div>
+        
+        <div className="mt-8">
+          <ErrorBoundary fallback={
+            <div className="bg-red-900/30 border border-red-500/50 rounded-lg p-6 text-center">
+              <p className="text-red-400">❌ Fehler beim Laden dieses Tabs. Bitte wählen Sie einen anderen Tab oder laden Sie die Seite neu.</p>
+            </div>
+          }>
+            {activeTab === 'predict' && renderPredictTab()}
+            {activeTab === 'performance' && renderPerformanceTab()}
+            {activeTab === 'data' && renderDataTab()}
+            {activeTab === 'code' && renderCodeTab()}
+            {activeTab === 'api' && renderApiTab()}
+            {activeTab === 'export' && renderExportTab()}
+          </ErrorBoundary>
+        </div>
       </div>
-      
-      <div className="mt-8">
-        {activeTab === 'predict' && renderPredictTab()}
-        {activeTab === 'performance' && renderPerformanceTab()}
-        {activeTab === 'insights' && renderInsightsTab()}
-        {activeTab === 'code' && renderCodeTab()}
-        {activeTab === 'api' && renderApiTab()}
-        {activeTab === 'export' && renderExportTab()}
-      </div>
-    </div>
+    </ErrorBoundary>
   );
 };
 

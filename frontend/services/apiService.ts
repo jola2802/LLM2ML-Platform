@@ -125,6 +125,21 @@ class ApiService {
     }
   }
 
+  // Python-Code und Hyperparameter für ein Projekt aktualisieren
+  async updateProjectCodeAndHyperparameters(projectId: string, pythonCode: string, hyperparameters: { [key: string]: any }): Promise<void> {
+    const response = await fetch(`${API_BASE_URL}/projects/${projectId}/code`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ pythonCode, hyperparameters }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+  }
+
   // Projekt re-trainieren
   async retrainProject(projectId: string): Promise<void> {
     const response = await fetch(`${API_BASE_URL}/projects/${projectId}/retrain`, {
@@ -167,7 +182,7 @@ class ApiService {
     }
   }
 
-  // Datei hochladen und intelligente Analyse
+  // Datei hochladen und Basis-Analyse (ohne LLM)
   async uploadFile(file: File): Promise<CsvAnalysisResult> {
     const formData = new FormData();
     formData.append('file', file);
@@ -175,6 +190,28 @@ class ApiService {
     const response = await fetch(`${API_BASE_URL}/upload`, {
       method: 'POST',
       body: formData,
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+    }
+
+    return response.json();
+  }
+
+  // LLM-Empfehlungen für manipulierte Daten
+  async analyzeData(filePath: string, excludedColumns?: string[], excludedFeatures?: string[]): Promise<any> {
+    const response = await fetch(`${API_BASE_URL}/analyze-data`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        filePath,
+        excludedColumns,
+        excludedFeatures
+      }),
     });
 
     if (!response.ok) {
@@ -225,7 +262,7 @@ class ApiService {
 
   // Gemini-Verbindungsstatus prüfen
   async checkGeminiStatus(): Promise<{connected: boolean, hasApiKey: boolean, error?: string, lastTested?: string}> {
-    const response = await fetch(`${API_BASE_URL}/gemini/status`);
+    const response = await fetch(`${API_BASE_URL}/llm/status`);
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
@@ -287,6 +324,16 @@ class ApiService {
     const response = await fetch(`${API_BASE_URL}/gemini/current-model`);
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    return response.json();
+  }
+
+  // Erweiterte Datenstatistiken abrufen
+  async getDataStatistics(projectId: string): Promise<any> {
+    const response = await fetch(`${API_BASE_URL}/projects/${projectId}/data-statistics`);
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
     }
     return response.json();
   }

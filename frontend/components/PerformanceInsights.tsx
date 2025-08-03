@@ -253,7 +253,7 @@ const PerformanceInsights: React.FC<PerformanceInsightsProps> = ({ project, onIn
             </div>
           </div>
 
-          {/* Next Steps */}
+          {/* Next Steps
           <div className="bg-gray-800/50 rounded-lg p-6">
             <h4 className="text-white font-medium mb-4 flex items-center">
               <span className="mr-2">🚀</span>Nächste Schritte
@@ -268,7 +268,7 @@ const PerformanceInsights: React.FC<PerformanceInsightsProps> = ({ project, onIn
                 </li>
               ))}
             </ol>
-          </div>
+          </div> */}
 
           {/* Evaluation Metadata */}
           <div className="bg-gray-800/30 rounded-lg p-4 text-center">

@@ -37,7 +37,7 @@ await initializeLogging();
 await initializeDatabase();
 
 const app = express();
-const PORT = process.env.PORT;
+const PORT = process.env.PORT || 3001;
 
 // Middleware
 app.use(cors());
@@ -93,37 +93,79 @@ setTrainingFunctions(trainModelAsync, retrainModelAsync);
 
 // Asynchrone Trainingsfunktion
 async function trainModelAsync(projectId) {
+  let pythonCode = '';
+  
   try {
     const project = await getProject(projectId);
     if (!project) return;
         
     // Python Script mit LLM generieren
-    const pythonCode = await generatePythonScriptWithLLM(project);
+    try {
+      const response = await generatePythonScriptWithLLM(project);
+      
+      // Validiere Response-Format
+      if (typeof response === 'string') {
+        pythonCode = response;
+      } else if (response && response.result) {
+        pythonCode = response.result;
+      } else if (response && response.text) {
+        pythonCode = response.text;
+      } else {
+        throw new Error('Ungültiges Response-Format vom Python-Generator');
+      }
+      
+      // Validiere Python-Code
+      if (!pythonCode || typeof pythonCode !== 'string') {
+        throw new Error('Leerer oder ungültiger Python-Code erhalten');
+      }
+      
+      console.log(`Python-Code erfolgreich generiert (${pythonCode.length} Zeichen)`);
+      
+    } catch (generationError) {
+      console.error('Fehler bei Python-Code-Generierung:', generationError.message);
+      throw new Error(`Python-Code-Generierung fehlgeschlagen: ${generationError.message}`);
+    }
 
     const scriptPath = path.join(scriptDir, `${projectId}.py`);
     
     // Script in Datei schreiben
-    await fs.writeFile(scriptPath, pythonCode);
+    try {
+      await fs.writeFile(scriptPath, pythonCode);
+      console.log(`Python-Script gespeichert: ${scriptPath}`);
+    } catch (writeError) {
+      console.error('Fehler beim Schreiben der Python-Datei:', writeError.message);
+      throw new Error(`Datei-Schreibfehler: ${writeError.message}`);
+    }
     
     // Python Script ausführen
-    const { stdout, stderr } = await executePythonScript(scriptPath, scriptDir, venvDir);
+    let executionResult;
+    try {
+      executionResult = await executePythonScript(scriptPath, scriptDir, venvDir);
+      console.log('Python-Script erfolgreich ausgeführt');
+    } catch (executionError) {
+      console.error('Fehler bei Python-Script-Ausführung:', executionError.message);
+      throw new Error(`Python-Ausführungsfehler: ${executionError.message}`);
+    }
     
-    // console.log('Python output:', stdout);
+    const { stdout, stderr } = executionResult;
+    
+    // Log Ausgabe für Debugging
+    if (stdout) {
+      console.log('Python stdout (erste 500 Zeichen):', stdout.substring(0, 500));
+    }
     if (stderr) {
-      console.log('Python stderr:', stderr);
-      console.log('Python code:', pythonCode);
+      console.log('Python stderr (erste 500 Zeichen):', stderr.substring(0, 500));
     }
 
-    // Baue eine retry-Logik ein, wenn es bei der Ausführung Fehler gibt
-    if (stderr) {
-      console.log('Fehler bei der Ausführung des Python-Scripts. Versuche es erneut...');
-      const retryCode = await validatePythonCodeWithLLM(pythonCode);
-      await fs.writeFile(scriptPath, retryCode);
-      return trainModelAsync(projectId);
-    }
-    
     // Performance Metriken aus der Ausgabe extrahieren
-    const metrics = extractMetricsFromOutput(stdout, project.modelType);
+    let metrics = {};
+    try {
+      metrics = extractMetricsFromOutput(stdout, project.modelType);
+      console.log('Extrahierte Metriken:', metrics);
+    } catch (metricsError) {
+      console.error('Fehler bei Metrik-Extraktion:', metricsError.message);
+      metrics = { error: 'Metrik-Extraktion fehlgeschlagen' };
+    }
     
     // Model-Datei pfad
     const modelFileName = `model_${projectId}.pkl`;
@@ -135,51 +177,172 @@ async function trainModelAsync(projectId) {
     try {
       await fs.access(tempModelPath);
       await fs.rename(tempModelPath, fullModelPath);
-      // console.log(`Model erfolgreich verschoben: ${fullModelPath}`);
-    } catch (err) {
-      // console.log('Could not move model file:', err.message);
+      console.log(`Model-Datei verschoben: ${fullModelPath}`);
+    } catch (modelError) {
+      console.log('Model-Datei nicht gefunden oder Fehler beim Verschieben:', modelError.message);
     }
     
-    // Projekt in DB aktualisieren (inkl. originalPythonCode)
-    await updateProjectTraining(projectId, {
-      status: 'Completed',
-      performanceMetrics: metrics,
-      pythonCode: pythonCode, // Bearbeitbar
-      originalPythonCode: pythonCode, // Original für Backup
-      modelPath: modelPath
-    });
+    // Hyperparameter aus dem Python-Code extrahieren
+    let hyperparameters = {};
+    try {
+      hyperparameters = extractHyperparametersFromCode(pythonCode);
+      console.log('Extrahierte Hyperparameter:', hyperparameters);
+    } catch (hyperError) {
+      console.error('Fehler bei Hyperparameter-Extraktion:', hyperError.message);
+      hyperparameters = project.hyperparameters || {};
+    }
     
-    // console.log(`Training completed for project: ${project.name}`);
+    // Projekt in DB aktualisieren (inkl. originalPythonCode und Hyperparameter)
+    try {
+      await updateProjectTraining(projectId, {
+        status: 'Completed',
+        performanceMetrics: metrics,
+        pythonCode: pythonCode, // Bearbeitbar
+        originalPythonCode: pythonCode, // Original für Backup
+        modelPath: modelPath,
+        hyperparameters: hyperparameters
+      });
+      console.log(`Projekt ${project.name} erfolgreich aktualisiert`);
+    } catch (dbError) {
+      console.error('Fehler beim DB-Update:', dbError.message);
+      throw new Error(`DB-Update fehlgeschlagen: ${dbError.message}`);
+    }
     
     // Automatische Performance-Evaluation nach erfolgreichem Training
     try {
-      // console.log(`Starte automatische Performance-Evaluation für Projekt: ${project.name}`);
+      console.log(`Starte automatische Performance-Evaluation für Projekt: ${project.name}`);
       const performanceInsights = await evaluatePerformanceWithLLM(await getProject(projectId));
       
       // Performance-Insights in DB speichern
       try {
         await updateProjectInsights(projectId, performanceInsights);
-        // console.log(`Performance-Evaluation erfolgreich abgeschlossen für Projekt: ${project.name}`);
-      } catch (err) {
-        console.error('Fehler beim Speichern der Performance-Insights:', err);
+        console.log(`Performance-Evaluation erfolgreich abgeschlossen für Projekt: ${project.name}`);
+      } catch (insightsError) {
+        console.error('Fehler beim Speichern der Performance-Insights:', insightsError.message);
+        // Nicht kritisch - Training war erfolgreich
       }
     } catch (evaluationError) {
-      console.error(`Performance-Evaluation fehlgeschlagen für Projekt ${projectId}:`, evaluationError);
+      console.error(`Performance-Evaluation fehlgeschlagen für Projekt ${projectId}:`, evaluationError.message);
       // Training ist erfolgreich, auch wenn Evaluation fehlschlägt
     }
     
+    console.log(`Training erfolgreich abgeschlossen für Projekt: ${project.name}`);
+    
   } catch (error) {
-    console.error(`Training failed for project ${projectId}:`, error);
+    console.error(`Training failed for project ${projectId}:`, error.message);
+    
+    // Hyperparameter aus dem Python-Code extrahieren (falls vorhanden)
+    let hyperparameters = {};
+    try {
+      hyperparameters = pythonCode ? extractHyperparametersFromCode(pythonCode) : (project?.hyperparameters || {});
+    } catch (hyperError) {
+      console.error('Fehler bei Hyperparameter-Extraktion im Fehlerfall:', hyperError.message);
+      hyperparameters = project?.hyperparameters || {};
+    }
     
     // Status auf Failed setzen
-    await updateProjectTraining(projectId, {
-      status: 'Failed',
-      performanceMetrics: '',
-      pythonCode: pythonCode,
-      originalPythonCode: '',
-      modelPath: ''
-    });
+    try {
+      await updateProjectTraining(projectId, {
+        status: 'Failed',
+        performanceMetrics: { error: error.message },
+        pythonCode: pythonCode,
+        originalPythonCode: '',
+        modelPath: '',
+        hyperparameters: hyperparameters
+      });
+      console.log(`Projekt ${projectId} als fehlgeschlagen markiert`);
+    } catch (dbError) {
+      console.error('Fehler beim Markieren des Projekts als fehlgeschlagen:', dbError.message);
+    }
   }
+}
+
+// Hyperparameter aus Python-Code extrahieren
+function extractHyperparametersFromCode(pythonCode) {
+  try {
+    // Suche nach der hyperparameters-Zeile
+    const lines = pythonCode.split('\n');
+    for (const line of lines) {
+      if (line.includes('hyperparameters = ')) {
+        // Verschiedene Formate unterstützen
+        let match = line.match(/hyperparameters = "(.+)"/);
+        if (match) {
+          const jsonStr = match[1].replace(/\\"/g, '"');
+          const hyperparameters = JSON.parse(jsonStr);
+          return convertHyperparametersToNumbers(hyperparameters);
+        }
+        
+        // Alternative: hyperparameters = {...}
+        match = line.match(/hyperparameters = (\{.*\})/);
+        if (match) {
+          const hyperparameters = JSON.parse(match[1]);
+          return convertHyperparametersToNumbers(hyperparameters);
+        }
+        
+        // Alternative: hyperparameters = {...} (mit Zeilenumbrüchen)
+        const startIndex = line.indexOf('hyperparameters = {');
+        if (startIndex !== -1) {
+          let jsonStr = line.substring(startIndex + 'hyperparameters = '.length);
+          let braceCount = 0;
+          let inString = false;
+          let escapeNext = false;
+          
+          for (let i = 0; i < jsonStr.length; i++) {
+            const char = jsonStr[i];
+            if (escapeNext) {
+              escapeNext = false;
+              continue;
+            }
+            if (char === '\\') {
+              escapeNext = true;
+              continue;
+            }
+            if (char === '"' && !escapeNext) {
+              inString = !inString;
+            }
+            if (!inString) {
+              if (char === '{') braceCount++;
+              if (char === '}') {
+                braceCount--;
+                if (braceCount === 0) {
+                  jsonStr = jsonStr.substring(0, i + 1);
+                  break;
+                }
+              }
+            }
+          }
+          
+          try {
+            const hyperparameters = JSON.parse(jsonStr);
+            return convertHyperparametersToNumbers(hyperparameters);
+          } catch (e) {
+            console.error('Fehler beim Parsen der Hyperparameter:', e);
+          }
+        }
+      }
+    }
+    return null;
+  } catch (error) {
+    console.error('Fehler beim Extrahieren der Hyperparameter:', error);
+    return null;
+  }
+}
+
+// Hyperparameter zu numerischen Werten konvertieren
+function convertHyperparametersToNumbers(hyperparameters) {
+  if (!hyperparameters || typeof hyperparameters !== 'object') {
+    return hyperparameters;
+  }
+  
+  const converted = {};
+  for (const [key, value] of Object.entries(hyperparameters)) {
+    if (typeof value === 'string' && !isNaN(Number(value)) && value.trim() !== '') {
+      converted[key] = Number(value);
+    } else {
+      converted[key] = value;
+    }
+  }
+  return converted;
 }
 
 // Re-Training mit bearbeitetem Code
@@ -230,11 +393,16 @@ async function retrainModelAsync(projectId, customPythonCode) {
       // console.log('Could not move retrained model file:', err.message);
     }
     
+    // Hyperparameter aus dem Python-Code extrahieren
+    const hyperparameters = extractHyperparametersFromCode(customPythonCode);
+    
     // Projekt in DB aktualisieren
     await updateProjectTraining(projectId, {
       status: 'Completed',
       performanceMetrics: metrics,
-      modelPath: modelPath
+      pythonCode: customPythonCode, // Wichtig: Python-Code aktualisieren
+      modelPath: modelPath,
+      hyperparameters: hyperparameters
     });
     
     // console.log(`Re-training completed for project: ${project.name}`);
@@ -259,8 +427,15 @@ async function retrainModelAsync(projectId, customPythonCode) {
   } catch (error) {
     console.error(`Re-training failed for project ${projectId}:`, error);
     
+    // Hyperparameter aus dem Python-Code extrahieren (falls vorhanden)
+    const hyperparameters = customPythonCode ? extractHyperparametersFromCode(customPythonCode) : null;
+    
     // Status auf Failed setzen
-    await updateProjectStatus(projectId, 'Re-training Failed');
+    await updateProjectTraining(projectId, {
+      status: 'Re-training Failed',
+      pythonCode: customPythonCode, // Python-Code auch bei Fehler beibehalten
+      hyperparameters: hyperparameters
+    });
   }
 }
 

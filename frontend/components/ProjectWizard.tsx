@@ -4,11 +4,29 @@ import { ModelType } from '../types';
 import { apiService, CsvAnalysisResult } from '../services/apiService';
 import { Spinner } from './ui/Spinner';
 import { CloudUploadIcon } from './icons/CloudUploadIcon';
+import { TrashIcon } from './icons/TrashIcon';
 
 interface ProjectWizardProps {
   onBack: () => void;
   onSubmit: (projectData: any) => void;
 }
+
+// Verfügbare ML-Algorithmen
+const ALGORITHMS: { [key: string]: { name: string; type: string } } = {
+  // Klassifikation
+  'RandomForestClassifier': { name: 'Random Forest Classifier', type: 'Classification' },
+  'SVM': { name: 'Support Vector Machine', type: 'Classification' },
+  'LogisticRegression': { name: 'Logistic Regression', type: 'Classification' },
+  'XGBoostClassifier': { name: 'XGBoost Classifier', type: 'Classification' },
+  'NeuralNetworkClassifier': { name: 'Neural Network Classifier', type: 'Classification' },
+  
+  // Regression
+  'RandomForestRegressor': { name: 'Random Forest Regressor', type: 'Regression' },
+  'SVR': { name: 'Support Vector Regression', type: 'Regression' },
+  'LinearRegression': { name: 'Linear Regression', type: 'Regression' },
+  'XGBoostRegressor': { name: 'XGBoost Regressor', type: 'Regression' },
+  'NeuralNetworkRegressor': { name: 'Neural Network Regressor', type: 'Regression' },
+};
 
 const ProjectWizard: React.FC<ProjectWizardProps> = ({ onBack, onSubmit }) => {
   const [step, setStep] = useState(1);
@@ -17,8 +35,18 @@ const ProjectWizard: React.FC<ProjectWizardProps> = ({ onBack, onSubmit }) => {
   const [csvAnalysis, setCsvAnalysis] = useState<CsvAnalysisResult | null>(null);
   const [llmRecommendations, setLlmRecommendations] = useState<any>(null);
   
+  // Neue States für erweiterte Funktionalität
+  const [excludedColumns, setExcludedColumns] = useState<string[]>([]);
+  const [excludedFeatures, setExcludedFeatures] = useState<string[]>([]);
+  const [selectedAlgorithm, setSelectedAlgorithm] = useState<string>('');
+  const [selectedTargetVariable, setSelectedTargetVariable] = useState<string>('');
+  const [selectedModelType, setSelectedModelType] = useState<string>('');
+  const [manipulatedData, setManipulatedData] = useState<any>(null);
+  const [availableFeatures, setAvailableFeatures] = useState<string[]>([]);
+  
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
+  const [isProcessingData, setIsProcessingData] = useState(false);
   const [analysisError, setAnalysisError] = useState<string | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -31,9 +59,11 @@ const ProjectWizard: React.FC<ProjectWizardProps> = ({ onBack, onSubmit }) => {
       setAnalysisError(null);
       setCsvAnalysis(null);
       setLlmRecommendations(null);
+      setExcludedColumns([]);
+      setExcludedFeatures([]);
 
       try {
-        // Datei an Backend senden und intelligente Analyse
+        // Datei an Backend senden für Basis-Analyse (ohne LLM)
         const analysis = await apiService.uploadFile(file);
         setCsvAnalysis(analysis);
         
@@ -41,14 +71,10 @@ const ProjectWizard: React.FC<ProjectWizardProps> = ({ onBack, onSubmit }) => {
           throw new Error("Keine Spalten in der Datei gefunden. Bitte eine gültige Datei mit Überschriften bereitstellen.");
         }
 
-        // LLM-Empfehlungen automatisch setzen
-        if (analysis.recommendations) {
-          setLlmRecommendations(analysis.recommendations);
-          
-          // Automatischen Projektnamen vorschlagen
-          if (analysis.recommendations.dataSourceName && !projectName) {
-            setProjectName(`${analysis.recommendations.dataSourceName} - ${analysis.recommendations.modelType} Model`);
-          }
+        // Automatischen Projektnamen vorschlagen
+        if (!projectName && analysis.fileName) {
+          const fileName = analysis.fileName.replace(/\.[^/.]+$/, ""); // Remove extension
+          setProjectName(`${fileName} - ML Model`);
         }
 
       } catch (error) {
@@ -59,16 +85,97 @@ const ProjectWizard: React.FC<ProjectWizardProps> = ({ onBack, onSubmit }) => {
     }
   };
 
+  const handleDataManipulation = async () => {
+    if (!csvAnalysis) return;
+    
+    setIsProcessingData(true);
+    setAnalysisError(null);
+    
+    try {
+      // LLM-Empfehlungen für manipulierte Daten abrufen
+      const result = await apiService.analyzeData(
+        csvAnalysis.filePath, 
+        excludedColumns, 
+        excludedFeatures
+      );
+      
+      console.log('AnalyzeData Result:', result); // Debug-Log
+      
+      setManipulatedData(result.analysis); // Geändert von result.manipulatedData
+      
+      // LLM-empfohlene Features verwenden - das sind die Features, die das LLM für das Training empfiehlt
+      let features = [];
+      if (result.recommendations && result.recommendations.features) {
+        features = result.recommendations.features;
+      } else if (result.availableFeatures && result.availableFeatures.length > 0) {
+        // Fallback: Alle verfügbaren Features außer der Zielvariable
+        features = result.availableFeatures.filter((f: string) => f !== result.recommendations?.targetVariable);
+      } else if (result.analysis && result.analysis.columns) {
+        // Fallback: Alle Spalten außer der Zielvariable
+        features = result.analysis.columns.filter((f: string) => f !== result.recommendations?.targetVariable);
+      }
+      setAvailableFeatures(features);
+      
+      setLlmRecommendations(result.recommendations);
+      
+      // Automatisch empfohlene Werte setzen
+      if (result.recommendations) {
+        if (result.recommendations.targetVariable && !selectedTargetVariable) {
+          setSelectedTargetVariable(result.recommendations.targetVariable);
+        }
+        if (result.recommendations.algorithm && !selectedAlgorithm) {
+          setSelectedAlgorithm(result.recommendations.algorithm);
+        }
+        if (result.recommendations.modelType && !selectedModelType) {
+          setSelectedModelType(result.recommendations.modelType);
+        }
+      }
+      
+    } catch (error) {
+      setAnalysisError(error instanceof Error ? error.message : "Fehler bei der Datenmanipulation.");
+    } finally {
+      setIsProcessingData(false);
+    }
+  };
+
+  const toggleColumnExclusion = (column: string) => {
+    setExcludedColumns(prev => 
+      prev.includes(column) 
+        ? prev.filter(col => col !== column)
+        : [...prev, column]
+    );
+  };
+
+  const toggleFeatureExclusion = (feature: string) => {
+    setExcludedFeatures(prev => 
+      prev.includes(feature) 
+        ? prev.filter(feat => feat !== feature)
+        : [...prev, feature]
+    );
+  };
+
   const handleCreateProject = async () => {
-    if (!projectName || !csvAnalysis || !llmRecommendations) return;
+    if (!projectName || !csvAnalysis || !selectedAlgorithm || !selectedTargetVariable) return;
     
     setIsCreating(true);
     try {
-      // Intelligentes Projekt mit LLM-Empfehlungen erstellen
+      // Projekt mit benutzerdefinierten Einstellungen erstellen
+      const finalRecommendations = {
+        ...llmRecommendations,
+        algorithm: selectedAlgorithm,
+        targetVariable: selectedTargetVariable,
+        modelType: selectedModelType,
+        excludedColumns: excludedColumns,
+        excludedFeatures: excludedFeatures,
+        features: (availableFeatures || []).filter(f => 
+          f !== selectedTargetVariable && !excludedFeatures.includes(f)
+        )
+      };
+
       const project = await apiService.createSmartProject({
         name: projectName,
         csvFilePath: csvAnalysis.filePath,
-        recommendations: llmRecommendations
+        recommendations: finalRecommendations
       });
       
       onSubmit(project);
@@ -79,14 +186,21 @@ const ProjectWizard: React.FC<ProjectWizardProps> = ({ onBack, onSubmit }) => {
     }
   };
 
-  const nextStep = () => setStep(s => s + 1);
+  const nextStep = async () => {
+    if (step === 2) {
+      // Beim Übergang von Schritt 2 zu 3: LLM-Empfehlungen abrufen
+      await handleDataManipulation();
+    }
+    setStep(s => s + 1);
+  };
+  
   const prevStep = () => setStep(s => s - 1);
 
   const renderStep1 = () => (
     <div>
-      <h3 className="text-xl font-semibold text-white mb-2">🚀 ML-Projekt erstellen</h3>
+      <h3 className="text-xl font-semibold text-white mb-2">📁 Datei hochladen & Basis-Analyse</h3>
       <p className="text-sm text-gray-400 mb-6">
-        Unser KI-Experte analysiert Ihre Daten automatisch und wählt den optimalen Algorithmus und die besten Features aus.
+        Laden Sie Ihre Daten hoch und lassen Sie uns eine erste Analyse durchführen.
       </p>
       
       <div className="space-y-6">
@@ -131,8 +245,8 @@ const ProjectWizard: React.FC<ProjectWizardProps> = ({ onBack, onSubmit }) => {
             <div className="flex items-center space-x-4">
               <Spinner size="sm" />
               <div>
-                <h4 className="text-blue-400 font-medium">🧠 KI-Experte analysiert Ihre Daten...</h4>
-                <p className="text-blue-300 text-sm">Bestimme optimalen Algorithmus und Features</p>
+                <h4 className="text-blue-400 font-medium">📊 Analysiere Datenstruktur...</h4>
+                <p className="text-blue-300 text-sm">Erkenne Spalten und Datentypen</p>
               </div>
             </div>
           </div>
@@ -140,7 +254,7 @@ const ProjectWizard: React.FC<ProjectWizardProps> = ({ onBack, onSubmit }) => {
 
         {csvAnalysis && (
           <div className="bg-gray-900/50 p-6 rounded-lg border border-gray-700">
-            <h4 className="font-semibold text-green-400 mb-4">📊 Datenanalyse</h4>
+            <h4 className="font-semibold text-green-400 mb-4">📊 Datenübersicht</h4>
             <div className="grid grid-cols-2 gap-6 text-sm">
               <div>
                 <p className="text-gray-400">Zeilen: <span className="text-white font-mono">{csvAnalysis.rowCount.toLocaleString()}</span></p>
@@ -151,54 +265,24 @@ const ProjectWizard: React.FC<ProjectWizardProps> = ({ onBack, onSubmit }) => {
                 <p className="text-gray-400">Kategorische Spalten: <span className="text-green-400 font-mono">{Object.values(csvAnalysis.dataTypes).filter(t => t === 'categorical').length}</span></p>
               </div>
             </div>
-          </div>
-        )}
-
-        {llmRecommendations && (
-          <div className="bg-gradient-to-r from-green-900/40 to-blue-900/40 border border-green-500/50 rounded-lg p-6">
-            <h4 className="text-green-400 font-bold mb-4 flex items-center">
-              🎯 KI-Experten-Empfehlung
-              <span className="ml-2 px-2 py-1 bg-green-600 text-green-100 text-xs rounded-full">
-                Automatisch optimiert
-              </span>
-            </h4>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-              <div className="space-y-3">
-                <div>
-                  <p className="text-gray-300 font-medium">Zielvariable:</p>
-                  <p className="text-green-300 font-mono">{llmRecommendations.targetVariable}</p>
-                </div>
-                <div>
-                  <p className="text-gray-300 font-medium">Model-Typ:</p>
-                  <p className="text-green-300">{llmRecommendations.modelType}</p>
-                </div>
-                <div>
-                  <p className="text-gray-300 font-medium">Algorithmus:</p>
-                  <p className="text-green-300">{llmRecommendations.algorithm}</p>
-                </div>
-              </div>
-              
-              <div className="space-y-3">
-                <div>
-                  <p className="text-gray-300 font-medium">Features ({llmRecommendations.features?.length || 0}):</p>
-                  <div className="text-green-300 text-xs max-h-20 overflow-y-auto">
-                    {llmRecommendations.features?.join(', ') || 'Keine Features'}
-                  </div>
-                </div>
+            <div className="mt-4">
+              <h5 className="text-sm font-medium text-gray-300 mb-2">Verfügbare Spalten:</h5>
+              <div className="flex flex-wrap gap-2">
+                {csvAnalysis.columns.map((column) => (
+                  <span 
+                    key={column}
+                    className={`px-2 py-1 rounded text-xs ${
+                      csvAnalysis.dataTypes[column] === 'numeric' 
+                        ? 'bg-blue-900/30 text-blue-300 border border-blue-500/30'
+                        : 'bg-green-900/30 text-green-300 border border-green-500/30'
+                    }`}
+                  >
+                    {column}
+                  </span>
+                ))}
               </div>
             </div>
-            
-            <details className="mt-4">
-              <summary className="cursor-pointer text-green-200 hover:text-green-100 font-medium">
-                💡 Begründung anzeigen
-              </summary>
-              <div className="mt-3 p-4 bg-green-950/30 rounded-lg">
-                <p className="text-green-100 text-sm leading-relaxed">
-                  {llmRecommendations.reasoning || 'Keine Begründung verfügbar'}
-                </p>
-              </div>
-            </details>
           </div>
         )}
 
@@ -213,44 +297,385 @@ const ProjectWizard: React.FC<ProjectWizardProps> = ({ onBack, onSubmit }) => {
 
   const renderStep2 = () => (
     <div>
-      <h3 className="text-xl font-semibold text-white mb-4">🔍 Projektübersicht</h3>
-      <p className="text-gray-400 mb-6">Überprüfen Sie die automatischen Empfehlungen vor dem Start des Trainings.</p>
+      <h3 className="text-xl font-semibold text-white mb-2">✂️ Datenmanipulation & Feature-Auswahl</h3>
+      <p className="text-sm text-gray-400 mb-6">
+        Entfernen Sie unerwünschte Spalten und Features bevor die KI-Analyse startet.
+      </p>
       
       <div className="space-y-6">
-        <div className="bg-gray-900/50 p-6 rounded-lg border border-gray-700">
-          <h4 className="font-semibold text-white mb-4">Projekt-Konfiguration</h4>
-          <div className="space-y-3">
-            <div className="flex justify-between">
-              <span className="text-gray-400 font-medium">Projektname:</span>
-              <span className="text-white">{projectName}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-400 font-medium">Datenquelle:</span>
-              <span className="text-white">{dataSource?.name}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-400 font-medium">Zeilen:</span>
-              <span className="text-blue-400">{csvAnalysis?.rowCount.toLocaleString()}</span>
-            </div>
-          </div>
-        </div>
-
-        {llmRecommendations && (
-          <div className="bg-gradient-to-r from-purple-900/40 to-blue-900/40 border border-purple-500/50 rounded-lg p-6">
-            <h4 className="font-semibold text-purple-400 mb-4">🤖 Automatische ML-Konfiguration</h4>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-              <div>
-                <p className="text-gray-300"><strong>Model-Typ:</strong> {llmRecommendations.modelType}</p>
-                <p className="text-gray-300"><strong>Algorithmus:</strong> {llmRecommendations.algorithm}</p>
-                <p className="text-gray-300"><strong>Zielvariable:</strong> {llmRecommendations.targetVariable}</p>
+        {csvAnalysis && (
+          <>
+            <div className="bg-gray-900/50 p-6 rounded-lg border border-gray-700">
+              <h4 className="font-semibold text-white mb-4">🗂️ Spalten verwalten</h4>
+              <p className="text-sm text-gray-400 mb-4">
+                Klicken Sie auf Spalten, um sie aus dem Dataset zu entfernen.
+              </p>
+              
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                {csvAnalysis.columns.map((column) => (
+                  <div
+                    key={column}
+                    onClick={() => toggleColumnExclusion(column)}
+                    className={`cursor-pointer p-3 rounded-lg border transition-all ${
+                      excludedColumns.includes(column)
+                        ? 'bg-red-900/30 border-red-500/50 text-red-300'
+                        : `${csvAnalysis.dataTypes[column] === 'numeric' 
+                          ? 'bg-blue-900/30 border-blue-500/30 text-blue-300 hover:bg-blue-800/40'
+                          : 'bg-green-900/30 border-green-500/30 text-green-300 hover:bg-green-800/40'
+                        }`
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium">{column}</span>
+                      {excludedColumns.includes(column) && (
+                        <TrashIcon className="h-4 w-4" />
+                      )}
+                    </div>
+                    <div className="text-xs opacity-75 mt-1">
+                      {csvAnalysis.dataTypes[column]}
+                    </div>
+                  </div>
+                ))}
               </div>
+              
+              {excludedColumns.length > 0 && (
+                <div className="mt-4 p-3 bg-red-900/20 border border-red-500/30 rounded">
+                  <p className="text-red-300 text-sm">
+                    <strong>Entfernte Spalten ({excludedColumns.length}):</strong> {excludedColumns.join(', ')}
+                  </p>
+                </div>
+              )}
+            </div>
+
+            <div className="bg-gray-900/50 p-6 rounded-lg border border-gray-700">
+              <h4 className="font-semibold text-white mb-4">🎯 Features für ML ausschließen</h4>
+              <p className="text-sm text-gray-400 mb-4">
+                Schließen Sie Features aus, die nicht für das Machine Learning verwendet werden sollen.
+              </p>
+              
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                {csvAnalysis.columns
+                  .filter(col => !excludedColumns.includes(col))
+                  .map((feature) => (
+                    <div
+                      key={feature}
+                      onClick={() => toggleFeatureExclusion(feature)}
+                      className={`cursor-pointer p-3 rounded-lg border transition-all ${
+                        excludedFeatures.includes(feature)
+                          ? 'bg-orange-900/30 border-orange-500/50 text-orange-300'
+                          : `${csvAnalysis.dataTypes[feature] === 'numeric' 
+                            ? 'bg-blue-900/30 border-blue-500/30 text-blue-300 hover:bg-blue-800/40'
+                            : 'bg-green-900/30 border-green-500/30 text-green-300 hover:bg-green-800/40'
+                          }`
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-medium">{feature}</span>
+                        {excludedFeatures.includes(feature) && (
+                          <span className="text-xs">🚫</span>
+                        )}
+                      </div>
+                      <div className="text-xs opacity-75 mt-1">
+                        {csvAnalysis.dataTypes[feature]}
+                      </div>
+                    </div>
+                  ))}
+              </div>
+              
+              {excludedFeatures.length > 0 && (
+                <div className="mt-4 p-3 bg-orange-900/20 border border-orange-500/30 rounded">
+                  <p className="text-orange-300 text-sm">
+                    <strong>Ausgeschlossene Features ({excludedFeatures.length}):</strong> {excludedFeatures.join(', ')}
+                  </p>
+                </div>
+              )}
+            </div>
+
+            <div className="bg-blue-900/30 border border-blue-500/50 rounded-lg p-6">
+              <h4 className="text-blue-400 font-medium mb-2">📊 Manipulierte Datenübersicht</h4>
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                  <p className="text-gray-400">Verbleibende Spalten: <span className="text-white font-mono">{csvAnalysis.columns.length - excludedColumns.length}</span></p>
+                  <p className="text-gray-400">Verfügbare Features: <span className="text-blue-400 font-mono">{csvAnalysis.columns.length - excludedColumns.length - excludedFeatures.length}</span></p>
+                </div>
+                <div>
+                  <p className="text-gray-400">Entfernte Spalten: <span className="text-red-400 font-mono">{excludedColumns.length}</span></p>
+                  <p className="text-gray-400">Ausgeschlossene Features: <span className="text-orange-400 font-mono">{excludedFeatures.length}</span></p>
+                </div>
+              </div>
+            </div>
+          </>
+        )}
+
+        {analysisError && (
+          <div className="bg-red-900/30 border border-red-500/50 rounded-lg p-4">
+            <p className="text-red-400">❌ {analysisError}</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+
+  const renderStep3 = () => (
+    <div>
+      <h3 className="text-xl font-semibold text-white mb-2">⚙️ Hyperparameter & ML-Konfiguration</h3>
+      <p className="text-sm text-gray-400 mb-6">
+        Wählen Sie Algorithmus, Zielvariable und weitere ML-Parameter.
+      </p>
+      
+      <div className="space-y-6">
+        {isProcessingData && (
+          <div className="bg-blue-900/30 border border-blue-500/50 rounded-lg p-6">
+            <div className="flex items-center space-x-4">
+              <Spinner size="sm" />
               <div>
-                <p className="text-gray-300"><strong>Features:</strong> {llmRecommendations.features?.length || 0} ausgewählt</p>
-                <p className="text-gray-300"><strong>Hyperparameter:</strong> {Object.keys(llmRecommendations.hyperparameters || {}).length} konfiguriert</p>
+                <h4 className="text-blue-400 font-medium">🧠 KI analysiert manipulierte Daten...</h4>
+                <p className="text-blue-300 text-sm">Erstelle optimierte Empfehlungen für Ihre Auswahl</p>
               </div>
             </div>
           </div>
         )}
+
+        <div className="bg-gray-900/50 p-6 rounded-lg border border-gray-700">
+          <h4 className="font-semibold text-white mb-4">🎯 Zielvariable auswählen</h4>
+          <p className="text-sm text-gray-400 mb-4">
+            Wählen Sie die Variable, die vorhergesagt werden soll.
+          </p>
+          
+          <select
+            value={selectedTargetVariable}
+            onChange={(e) => setSelectedTargetVariable(e.target.value)}
+            className="w-full bg-gray-700 border-gray-600 rounded-md p-3 text-white focus:ring-blue-500 focus:border-blue-500"
+          >
+            <option value="">-- Zielvariable wählen --</option>
+            {csvAnalysis?.columns
+              .filter(col => !excludedColumns.includes(col) && !excludedFeatures.includes(col))
+              .map((column) => (
+                <option key={column} value={column}>
+                  {column} ({csvAnalysis.dataTypes[column]})
+                </option>
+              ))}
+          </select>
+          
+          {llmRecommendations?.targetVariable && (
+            <div className="mt-3 p-3 bg-green-900/20 border border-green-500/30 rounded">
+              <p className="text-green-300 text-sm">
+                💡 <strong>KI-Empfehlung:</strong> {llmRecommendations.targetVariable}
+                {llmRecommendations.targetVariable !== selectedTargetVariable && selectedTargetVariable && (
+                  <button 
+                    onClick={() => setSelectedTargetVariable(llmRecommendations.targetVariable)}
+                    className="ml-2 text-xs px-2 py-1 bg-green-600 text-white rounded hover:bg-green-700"
+                  >
+                    Übernehmen
+                  </button>
+                )}
+              </p>
+            </div>
+          )}
+        </div>
+
+        <div className="bg-gray-900/50 p-6 rounded-lg border border-gray-700">
+          <h4 className="font-semibold text-white mb-4">🤖 Modell-Typ bestimmen</h4>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div
+              onClick={() => setSelectedModelType('Classification')}
+              className={`p-4 rounded-lg border cursor-pointer transition-all ${
+                selectedModelType === 'Classification'
+                  ? 'bg-blue-900/40 border-blue-500 text-blue-300'
+                  : 'bg-gray-800/50 border-gray-600 text-gray-300 hover:bg-gray-700/50'
+              }`}
+            >
+              <h5 className="font-medium">🏷️ Klassifikation</h5>
+              <p className="text-sm mt-1 opacity-75">
+                Kategorien vorhersagen (z.B. Spam/Nicht-Spam, Krebsdiagnose)
+              </p>
+            </div>
+            
+            <div
+              onClick={() => setSelectedModelType('Regression')}
+              className={`p-4 rounded-lg border cursor-pointer transition-all ${
+                selectedModelType === 'Regression'
+                  ? 'bg-purple-900/40 border-purple-500 text-purple-300'
+                  : 'bg-gray-800/50 border-gray-600 text-gray-300 hover:bg-gray-700/50'
+              }`}
+            >
+              <h5 className="font-medium">📈 Regression</h5>
+              <p className="text-sm mt-1 opacity-75">
+                Numerische Werte vorhersagen (z.B. Preise, Temperaturen)
+              </p>
+            </div>
+          </div>
+          
+          {llmRecommendations?.modelType && (
+            <div className="p-3 bg-green-900/20 border border-green-500/30 rounded">
+              <p className="text-green-300 text-sm">
+                💡 <strong>KI-Empfehlung:</strong> {llmRecommendations.modelType}
+                {llmRecommendations.modelType !== selectedModelType && selectedModelType && (
+                  <button 
+                    onClick={() => setSelectedModelType(llmRecommendations.modelType)}
+                    className="ml-2 text-xs px-2 py-1 bg-green-600 text-white rounded hover:bg-green-700"
+                  >
+                    Übernehmen
+                  </button>
+                )}
+              </p>
+            </div>
+          )}
+        </div>
+
+        {selectedModelType && (
+          <div className="bg-gray-900/50 p-6 rounded-lg border border-gray-700">
+            <h4 className="font-semibold text-white mb-4">🧮 Algorithmus auswählen</h4>
+            <p className="text-sm text-gray-400 mb-4">
+              Wählen Sie den ML-Algorithmus für Ihr {selectedModelType}-Problem.
+            </p>
+            
+            <select
+              value={selectedAlgorithm}
+              onChange={(e) => setSelectedAlgorithm(e.target.value)}
+              className="w-full bg-gray-700 border-gray-600 rounded-md p-3 text-white focus:ring-blue-500 focus:border-blue-500"
+            >
+              <option value="">-- Algorithmus wählen --</option>
+              {Object.entries(ALGORITHMS)
+                .filter(([_, algo]) => algo.type === selectedModelType)
+                .map(([key, algo]) => (
+                  <option key={key} value={key}>
+                    {algo.name}
+                  </option>
+                ))}
+            </select>
+            
+            {llmRecommendations?.algorithm && (
+              <div className="mt-3 p-3 bg-green-900/20 border border-green-500/30 rounded">
+                <p className="text-green-300 text-sm">
+                  💡 <strong>KI-Empfehlung:</strong> {ALGORITHMS[llmRecommendations.algorithm]?.name || llmRecommendations.algorithm}
+                  {llmRecommendations.algorithm !== selectedAlgorithm && selectedAlgorithm && (
+                    <button 
+                      onClick={() => setSelectedAlgorithm(llmRecommendations.algorithm)}
+                      className="ml-2 text-xs px-2 py-1 bg-green-600 text-white rounded hover:bg-green-700"
+                    >
+                      Übernehmen
+                    </button>
+                  )}
+                </p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {llmRecommendations && (
+          <div className="bg-gradient-to-r from-green-900/40 to-blue-900/40 border border-green-500/50 rounded-lg p-6">
+            <h4 className="text-green-400 font-bold mb-4 flex items-center">
+              🎯 KI-Empfehlungen
+            </h4>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+              <div className="space-y-3">
+                <div>
+                  <p className="text-gray-300 font-medium">Empfohlene Features ({(availableFeatures || []).filter(f => f !== selectedTargetVariable && !excludedFeatures.includes(f)).length}):</p>
+                  <div className="text-green-300 text-xs max-h-20 overflow-y-auto">
+                    {(availableFeatures || [])
+                      .filter(f => f !== selectedTargetVariable && !excludedFeatures.includes(f))
+                      .join(', ') || 'Keine Features verfügbar'}
+                  </div>
+                </div>
+              </div>
+              
+              <div className="space-y-3">
+                <div>
+                  <p className="text-gray-300 font-medium">Begründung:</p>
+                  <div className="text-green-300 text-xs max-h-20 overflow-y-auto">
+                    {llmRecommendations.reasoning || 'Keine Begründung verfügbar'}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {analysisError && (
+          <div className="bg-red-900/30 border border-red-500/50 rounded-lg p-4">
+            <p className="text-red-400">❌ {analysisError}</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+
+  const renderStep4 = () => (
+    <div>
+      <h3 className="text-xl font-semibold text-white mb-4">✅ Bestätigung & Training starten</h3>
+      <p className="text-gray-400 mb-6">Überprüfen Sie Ihre Konfiguration vor dem Training.</p>
+      
+      <div className="space-y-6">
+        <div className="bg-gray-900/50 p-6 rounded-lg border border-gray-700">
+          <h4 className="font-semibold text-white mb-4">📋 Projekt-Zusammenfassung</h4>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-3 text-sm">
+              <div className="flex justify-between">
+                <span className="text-gray-400 font-medium">Projektname:</span>
+                <span className="text-white">{projectName}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-400 font-medium">Datenquelle:</span>
+                <span className="text-white">{dataSource?.name}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-400 font-medium">Zeilen:</span>
+                <span className="text-blue-400">{csvAnalysis?.rowCount.toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-400 font-medium">Ursprüngliche Spalten:</span>
+                <span className="text-white">{csvAnalysis?.columns.length}</span>
+              </div>
+            </div>
+            
+            <div className="space-y-3 text-sm">
+              <div className="flex justify-between">
+                <span className="text-gray-400 font-medium">Modell-Typ:</span>
+                <span className="text-purple-400">{selectedModelType}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-400 font-medium">Algorithmus:</span>
+                <span className="text-blue-400">{ALGORITHMS[selectedAlgorithm]?.name || selectedAlgorithm}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-400 font-medium">Zielvariable:</span>
+                <span className="text-green-400">{selectedTargetVariable}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-400 font-medium">Features:</span>
+                <span className="text-cyan-400">
+                  {(availableFeatures || []).filter(f => f !== selectedTargetVariable && !excludedFeatures.includes(f)).length}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {excludedColumns.length > 0 && (
+          <div className="bg-red-900/20 border border-red-500/30 rounded-lg p-4">
+            <h5 className="text-red-400 font-medium mb-2">🗑️ Entfernte Spalten ({excludedColumns.length})</h5>
+            <p className="text-red-300 text-sm">{excludedColumns.join(', ')}</p>
+          </div>
+        )}
+
+        {excludedFeatures.length > 0 && (
+          <div className="bg-orange-900/20 border border-orange-500/30 rounded-lg p-4">
+            <h5 className="text-orange-400 font-medium mb-2">🚫 Ausgeschlossene Features ({excludedFeatures.length})</h5>
+            <p className="text-orange-300 text-sm">{excludedFeatures.join(', ')}</p>
+          </div>
+        )}
+
+        <div className="bg-gradient-to-r from-blue-900/40 to-green-900/40 border border-blue-500/50 rounded-lg p-6">
+          <h5 className="text-blue-400 font-medium mb-2">🔬 Verwendete Features für ML</h5>
+          <div className="text-blue-300 text-sm">
+            {(availableFeatures || [])
+              .filter(f => f !== selectedTargetVariable && !excludedFeatures.includes(f))
+              .join(', ') || 'Keine Features verfügbar'}
+          </div>
+        </div>
 
         <div className="bg-yellow-900/30 border border-yellow-500/50 rounded-lg p-4">
           <div className="flex items-start space-x-3">
@@ -258,7 +683,7 @@ const ProjectWizard: React.FC<ProjectWizardProps> = ({ onBack, onSubmit }) => {
             <div>
               <h5 className="text-yellow-400 font-medium">Automatisches Training</h5>
               <p className="text-yellow-200 text-sm mt-1">
-                Das Training startet automatisch nach der Erstellung. Sie können den Fortschritt im Dashboard verfolgen.
+                Das Training startet nach der Erstellung. Sie können den Fortschritt im Dashboard verfolgen.
               </p>
             </div>
           </div>
@@ -272,12 +697,24 @@ const ProjectWizard: React.FC<ProjectWizardProps> = ({ onBack, onSubmit }) => {
       num: 1, 
       title: 'Upload & Analyse', 
       content: renderStep1(), 
-      canProceed: !!(projectName && csvAnalysis && llmRecommendations && !isAnalyzing) 
+      canProceed: !!(projectName && csvAnalysis && !isAnalyzing) 
     },
     { 
       num: 2, 
-      title: 'Bestätigung', 
+      title: 'Datenmanipulation', 
       content: renderStep2(), 
+      canProceed: !!(csvAnalysis) 
+    },
+    { 
+      num: 3, 
+      title: 'ML-Konfiguration', 
+      content: renderStep3(), 
+      canProceed: !!(selectedTargetVariable && selectedAlgorithm && selectedModelType && !isProcessingData)
+    },
+    { 
+      num: 4, 
+      title: 'Bestätigung', 
+      content: renderStep4(), 
       canProceed: true 
     },
   ];
@@ -286,10 +723,37 @@ const ProjectWizard: React.FC<ProjectWizardProps> = ({ onBack, onSubmit }) => {
     <div className="max-w-4xl mx-auto bg-gray-800 rounded-lg shadow-xl p-6 sm:p-8 animate-fade-in">
       <div className="flex justify-between items-start mb-6">
         <div>
-          <h2 className="text-3xl font-bold text-white">Intelligentes ML-Projekt</h2>
+          <h2 className="text-3xl font-bold text-white">Intelligenter ML-Wizard</h2>
           <p className="text-gray-400">Schritt {step} von {steps.length}: {steps[step-1].title}</p>
         </div>
         <button onClick={onBack} className="text-gray-400 hover:text-white text-xl">&times;</button>
+      </div>
+
+      {/* Fortschrittsanzeige */}
+      <div className="flex items-center justify-between mb-6">
+        {steps.map((stepInfo, index) => (
+          <div key={index} className="flex items-center">
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
+              index + 1 < step 
+                ? 'bg-green-600 text-white' 
+                : index + 1 === step 
+                  ? 'bg-blue-600 text-white' 
+                  : 'bg-gray-600 text-gray-300'
+            }`}>
+              {index + 1 < step ? '✓' : index + 1}
+            </div>
+            <span className={`ml-2 text-sm ${
+              index + 1 <= step ? 'text-white' : 'text-gray-400'
+            }`}>
+              {stepInfo.title}
+            </span>
+            {index < steps.length - 1 && (
+              <div className={`mx-4 h-0.5 w-16 ${
+                index + 1 < step ? 'bg-green-600' : 'bg-gray-600'
+              }`} />
+            )}
+          </div>
+        ))}
       </div>
 
       <div className="py-6">
@@ -307,10 +771,17 @@ const ProjectWizard: React.FC<ProjectWizardProps> = ({ onBack, onSubmit }) => {
         {step < steps.length ? (
           <button
             onClick={nextStep}
-            disabled={!steps[step-1].canProceed || isAnalyzing}
+            disabled={!steps[step-1].canProceed || isAnalyzing || isProcessingData}
             className="px-6 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 disabled:bg-gray-500 disabled:cursor-not-allowed transition-colors"
           >
-            Weiter
+            {step === 2 && isProcessingData ? (
+              <div className="flex items-center space-x-2">
+                <Spinner size="sm" />
+                <span>Analysiere...</span>
+              </div>
+            ) : (
+              'Weiter'
+            )}
           </button>
         ) : (
           <button

@@ -5,11 +5,6 @@ import { predictWithModel } from './code_exec.js';
 
 // Service-Imports
 import { 
-  analyzeCsvFile, 
-  analyzeJsonFile, 
-  analyzeExcelFile, 
-  analyzeTextFile, 
-  analyzeGenericFile,
   getLLMRecommendations,
   evaluatePerformanceWithLLM 
 } from './llm_api.js';
@@ -23,10 +18,29 @@ import {
   createProject,
   createSmartProject,
   updateProjectCode,
+  updateProjectHyperparameters,
   updateProjectStatus,
   updateProjectInsights,
   deleteProject 
 } from './db.js';
+import { 
+  analyzeCsvFile, 
+  analyzeJsonFile, 
+  analyzeExcelFile, 
+  analyzeTextFile, 
+  analyzeGenericFile,
+} from './file_analysis.js';
+import {
+  clearFileCache,
+  getFileCacheStatus
+} from './llm.js';
+import {
+  getCachedDataAnalysis,
+  clearAnalysisCache,
+  getAnalysisCacheStatus,
+  analyzeDataForLLM
+} from './data_exploration.js';
+import { logRESTAPIRequest } from './log.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -41,9 +55,10 @@ export function setTrainingFunctions(trainFn, retrainFn) {
 
 export function setupAPIEndpoints(app, upload, scriptDir, venvDir) {
   
-  // Datei hochladen und intelligente Analyse
+  // Datei hochladen und Basis-Analyse (ohne LLM)
   app.post('/api/upload', upload.single('file'), async (req, res) => {
     try {
+      logRESTAPIRequest('upload', req.file);
       if (!req.file) {
         return res.status(400).json({ error: 'Keine Datei hochgeladen' });
       }
@@ -57,7 +72,7 @@ export function setupAPIEndpoints(app, upload, scriptDir, venvDir) {
       // Datei basierend auf Typ analysieren
       let analysis;
       if (fileExtension === '.csv') {
-        analysis = await analyzeCsvFile(filePath);
+        analysis = await analyzeCsvFile(filePath, true);
       } else if (fileExtension === '.json') {
         analysis = await analyzeJsonFile(filePath);
       } else if (fileExtension === '.xlsx' || fileExtension === '.xls') {
@@ -74,9 +89,7 @@ export function setupAPIEndpoints(app, upload, scriptDir, venvDir) {
         analysis = await analyzeGenericFile(filePath, fileExtension);
       }
       
-      // LLM-basierte Empfehlungen für Algorithmus und Features
-      const recommendations = await getLLMRecommendations(analysis, filePath);
-      
+      // Nur Basis-Analyse zurückgeben (ohne LLM-Empfehlungen)
       res.json({
         fileName: originalName,
         filePath: filePath,
@@ -85,8 +98,7 @@ export function setupAPIEndpoints(app, upload, scriptDir, venvDir) {
         rowCount: analysis.rowCount,
         dataTypes: analysis.dataTypes,
         sampleData: analysis.sampleData,
-        llmAnalysis: analysis.llm_analysis,
-        recommendations: recommendations // Automatische LLM-Empfehlungen
+        llmAnalysis: analysis.llm_analysis
       });
     } catch (error) {
       console.error('Fehler beim Datei-Upload:', error);
@@ -94,9 +106,98 @@ export function setupAPIEndpoints(app, upload, scriptDir, venvDir) {
     }
   });
 
+  // Intelligente LLM-Empfehlungen für manipulierte Daten
+  app.post('/api/analyze-data', async (req, res) => {
+    try {
+      logRESTAPIRequest('analyze-data', req.body);
+      const { filePath, excludedColumns, excludedFeatures, selectedColumns } = req.body;
+      
+      if (!filePath) {
+        return res.status(400).json({ error: 'filePath ist erforderlich' });
+      }
+      
+      const fileExtension = path.extname(filePath).toLowerCase();
+      
+      // Datei basierend auf Typ analysieren
+      let analysis;
+      if (fileExtension === '.csv') {
+        analysis = await analyzeCsvFile(filePath, true);
+        analysis.file_type = 'CSV';
+      } else if (fileExtension === '.json') {
+        analysis = await analyzeJsonFile(filePath);
+        analysis.file_type = 'JSON';
+      } else if (fileExtension === '.xlsx' || fileExtension === '.xls') {
+        analysis = await analyzeExcelFile(filePath);
+        analysis.file_type = 'Excel';
+      } else if (fileExtension === '.txt') {
+        analysis = await analyzeTextFile(filePath);
+        analysis.file_type = 'Text';
+      } else if (fileExtension === '.pdf') {
+        analysis = await analyzeGenericFile(filePath, fileExtension);
+        analysis.file_type = 'PDF';
+      } else if (fileExtension === '.xml') {
+        analysis = await analyzeGenericFile(filePath, fileExtension);
+        analysis.file_type = 'XML';
+      } else if (fileExtension === '.docx' || fileExtension === '.doc') {
+        analysis = await analyzeGenericFile(filePath, fileExtension);
+        analysis.file_type = 'Word';
+      } else {
+        analysis = await analyzeGenericFile(filePath, fileExtension);
+        analysis.file_type = fileExtension.substring(1).toUpperCase();
+      }
+      
+      // Spalten basierend auf Manipulationen anpassen
+      let manipulatedAnalysis = { ...analysis };
+      
+      if (excludedColumns && excludedColumns.length > 0) {
+        manipulatedAnalysis.columns = analysis.columns.filter(col => !excludedColumns.includes(col));
+        manipulatedAnalysis.sampleData = analysis.sampleData.map(row => 
+          row.filter((_, index) => !excludedColumns.includes(analysis.columns[index]))
+        );
+      }
+      
+      if (selectedColumns && selectedColumns.length > 0) {
+        manipulatedAnalysis.columns = selectedColumns;
+        manipulatedAnalysis.sampleData = analysis.sampleData.map(row => 
+          selectedColumns.map(col => row[analysis.columns.indexOf(col)])
+        );
+      }
+      
+      if (excludedFeatures && excludedFeatures.length > 0) {
+        manipulatedAnalysis.columns = analysis.columns.filter(col => !excludedFeatures.includes(col));
+      }
+      
+      // LLM-basierte Empfehlungen für manipulierte Daten
+      const recommendations = await getLLMRecommendations(
+        manipulatedAnalysis, 
+        filePath, 
+        venvDir, 
+        selectedColumns, 
+        excludedFeatures
+      );
+      
+      // Sicherstellen, dass recommendations.features existiert
+      if (!recommendations.features || recommendations.features.length === 0) {
+        console.warn('LLM gab keine Features zurück, verwende Fallback');
+        recommendations.features = manipulatedAnalysis.columns.filter(col => col !== recommendations.targetVariable);
+      }
+      
+      res.json({
+        analysis: manipulatedAnalysis,
+        recommendations: recommendations,
+        availableFeatures: recommendations.features // LLM-empfohlene Features, nicht alle Spalten
+      });
+      
+    } catch (error) {
+      console.error('Fehler bei der Datenanalyse:', error);
+      res.status(500).json({ error: 'Fehler bei der Datenanalyse: ' + error.message });
+    }
+  });
+
   // Intelligentes Projekt erstellen (mit LLM-Empfehlungen)
   app.post('/api/projects/smart-create', async (req, res) => {
     try {
+      logRESTAPIRequest('smart-create-project', req.body);
       const { name, csvFilePath, recommendations } = req.body;
       
       const project = await createSmartProject({ name, csvFilePath, recommendations });
@@ -115,6 +216,7 @@ export function setupAPIEndpoints(app, upload, scriptDir, venvDir) {
   // Alle Projekte abrufen
   app.get('/api/projects', async (req, res) => {
     try {
+      logRESTAPIRequest('get-all-projects', req.body);
       const projects = await getAllProjects();
       res.json(projects);
     } catch (err) {
@@ -125,6 +227,7 @@ export function setupAPIEndpoints(app, upload, scriptDir, venvDir) {
   // Einzelnes Projekt abrufen
   app.get('/api/projects/:id', async (req, res) => {
     try {
+      logRESTAPIRequest('get-project', req);
       const project = await getProject(req.params.id);
       if (!project) {
         return res.status(404).json({ error: 'Project not found' });
@@ -138,6 +241,8 @@ export function setupAPIEndpoints(app, upload, scriptDir, venvDir) {
   // Neues Projekt erstellen
   app.post('/api/projects', async (req, res) => {
     try {
+      logRESTAPIRequest('create-project', req.body);
+      console.log('Neues Projekt erstellen:', req.body);
       const { name, modelType, dataSourceName, targetVariable, features, csvFilePath, algorithm, hyperparameters } = req.body;
       
       const project = await createProject({ 
@@ -158,6 +263,7 @@ export function setupAPIEndpoints(app, upload, scriptDir, venvDir) {
   // Modell herunterladen
   app.get('/api/projects/:id/download', async (req, res) => {
     try {
+      logRESTAPIRequest('download-project', req.params.id);
       const project = await getProject(req.params.id);
       if (!project) {
         return res.status(404).json({ error: 'Project not found' });
@@ -189,14 +295,24 @@ export function setupAPIEndpoints(app, upload, scriptDir, venvDir) {
 
   // Projekt löschen  
   app.delete('/api/projects/:id', async (req, res) => {
+    logRESTAPIRequest('delete-project', req.params.id);
     const { id } = req.params;
     
     try {
       const project = await getProject(id);
       if (project && project.modelPath) {
-        // Model-Datei löschen falls vorhanden
+        // Upload-Datei, Skirpt und Predict Datei sowie Model-Datei löschen falls vorhanden
         try {
+          await fs.unlink( project.csvFilePath);
           await fs.unlink(path.join(path.dirname(__dirname), project.modelPath));
+          //  Suche im Ordner scripts nach allen Dateien, die die Projekt-ID im Namen haben und lösche sie
+          const scriptDir = path.join(path.dirname(__dirname), 'scripts');
+          const scriptFiles = await fs.readdir(scriptDir);
+          for (const file of scriptFiles) {
+            if (file.includes(id)) {
+              await fs.unlink(path.join(scriptDir, file));
+            }
+          }
         } catch (err) {
           console.log('Could not delete model file:', err.message);
         }
@@ -218,8 +334,9 @@ export function setupAPIEndpoints(app, upload, scriptDir, venvDir) {
   // Python-Code eines Projekts bearbeiten
   app.put('/api/projects/:id/code', async (req, res) => {
     try {
+      logRESTAPIRequest('update-project-code', req.params.id);
       const { id } = req.params;
-      const { pythonCode } = req.body;
+      const { pythonCode, hyperparameters } = req.body;
       
       const project = await getProject(id);
       if (!project) {
@@ -229,7 +346,12 @@ export function setupAPIEndpoints(app, upload, scriptDir, venvDir) {
       // Python-Code in der Datenbank aktualisieren
       await updateProjectCode(id, pythonCode);
       
-      res.json({ message: 'Python-Code erfolgreich aktualisiert', id });
+      // Hyperparameter aktualisieren, falls vorhanden
+      if (hyperparameters) {
+        await updateProjectHyperparameters(id, hyperparameters);
+      }
+      
+      res.json({ message: 'Python-Code und Hyperparameter erfolgreich aktualisiert', id });
       
     } catch (err) {
       res.status(500).json({ error: err.message });
@@ -239,6 +361,7 @@ export function setupAPIEndpoints(app, upload, scriptDir, venvDir) {
   // Projekt mit bearbeitetem Code re-trainieren
   app.post('/api/projects/:id/retrain', async (req, res) => {
     try {
+      logRESTAPIRequest('retrain-project', req.params.id);
       const { id } = req.params;
       
       const project = await getProject(id);
@@ -268,6 +391,7 @@ export function setupAPIEndpoints(app, upload, scriptDir, venvDir) {
   // API-Endpoint für intelligente Performance-Evaluation
   app.post('/api/projects/:id/evaluate-performance', async (req, res) => {
     try {
+      logRESTAPIRequest('evaluate-performance', req.params.id);
       const { id } = req.params;
       const project = await getProject(id);
       
@@ -298,9 +422,183 @@ export function setupAPIEndpoints(app, upload, scriptDir, venvDir) {
     }
   });
 
-  // Gemini-Verbindungsstatus prüfen
-  app.get('/api/gemini/status', async (req, res) => {
+  // Erweiterte Datenstatistiken für Data Insights
+  app.get('/api/projects/:id/data-statistics', async (req, res) => {
     try {
+      logRESTAPIRequest('data-statistics', req.params.id);
+      const { id } = req.params;
+      const project = await getProject(id);
+      
+      if (!project) {
+        return res.status(404).json({ error: 'Projekt nicht gefunden' });
+      }
+
+      // Prüfe ob CSV-Pfad vorhanden ist
+      if (!project.csvFilePath) {
+        return res.status(400).json({ error: 'Keine CSV-Datei für dieses Projekt verfügbar' });
+      }
+      
+      // CSV-Datei analysieren für detaillierte Statistiken
+      const fileExtension = path.extname(project.csvFilePath).toLowerCase();
+      let analysis;
+      
+      if (fileExtension === '.csv') {
+        analysis = await analyzeCsvFile(project.csvFilePath, false);
+      } else {
+        return res.status(400).json({ error: 'Nur CSV-Dateien werden für Datenstatistiken unterstützt' });
+      }
+
+      // Erweiterte Statistiken basierend auf der Analyse erstellen
+      const statistics = {
+        basicInfo: {
+          fileName: path.basename(project.csvFilePath),
+          fileSize: 0, // Wird bei Bedarf implementiert
+          rowCount: analysis.rowCount,
+          columnCount: analysis.columns.length,
+          dataTypes: analysis.dataTypes
+        },
+        columnAnalysis: analysis.columns.map(column => ({
+          name: column,
+          dataType: analysis.dataTypes[column],
+          sampleValues: analysis.sampleData.slice(0, 50).map(row => {
+            const colIndex = analysis.columns.indexOf(column);
+            return row[colIndex];
+          }).filter(val => val != null && val !== ''),
+          isFeature: project.features.includes(column),
+          isTarget: project.targetVariable === column
+        })),
+        sampleData: {
+          headers: analysis.columns.slice(0, 50), // Erste 50 Spalten als Preview
+          rows: analysis.sampleData.slice(0, 50) // Erste 50 Zeilen als Preview
+        },
+        mlConfig: {
+          algorithm: project.algorithm,
+          modelType: project.modelType,
+          targetVariable: project.targetVariable,
+          features: project.features,
+          excludedColumns: project.recommendations?.excludedColumns || [],
+          excludedFeatures: project.recommendations?.excludedFeatures || []
+        }
+      };
+
+      res.json(statistics);
+      
+    } catch (error) {
+      console.error('Fehler bei Datenstatistiken:', error);
+      res.status(500).json({ error: 'Datenstatistiken-Abruf fehlgeschlagen: ' + error.message });
+    }
+  });
+
+  // Datenstatistiken für ein Projekt abrufen
+  app.get('/api/projects/:id/stats', async (req, res) => {
+    try {
+      logRESTAPIRequest('stats', req.params.id);
+      const projectId = req.params.id;
+      const project = await getProject(projectId);
+      
+      if (!project) {
+        return res.status(404).json({ error: 'Projekt nicht gefunden' });
+      }
+      
+      if (!project.csvFilePath) {
+        return res.status(400).json({ error: 'Keine CSV-Datei für dieses Projekt verfügbar' });
+      }
+      
+      const fileExtension = path.extname(project.csvFilePath).toLowerCase();
+      
+      if (fileExtension === '.csv') {
+        analysis = await analyzeCsvFile(project.csvFilePath, false, venvDir);
+      } else {
+        return res.status(400).json({ error: 'Nur CSV-Dateien werden für Datenstatistiken unterstützt' });
+      }
+      
+      res.json({
+        projectId: projectId,
+        fileName: project.name,
+        stats: analysis
+      });
+      
+    } catch (error) {
+      console.error('Fehler beim Abrufen der Datenstatistiken:', error);
+      res.status(500).json({ error: 'Fehler beim Abrufen der Datenstatistiken: ' + error.message });
+    }
+  });
+
+  // Cache löschen
+  app.post('/api/cache/clear', async (req, res) => {
+    try {
+      logRESTAPIRequest('clear-cache', req.body);
+      await clearFileCache();
+      res.json({ message: 'Cache erfolgreich geleert' });
+    } catch (error) {
+      console.error('Fehler beim Löschen des Caches:', error);
+      res.status(500).json({ error: 'Fehler beim Löschen des Caches: ' + error.message });
+    }
+  });
+
+  // Cache-Status abrufen
+  app.get('/api/cache/status', async (req, res) => {
+    try {
+      logRESTAPIRequest('get-cache-status', req.body);
+      const status = await getFileCacheStatus();
+      res.json(status);
+    } catch (error) {
+      console.error('Fehler beim Abrufen des Cache-Status:', error);
+      res.status(500).json({ error: 'Fehler beim Abrufen des Cache-Status: ' + error.message });
+    }
+  });
+
+  // Datenexploration-Cache leeren
+  app.post('/api/analysis-cache/clear', async (req, res) => {
+    try {
+      logRESTAPIRequest('clear-analysis-cache', req.body);
+      await clearAnalysisCache();
+      res.json({ message: 'Datenanalyse-Cache erfolgreich geleert' });
+    } catch (error) {
+      console.error('Fehler beim Löschen des Datenanalyse-Caches:', error);
+      res.status(500).json({ error: 'Fehler beim Löschen des Datenanalyse-Caches: ' + error.message });
+    }
+  });
+
+  // Datenexploration-Cache-Status abrufen
+  app.get('/api/analysis-cache/status', async (req, res) => {
+    try {
+      logRESTAPIRequest('get-analysis-cache-status', req.body);
+      const status = await getAnalysisCacheStatus();
+      res.json(status);
+    } catch (error) {
+      console.error('Fehler beim Abrufen des Datenanalyse-Cache-Status:', error);
+      res.status(500).json({ error: 'Fehler beim Abrufen des Datenanalyse-Cache-Status: ' + error.message });
+    }
+  });
+
+  // Automatische Datenexploration für eine Datei
+  app.post('/api/explore-data', async (req, res) => {
+    try {
+      logRESTAPIRequest('explore-data', req.body);
+      const { filePath } = req.body;
+      
+      if (!filePath) {
+        return res.status(400).json({ error: 'filePath ist erforderlich' });
+      }
+      
+      if (!fs.access(filePath).then(() => true).catch(() => false)) {
+        return res.status(404).json({ error: 'Datei nicht gefunden' });
+      }
+      
+      const analysis = await getCachedDataAnalysis(filePath, false);
+      res.json(analysis);
+      
+    } catch (error) {
+      console.error('Fehler bei der Datenexploration:', error);
+      res.status(500).json({ error: 'Fehler bei der Datenexploration: ' + error.message });
+    }
+  });
+
+  // Gemini-Verbindungsstatus prüfen
+  app.get('/api/llm/status', async (req, res) => {
+    try {
+      logRESTAPIRequest('llm-status', req.body);
       const API_KEY = process.env.GEMINI_API_KEY;
       
       if (!API_KEY) {
@@ -314,9 +612,19 @@ export function setupAPIEndpoints(app, upload, scriptDir, venvDir) {
       // Teste die Verbindung mit einem einfachen Prompt
       try {
         const { testLLMAPI } = await import('./llm.js');
-        const testResponse = await testLLMAPI('Antworte nur mit "OK" wenn du diese Nachricht erhältst.');
+        const testResponseOllama = await testLLMAPI('Antworte nur mit "OK" wenn du diese Nachricht erhältst.', 'ollama');
+        // const testResponseGemini = await testLLMAPI('Antworte nur mit "OK" wenn du diese Nachricht erhältst.', 'gemini-2.5-flash-lite');
         
-        const isConnected = testResponse && testResponse.toLowerCase().includes('ok');
+        let isConnected = false;
+        if (testResponseOllama) {
+          isConnected = testResponseOllama.ollama.toLowerCase().includes('ok');
+          console.log('Ollama connected:', isConnected);
+        } else if (testResponseGemini) {
+          isConnected = testResponseGemini.gemini.toLowerCase().includes('ok');
+          console.log('Gemini connected:', isConnected);
+        } else {
+          isConnected = false
+        }
         
         res.json({ 
           connected: isConnected, 
@@ -339,6 +647,7 @@ export function setupAPIEndpoints(app, upload, scriptDir, venvDir) {
   // API-Key setzen (temporär für die Session)
   app.post('/api/gemini/api-key', async (req, res) => {
     try {
+      logRESTAPIRequest('set-gemini-api-key', req.body);
       const { apiKey } = req.body;
       
       if (!apiKey || typeof apiKey !== 'string') {
@@ -383,6 +692,7 @@ export function setupAPIEndpoints(app, upload, scriptDir, venvDir) {
 
   // Aktuellen API-Key-Status abrufen (ohne den Key preiszugeben)
   app.get('/api/gemini/api-key-status', (req, res) => {
+    logRESTAPIRequest('get-gemini-api-key-status', req.body);
     const API_KEY = process.env.GEMINI_API_KEY;
     const hasApiKey = Boolean(API_KEY && API_KEY.length > 0);
     const keyPreview = hasApiKey ? `${API_KEY.substring(0, 8)}...${API_KEY.substring(API_KEY.length - 4)}` : null;
@@ -396,6 +706,7 @@ export function setupAPIEndpoints(app, upload, scriptDir, venvDir) {
   // Verfügbare Gemini-Modelle abrufen
   app.get('/api/gemini/models', async (req, res) => {
     try {
+      logRESTAPIRequest('get-gemini-models', req.body);
       const { getAvailableGeminiModels, getCurrentGeminiModel } = await import('./llm.js');
       const availableModels = getAvailableGeminiModels();
       const currentModel = getCurrentGeminiModel();
@@ -414,6 +725,7 @@ export function setupAPIEndpoints(app, upload, scriptDir, venvDir) {
   // Gemini-Modell setzen
   app.post('/api/gemini/model', async (req, res) => {
     try {
+      logRESTAPIRequest('set-gemini-model', req.body);
       const { model } = req.body;
       
       if (!model || typeof model !== 'string') {
@@ -463,6 +775,7 @@ export function setupAPIEndpoints(app, upload, scriptDir, venvDir) {
   // Aktuelles Gemini-Modell abrufen
   app.get('/api/gemini/current-model', async (req, res) => {
     try {
+      logRESTAPIRequest('get-gemini-current-model', req.body);
       const { getCurrentGeminiModel, getAvailableGeminiModels } = await import('./llm.js');
       const currentModel = getCurrentGeminiModel();
       const availableModels = getAvailableGeminiModels();
@@ -484,6 +797,7 @@ export function setupAPIEndpoints(app, upload, scriptDir, venvDir) {
 export function setupPredictionEndpoint(app, scriptDir, venvDir) {
   app.post('/api/predict/:id', async (req, res) => {
     try {
+      logRESTAPIRequest('predict', req.body);
       const { id } = req.params;
       const inputs = req.body;
 

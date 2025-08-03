@@ -17,6 +17,28 @@ export async function initializeLogging() {
   }
 }
 
+// Sichere JSON-Serialisierung ohne zirkuläre Referenzen
+function safeStringify(obj, space = null) {
+  const seen = new WeakSet();
+  return JSON.stringify(obj, (key, value) => {
+    if (typeof value === 'object' && value !== null) {
+      if (seen.has(value)) {
+        return '[Circular Reference]';
+      }
+      seen.add(value);
+      
+      // Entferne Node.js-spezifische Eigenschaften, die zirkuläre Referenzen verursachen
+      if (value.constructor && value.constructor.name) {
+        const constructorName = value.constructor.name;
+        if (['Socket', 'Server', 'IncomingMessage', 'ServerResponse', 'HTTPParser'].includes(constructorName)) {
+          return `[${constructorName} Object]`;
+        }
+      }
+    }
+    return value;
+  }, space);
+}
+
 // Hilfsfunktion zum Loggen der LLM-Kommunikation
 export async function logLLMCommunication(type, data) {
   const timestamp = new Date().toISOString();
@@ -44,10 +66,34 @@ export async function logLLMCommunication(type, data) {
   // console.log('-'.repeat(80));
 
   try {
-    // An Log-Datei anhängen
+    // An Log-Datei anhängen mit sicherer Serialisierung
     await fs.appendFile(
       logFile,
-      JSON.stringify(logEntry, null, 2) + ',\n',
+      safeStringify(logEntry, 2) + ',\n',
+      'utf-8'
+    );
+  } catch (error) {
+    console.error('Error writing to log file:', error);
+  }
+}
+
+export async function logRESTAPIRequest(type, data) {
+  const timestamp = new Date().toISOString();
+  const logEntry = {
+    timestamp,
+    type,
+    data
+  };
+
+  // Log-Dateiname mit Datum
+  const date = new Date().toISOString().split('T')[0];
+  const logFile = path.join(logsDir, `rest_api_requests_${date}.log`);
+
+  try {
+    // An Log-Datei anhängen mit sicherer Serialisierung
+    await fs.appendFile(
+      logFile,
+      safeStringify(logEntry, 2) + ',\n',
       'utf-8'
     );
   } catch (error) {

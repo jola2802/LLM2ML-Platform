@@ -1,5 +1,5 @@
 import { callLLMAPI } from './llm.js';
-import { analyzeCsvFile } from './llm_api.js';
+import { getCachedDataAnalysis } from './data_exploration.js';
 
 // Verfügbare Algorithmen definieren
 const ALGORITHMS = {
@@ -59,12 +59,23 @@ const ALGORITHMS = {
 };
 
 // LLM-basierter Python Script Generator 
-export async function generatePythonScriptWithLLM(project) {
-  try {
-    // CSV-Datei analysieren für zusätzlichen Kontext
-    const csvAnalysis = await analyzeCsvFile(project.csvFilePath);
-    
-    const prompt = `Du bist ein extrem erfahrener Machine Learning Engineer und Python Programmierer. Generiere ein vollständiges, ausführbares Python-Script für das folgende ML-Projekt.
+export async function generatePythonScriptWithLLM(project, maxRetries = 3) {
+  let attempt = 0;
+  
+  while (attempt < maxRetries) {
+    try {
+      attempt++;
+      console.log(`Python Script Generierung - Versuch ${attempt}/${maxRetries}`);
+      
+      // Automatische Datenexploration durchführen
+      const dataAnalysis = await getCachedDataAnalysis(project.csvFilePath);
+      
+      if (!dataAnalysis.success) {
+        console.error('Automatische Datenanalyse fehlgeschlagen, verwende Fallback');
+        return generatePythonScriptTemplate(project);
+      }
+      
+      const prompt = `Du bist ein extrem erfahrener Machine Learning Engineer und Python Programmierer. Generiere ein vollständiges, ausführbares Python-Script für das folgende ML-Projekt.
 
 PROJEKT-DETAILS:
 - Name: ${project.name}
@@ -74,17 +85,19 @@ PROJEKT-DETAILS:
 - Features: ${project.features.join(', ')}
 - Hyperparameter: ${JSON.stringify(project.hyperparameters)}
 
-DATEN-ANALYSE:
-- LLM-Analyse: ${csvAnalysis.llm_analysis}
-- CSV-Pfad: ${project.csvFilePath}
-- Anzahl Zeilen: ${csvAnalysis.rowCount}
-- Spalten: ${csvAnalysis.columns.join(', ')}
-- Datentypen: ${Object.entries(csvAnalysis.dataTypes).map(([col, type]) => `${col}: ${type}`).join(', ')}
+WICHTIG: Die Hyperparameter MÜSSEN in der main()-Funktion als JSON-String definiert werden:
+hyperparameters = "${JSON.stringify(project.hyperparameters).replace(/"/g, '\\"')}"
 
-BEISPIEL-DATEN (erste 10 Zeilen):
-${csvAnalysis.sampleData.slice(0, 10).map((row, i) => 
-  `Zeile ${i+1}: ${csvAnalysis.columns.map((col, j) => `${col}=${row[j]}`).join(', ')}`
-).join('\n')}
+WICHTIG: Die Hyperparameter-Werte müssen als numerische Werte (nicht als Strings) in der JSON definiert werden:
+- n_estimators: 100 (nicht "100")
+- max_depth: 5 (nicht "5") 
+- min_samples_split: 2 (nicht "2")
+- min_samples_leaf: 1 (nicht "1")
+- C: 1.0 (nicht "1.0")
+- learning_rate: 0.1 (nicht "0.1")
+
+AUTOMATISCHE DATENANALYSE:
+${dataAnalysis.llm_summary}
 
 ANFORDERUNGEN:
 1. Lade die CSV-Datei und führe intelligente Datenbereinigung durch
@@ -107,25 +120,62 @@ ALGORITHMUS-MAPPING:
 - XGBoostRegressor: from xgboost import XGBRegressor
 
 WICHTIGE REGELN:
-- Verwende IMMER r"${project.csvFilePath}" für den CSV-Pfad
+- Verwende IMMER r"${project.csvFilePath}" für den Dateipfad
 - Gib Performance-Metriken in diesem Format aus: "Accuracy: 0.8524" (für Parsing)
 - Behandle fehlende Werte intelligent je nach Datentyp
 - Verwende scikit-learn Pipelines für sauberen Code
-- Füge ausführliche Kommentare und print-Statements hinzu
+- Füge so wenig Kommentare und print-Statements hinzu wie möglich
 - Das Script muss ohne weitere Eingaben ausführbar sein. Füge also keine sonstigen Eingaben hinzu.
 
-Generiere ein vollständiges Python-Script (nur Code, keine Markdown-Formatierung):`;
+Generiere ein vollständiges Python-Script (reiner Code, keine Markdown-Formatierung):`;
 
-    // Rufe das LLM API auf
-    const response = await callLLMAPI(prompt);
-    
-    return response;
-    
-  } catch (error) {
-    console.error('Fehler bei LLM Script-Generierung:', error);
-    // Fallback auf Template-basierte Generierung
-    return generatePythonScriptTemplate(project);
+      // Rufe das LLM API auf (ohne Datei-Upload, da wir die Analyse bereits haben)
+      const response = await callLLMAPI(prompt, null, 'gemini-2.5-flash-lite', 2);
+      
+      // Stelle sicher, dass wir den Python-Code als String zurückgeben
+      let pythonCode;
+      if (response && response.result) {
+        pythonCode = response.result;
+      } else if (typeof response === 'string') {
+        pythonCode = response;
+      } else {
+        console.error('Unerwartetes Response-Format:', response);
+        throw new Error('LLM gab keinen gültigen Python-Code zurück');
+      }
+      
+      // Validiere den generierten Code
+      if (!pythonCode || typeof pythonCode !== 'string') {
+        throw new Error('Leerer oder ungültiger Python-Code erhalten');
+      }
+      
+      // Entferne Markdown-Formatierung falls vorhanden
+      pythonCode = pythonCode.replace(/```python/g, '').replace(/```/g, '').trim();
+      
+      // Prüfe ob der Code grundlegende Python-Syntax hat
+      if (!pythonCode.includes('import') || !pythonCode.includes('def main()')) {
+        throw new Error('Generierter Code enthält nicht die erwartete Python-Struktur');
+      }
+      
+      console.log(`Python Script erfolgreich generiert (Versuch ${attempt})`);
+      return pythonCode;
+      
+    } catch (error) {
+      console.error(`Fehler bei LLM Script-Generierung (Versuch ${attempt}):`, error.message);
+      
+      if (attempt < maxRetries) {
+        // Warte kurz vor dem nächsten Versuch
+        await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+        continue;
+      } else {
+        // Letzter Versuch fehlgeschlagen - Fallback auf Template
+        console.error('Alle LLM-Versuche fehlgeschlagen, verwende Template-Fallback');
+        return generatePythonScriptTemplate(project);
+      }
+    }
   }
+  
+  // Fallback: Sollte nie erreicht werden
+  return generatePythonScriptTemplate(project);
 }
 
 // Fallback: Template-basierte Generierung (als Backup)
@@ -148,19 +198,10 @@ export function generatePythonScriptTemplate(project) {
     throw new Error('Keine CSV-Datei für das Training verfügbar');
   }
   
-  // Hyperparameter in Algorithmus-Constructor integrieren
-  let algorithmConstructor = algoConfig.constructor;
-  if (hyperparameters && Object.keys(hyperparameters).length > 0) {
-    // Parse existierende Parameter aus dem Constructor
-    const baseParams = algorithmConstructor.match(/\((.*)\)/)?.[1] || '';
-    const customParams = Object.entries(hyperparameters)
-      .map(([key, value]) => `${key}=${JSON.stringify(value)}`)
-      .join(', ');
-    
-    // Kombiniere base und custom Parameter  
-    const allParams = baseParams ? `${baseParams}, ${customParams}` : customParams;
-    algorithmConstructor = algorithmConstructor.replace(/\(.*\)/, `(${allParams})`);
-  }
+  // Hyperparameter als JSON-String für das Template vorbereiten
+  const hyperparametersJson = hyperparameters && Object.keys(hyperparameters).length > 0 
+    ? JSON.stringify(hyperparameters).replace(/"/g, '\\"')
+    : '{}';
   
   return `
 import pandas as pd
@@ -177,12 +218,19 @@ ${isClassification
 import joblib
 import os
 import warnings
+import json
 warnings.filterwarnings('ignore')
 
-# Echte CSV-Daten laden
-print("=== Lade CSV-Datei ===")
-csv_path = r"${csvFilePath}"
-print(f"CSV-Pfad: {csv_path}")
+def main():
+    # Hyperparameter definieren
+    hyperparameters = "${hyperparametersJson}"
+    
+    # CSV-Pfad definieren
+    csv_path = r"${csvFilePath}"
+    
+    # Echte CSV-Daten laden
+    print("=== Lade CSV-Datei ===")
+    print(f"CSV-Pfad: {csv_path}")
 
 # Überprüfe verschiedene mögliche Pfade
 possible_paths = [
@@ -269,27 +317,64 @@ if y.dtype == 'object':
 print(f"Finale Daten: Features={X.shape}, Target={y.shape}")
 print()
 
-# Train-Test Split
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42, stratify=${isClassification ? 'y' : 'None'})
+    # Train-Test Split
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42, stratify=${isClassification ? 'y' : 'None'})
+    
+    print(f"Training Set: {X_train.shape}")
+    print(f"Test Set: {X_test.shape}")
+    
+    # Feature-Namen für Debugging (nicht für Vorhersagen verwendet)
+    feature_names = list(X.columns)
+    print(f"Feature-Namen: {feature_names}")
 
-print(f"Training Set: {X_train.shape}")
-print(f"Test Set: {X_test.shape}")
+    # Hyperparameter laden und konvertieren
+    hyperparams = json.loads(hyperparameters)
+    
+    # Hyperparameter korrekt konvertieren
+    converted_hyperparams = {}
+    for key, value in hyperparams.items():
+        if key in ['n_estimators', 'max_depth', 'min_samples_split', 'min_samples_leaf', 'max_features']:
+            if isinstance(value, str):
+                converted_hyperparams[key] = int(value)
+            else:
+                converted_hyperparams[key] = value
+        elif key in ['learning_rate', 'C']:
+            if isinstance(value, str):
+                converted_hyperparams[key] = float(value)
+            else:
+                converted_hyperparams[key] = value
+        else:
+            converted_hyperparams[key] = value
+    
+    print(f"Verwendete Hyperparameter: {converted_hyperparams}")
+    
+    # Algorithmus mit Hyperparametern initialisieren
+    model = ${algoConfig.constructor.replace(/\(/g, '(').replace(/\)/g, ')')}
+    
+    # Hyperparameter setzen
+    for key, value in converted_hyperparams.items():
+        if hasattr(model, key):
+            setattr(model, key, value)
 
-# Komplette Pipeline mit Preprocessing und Model
-step_name = 'classifier' if ${isClassification ? 'True' : 'False'} else 'regressor'
-pipeline = Pipeline([
-    ('preprocessor', preprocessor),
-    (step_name, ${algorithmConstructor})
-])
-
-print("=== Training ===")
-print(f"Verwendeter Algorithmus: ${selectedAlgorithm}")
-pipeline.fit(X_train, y_train)
-print("Training abgeschlossen")
+    # Komplette Pipeline mit Preprocessing und Model
+    step_name = 'classifier' if ${isClassification ? 'True' : 'False'} else 'regressor'
+    pipeline = Pipeline([
+        ('preprocessor', preprocessor),
+        (step_name, model)
+    ])
+    
+    print("=== Training ===")
+    print(f"Verwendeter Algorithmus: ${selectedAlgorithm}")
+    
+    # Training ohne Feature-Namen für konsistente Vorhersagen
+    X_train_array = X_train.values
+    X_test_array = X_test.values
+    pipeline.fit(X_train_array, y_train)
+    print("Training abgeschlossen")
 
 # Vorhersagen
-y_pred = pipeline.predict(X_test)
-${isClassification ? 'y_pred_proba = pipeline.predict_proba(X_test) if hasattr(pipeline.named_steps["classifier"], "predict_proba") else None' : ''}
+y_pred = pipeline.predict(X_test_array)
+${isClassification ? 'y_pred_proba = pipeline.predict_proba(X_test_array) if hasattr(pipeline.named_steps["classifier"], "predict_proba") else None' : ''}
 
 # Evaluation
 print("=== Performance Metriken ===")
@@ -366,5 +451,8 @@ except Exception as e:
     print(f"Feature Importances nicht verfügbar: {e}")
     
 print("\\n=== Training abgeschlossen ===")
+
+if __name__ == "__main__":
+    main()
 `;
 } 

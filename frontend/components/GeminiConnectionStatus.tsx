@@ -5,7 +5,7 @@ interface ConnectionStatusProps {
   onRefresh?: () => void;
 }
 
-const GeminiConnectionStatus: React.FC<ConnectionStatusProps> = ({ onRefresh }) => {
+const LLMConnectionStatus: React.FC<ConnectionStatusProps> = ({ onRefresh }) => {
   const [status, setStatus] = useState<{
     connected: boolean;
     hasApiKey: boolean;
@@ -82,7 +82,7 @@ const GeminiConnectionStatus: React.FC<ConnectionStatusProps> = ({ onRefresh }) 
         <div className="flex items-center space-x-2">
           <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
           <div className="flex flex-col">
-            <span className="text-sm text-green-300">Gemini verbunden</span>
+            <span className="text-sm text-green-300">LLM verbunden</span>
             {status.currentModel && (
               <span className="text-xs text-gray-400 font-mono">{status.currentModel}</span>
             )}
@@ -120,4 +120,4 @@ const GeminiConnectionStatus: React.FC<ConnectionStatusProps> = ({ onRefresh }) 
   );
 };
 
-export default GeminiConnectionStatus;
+export default LLMConnectionStatus;

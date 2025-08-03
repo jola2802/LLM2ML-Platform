@@ -16,20 +16,58 @@ ENV NODE_ENV=production
 # Build frontend
 RUN npm run build
 
-# Backend stage
-FROM node:18-alpine AS backend
+# Backend stage - verwende debian für bessere Python-Kompatibilität
+FROM node:18-slim AS backend
+
+# Install system dependencies für Python und Build-Tools
+RUN apt-get update && apt-get install -y \
+    python3 \
+    python3-pip \
+    python3-venv \
+    python3-dev \
+    build-essential \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
-COPY backend/package*.json ./
+
+# Erstelle Python Virtual Environment
+# RUN python3 -m venv /opt/venv
+# ENV PATH="/opt/venv/bin:$PATH"
+
+# Kopiere Python requirements zuerst für besseres Caching
+COPY requirements.txt ./
+# RUN pip install --no-cache-dir -r requirements.txt
+
+# Backend dependencies
+COPY backend/package*.json ./backend/
+WORKDIR /app/backend
 RUN npm ci --only=production
 
+# Kopiere Backend-Code
 COPY backend/ ./
-COPY --from=frontend-builder /app/frontend/dist ./frontend/dist
 
-# Python dependencies
-RUN apk add --no-cache python3 py3-pip
-RUN pip3 install pandas scikit-learn joblib numpy xgboost
+# Kopiere Frontend Build
+COPY --from=frontend-builder /app/frontend/dist ../frontend/dist
 
-EXPOSE 3001
+# Erstelle benötigte Verzeichnisse
+RUN mkdir -p uploads models scripts logs
+
+# Backend static file serving konfigurieren
+WORKDIR /app
+
+# Umgebungsvariablen setzen
+ENV NODE_ENV=production
+ENV PORT=3001
+
+# Port freigeben (dynamisch über ENV konfigurierbar)
+EXPOSE $PORT
+
+# Arbeitsverzeichnis für Start
+WORKDIR /app/backend
+
+# Healthcheck hinzufügen
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+  CMD curl -f http://localhost:$PORT/ || exit 1
 
 CMD ["npm", "start"] 

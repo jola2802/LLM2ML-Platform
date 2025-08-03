@@ -51,6 +51,7 @@ export function getProject(id) {
         row.performanceMetrics = row.performanceMetrics ? JSON.parse(row.performanceMetrics) : null;
         row.llmRecommendations = row.llmRecommendations ? JSON.parse(row.llmRecommendations) : null;
         row.performanceInsights = row.performanceInsights ? JSON.parse(row.performanceInsights) : null;
+        row.hyperparameters = row.hyperparameters ? JSON.parse(row.hyperparameters) : null;
         resolve(row);
       } else {
         resolve(null);
@@ -72,7 +73,8 @@ export function getAllProjects() {
           features: JSON.parse(row.features || '[]'),
           performanceMetrics: row.performanceMetrics ? JSON.parse(row.performanceMetrics) : null,
           llmRecommendations: row.llmRecommendations ? JSON.parse(row.llmRecommendations) : null,
-          performanceInsights: row.performanceInsights ? JSON.parse(row.performanceInsights) : null
+          performanceInsights: row.performanceInsights ? JSON.parse(row.performanceInsights) : null,
+          hyperparameters: row.hyperparameters ? JSON.parse(row.hyperparameters) : null
         }));
         
         resolve(projects);
@@ -94,10 +96,22 @@ export function createProject(projectData) {
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
     
+    // Hyperparameter korrekt konvertieren (numerische Werte als Zahlen, nicht als Strings)
+    const convertedHyperparameters = {};
+    if (hyperparameters && typeof hyperparameters === 'object') {
+      for (const [key, value] of Object.entries(hyperparameters)) {
+        if (typeof value === 'string' && !isNaN(Number(value)) && value.trim() !== '') {
+          convertedHyperparameters[key] = Number(value);
+        } else {
+          convertedHyperparameters[key] = value;
+        }
+      }
+    }
+    
     stmt.run([
       id, name, status, modelType, dataSourceName, targetVariable, 
       JSON.stringify(features), createdAt, csvFilePath || null, 
-      algorithm || 'RandomForest', JSON.stringify(hyperparameters || {})
+      algorithm || 'RandomForest', JSON.stringify(convertedHyperparameters || {})
     ], function(err) {
       if (err) {
         reject(err);
@@ -105,7 +119,7 @@ export function createProject(projectData) {
         resolve({
           id, name, status, modelType, dataSourceName, targetVariable,
           features, createdAt, performanceMetrics: null, pythonCode: null, modelPath: null, 
-          csvFilePath, algorithm: algorithm || 'RandomForest', hyperparameters: hyperparameters || {}
+          csvFilePath, algorithm: algorithm || 'RandomForest', hyperparameters: convertedHyperparameters || {}
         });
       }
     });
@@ -127,11 +141,23 @@ export function createSmartProject(projectData) {
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
     
+    // Hyperparameter korrekt konvertieren (numerische Werte als Zahlen, nicht als Strings)
+    const convertedHyperparameters = {};
+    if (recommendations.hyperparameters && typeof recommendations.hyperparameters === 'object') {
+      for (const [key, value] of Object.entries(recommendations.hyperparameters)) {
+        if (typeof value === 'string' && !isNaN(Number(value)) && value.trim() !== '') {
+          convertedHyperparameters[key] = Number(value);
+        } else {
+          convertedHyperparameters[key] = value;
+        }
+      }
+    }
+    
     stmt.run([
       id, name, status, recommendations.modelType, recommendations.dataSourceName, 
       recommendations.targetVariable, JSON.stringify(recommendations.features), 
       createdAt, csvFilePath, recommendations.algorithm, 
-      JSON.stringify(recommendations.hyperparameters), JSON.stringify(recommendations)
+      JSON.stringify(convertedHyperparameters), JSON.stringify(recommendations)
     ], function(err) {
       if (err) {
         reject(err);
@@ -148,7 +174,7 @@ export function createSmartProject(projectData) {
           modelPath: null, 
           csvFilePath, 
           algorithm: recommendations.algorithm, 
-          hyperparameters: recommendations.hyperparameters,
+          hyperparameters: convertedHyperparameters,
           recommendations: recommendations
         });
       }
@@ -161,11 +187,11 @@ export function createSmartProject(projectData) {
 // Projekt-Status und Metriken aktualisieren
 export function updateProjectTraining(projectId, updateData) {
   return new Promise((resolve, reject) => {
-    const { status, performanceMetrics, pythonCode, originalPythonCode, modelPath } = updateData;
+    const { status, performanceMetrics, pythonCode, originalPythonCode, modelPath, hyperparameters } = updateData;
     
     const stmt = db.prepare(`
       UPDATE projects 
-      SET status = ?, performanceMetrics = ?, pythonCode = ?, originalPythonCode = ?, modelPath = ?
+      SET status = ?, performanceMetrics = ?, pythonCode = ?, originalPythonCode = ?, modelPath = ?, hyperparameters = ?
       WHERE id = ?
     `);
     
@@ -175,6 +201,7 @@ export function updateProjectTraining(projectId, updateData) {
       pythonCode,
       originalPythonCode,
       modelPath,
+      hyperparameters ? JSON.stringify(hyperparameters) : null,
       projectId
     ], function(err) {
       if (err) {
@@ -192,6 +219,19 @@ export function updateProjectTraining(projectId, updateData) {
 export function updateProjectCode(projectId, pythonCode) {
   return new Promise((resolve, reject) => {
     db.run('UPDATE projects SET pythonCode = ? WHERE id = ?', [pythonCode, projectId], function(err) {
+      if (err) {
+        reject(err);
+      } else {
+        resolve({ changes: this.changes, lastID: this.lastID });
+      }
+    });
+  });
+}
+
+// Hyperparameter eines Projekts aktualisieren
+export function updateProjectHyperparameters(projectId, hyperparameters) {
+  return new Promise((resolve, reject) => {
+    db.run('UPDATE projects SET hyperparameters = ? WHERE id = ?', [JSON.stringify(hyperparameters), projectId], function(err) {
       if (err) {
         reject(err);
       } else {
