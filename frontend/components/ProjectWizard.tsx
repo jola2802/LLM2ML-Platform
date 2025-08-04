@@ -44,6 +44,9 @@ const ProjectWizard: React.FC<ProjectWizardProps> = ({ onBack, onSubmit }) => {
   const [manipulatedData, setManipulatedData] = useState<any>(null);
   const [availableFeatures, setAvailableFeatures] = useState<string[]>([]);
   
+  // State für ausklappbare Sektionen
+  const [showColumnManagement, setShowColumnManagement] = useState(false);
+  
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const [isProcessingData, setIsProcessingData] = useState(false);
@@ -199,7 +202,7 @@ const ProjectWizard: React.FC<ProjectWizardProps> = ({ onBack, onSubmit }) => {
   const renderStep1 = () => (
     <div>
       <h3 className="text-xl font-semibold text-white mb-2">📁 Datei hochladen & Basis-Analyse</h3>
-      <p className="text-sm text-gray-400 mb-6">
+      <p className="text-sm text-slate-400 mb-6">
         Laden Sie Ihre Daten hoch und lassen Sie uns eine erste Analyse durchführen.
       </p>
       
@@ -211,19 +214,19 @@ const ProjectWizard: React.FC<ProjectWizardProps> = ({ onBack, onSubmit }) => {
             value={projectName}
             onChange={(e) => setProjectName(e.target.value)}
             placeholder="z.B. Kundenabwanderung Vorhersage"
-            className="w-full bg-gray-700 border-gray-600 rounded-md p-3 text-white focus:ring-blue-500 focus:border-blue-500"
+            className="w-full bg-slate-700 border-slate-600 rounded-md p-3 text-white focus:ring-blue-500 focus:border-blue-500"
           />
         </div>
 
         <div>
           <h4 className="text-lg font-medium text-white mb-2">Datei hochladen</h4>
           <div 
-            className="mt-1 flex justify-center px-6 pt-8 pb-8 border-2 border-gray-600 border-dashed rounded-lg cursor-pointer hover:border-blue-500 transition-all duration-200 hover:bg-gray-800/30"
+            className="mt-1 flex justify-center px-6 pt-8 pb-8 border-2 border-slate-600 border-dashed rounded-lg cursor-pointer hover:border-blue-500 transition-all duration-200 hover:bg-slate-800/30"
             onClick={() => fileInputRef.current?.click()}
           >
             <div className="space-y-2 text-center">
-              <CloudUploadIcon className="mx-auto h-16 w-16 text-gray-400" />
-              <div className="text-gray-400">
+              <CloudUploadIcon className="mx-auto h-16 w-16 text-slate-400" />
+              <div className="text-slate-400">
                 <p className="text-lg">{dataSource ? `📄 ${dataSource.name}` : 'Für Datei-Upload hier klicken'}</p>
                 <p className="text-sm">{dataSource ? `${(dataSource.size / 1024).toFixed(2)} KB` : 'Maximal 10MB'}</p>
               </div>
@@ -253,21 +256,21 @@ const ProjectWizard: React.FC<ProjectWizardProps> = ({ onBack, onSubmit }) => {
         )}
 
         {csvAnalysis && (
-          <div className="bg-gray-900/50 p-6 rounded-lg border border-gray-700">
+          <div className="bg-slate-900/50 p-6 rounded-lg border border-slate-700">
             <h4 className="font-semibold text-green-400 mb-4">📊 Datenübersicht</h4>
             <div className="grid grid-cols-2 gap-6 text-sm">
               <div>
-                <p className="text-gray-400">Zeilen: <span className="text-white font-mono">{csvAnalysis.rowCount.toLocaleString()}</span></p>
-                <p className="text-gray-400">Spalten: <span className="text-white font-mono">{csvAnalysis.columns.length}</span></p>
+                <p className="text-slate-400">Zeilen: <span className="text-white font-mono">{csvAnalysis.rowCount.toLocaleString()}</span></p>
+                <p className="text-slate-400">Spalten: <span className="text-white font-mono">{csvAnalysis.columns.length}</span></p>
               </div>
               <div>
-                <p className="text-gray-400">Numerische Spalten: <span className="text-blue-400 font-mono">{Object.values(csvAnalysis.dataTypes).filter(t => t === 'numeric').length}</span></p>
-                <p className="text-gray-400">Kategorische Spalten: <span className="text-green-400 font-mono">{Object.values(csvAnalysis.dataTypes).filter(t => t === 'categorical').length}</span></p>
+                <p className="text-slate-400">Numerische Spalten: <span className="text-blue-400 font-mono">{Object.values(csvAnalysis.dataTypes).filter(t => t === 'numeric').length}</span></p>
+                <p className="text-slate-400">Kategorische Spalten: <span className="text-green-400 font-mono">{Object.values(csvAnalysis.dataTypes).filter(t => t === 'categorical').length}</span></p>
               </div>
             </div>
             
             <div className="mt-4">
-              <h5 className="text-sm font-medium text-gray-300 mb-2">Verfügbare Spalten:</h5>
+              <h5 className="text-sm font-medium text-slate-300 mb-2">Verfügbare Spalten:</h5>
               <div className="flex flex-wrap gap-2">
                 {csvAnalysis.columns.map((column) => (
                   <span 
@@ -298,58 +301,81 @@ const ProjectWizard: React.FC<ProjectWizardProps> = ({ onBack, onSubmit }) => {
   const renderStep2 = () => (
     <div>
       <h3 className="text-xl font-semibold text-white mb-2">✂️ Datenmanipulation & Feature-Auswahl</h3>
-      <p className="text-sm text-gray-400 mb-6">
+      <p className="text-sm text-slate-400 mb-6">
         Entfernen Sie unerwünschte Spalten und Features bevor die KI-Analyse startet.
       </p>
       
       <div className="space-y-6">
         {csvAnalysis && (
           <>
-            <div className="bg-gray-900/50 p-6 rounded-lg border border-gray-700">
-              <h4 className="font-semibold text-white mb-4">🗂️ Spalten verwalten</h4>
-              <p className="text-sm text-gray-400 mb-4">
-                Klicken Sie auf Spalten, um sie aus dem Dataset zu entfernen.
-              </p>
-              
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                {csvAnalysis.columns.map((column) => (
-                  <div
-                    key={column}
-                    onClick={() => toggleColumnExclusion(column)}
-                    className={`cursor-pointer p-3 rounded-lg border transition-all ${
-                      excludedColumns.includes(column)
-                        ? 'bg-red-900/30 border-red-500/50 text-red-300'
-                        : `${csvAnalysis.dataTypes[column] === 'numeric' 
-                          ? 'bg-blue-900/30 border-blue-500/30 text-blue-300 hover:bg-blue-800/40'
-                          : 'bg-green-900/30 border-green-500/30 text-green-300 hover:bg-green-800/40'
-                        }`
-                    }`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium">{column}</span>
-                      {excludedColumns.includes(column) && (
-                        <TrashIcon className="h-4 w-4" />
-                      )}
-                    </div>
-                    <div className="text-xs opacity-75 mt-1">
-                      {csvAnalysis.dataTypes[column]}
-                    </div>
-                  </div>
-                ))}
-              </div>
-              
-              {excludedColumns.length > 0 && (
-                <div className="mt-4 p-3 bg-red-900/20 border border-red-500/30 rounded">
-                  <p className="text-red-300 text-sm">
-                    <strong>Entfernte Spalten ({excludedColumns.length}):</strong> {excludedColumns.join(', ')}
+            <div className="bg-slate-900/50 p-6 rounded-lg border border-slate-700">
+              <button
+                onClick={() => setShowColumnManagement(!showColumnManagement)}
+                className="w-full flex items-center justify-between text-left"
+              >
+                <div>
+                  <h4 className="font-semibold text-white">🗂️ Spalten verwalten</h4>
+                  <p className="text-sm text-slate-400 mt-1">
+                    {excludedColumns.length > 0 
+                      ? `${excludedColumns.length} Spalte(n) entfernt` 
+                      : 'Klicken Sie auf Spalten, um sie aus dem Dataset zu entfernen.'
+                    }
                   </p>
+                </div>
+                <div className={`transform transition-transform duration-200 ${showColumnManagement ? 'rotate-180' : ''}`}>
+                  <svg className="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </div>
+              </button>
+              
+              {showColumnManagement && (
+                <div className="mt-4 pt-4 border-t border-slate-600">
+                  <p className="text-sm text-slate-400 mb-4">
+                    Klicken Sie auf Spalten, um sie aus dem Dataset zu entfernen.
+                  </p>
+                  
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                    {csvAnalysis.columns.map((column) => (
+                      <div
+                        key={column}
+                        onClick={() => toggleColumnExclusion(column)}
+                        className={`cursor-pointer p-3 rounded-lg border transition-all ${
+                          excludedColumns.includes(column)
+                            ? 'bg-red-900/30 border-red-500/50 text-red-300'
+                            : `${csvAnalysis.dataTypes[column] === 'numeric' 
+                              ? 'bg-blue-900/30 border-blue-500/30 text-blue-300 hover:bg-blue-800/40'
+                              : 'bg-green-900/30 border-green-500/30 text-green-300 hover:bg-green-800/40'
+                            }`
+                        }`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-medium">{column}</span>
+                          {excludedColumns.includes(column) && (
+                            <TrashIcon className="h-4 w-4" />
+                          )}
+                        </div>
+                        <div className="text-xs opacity-75 mt-1">
+                          {csvAnalysis.dataTypes[column]}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  
+                  {excludedColumns.length > 0 && (
+                    <div className="mt-4 p-3 bg-red-900/20 border border-red-500/30 rounded">
+                      <p className="text-red-300 text-sm">
+                        <strong>Entfernte Spalten ({excludedColumns.length}):</strong> {excludedColumns.join(', ')}
+                      </p>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
 
-            <div className="bg-gray-900/50 p-6 rounded-lg border border-gray-700">
+            <div className="bg-slate-900/50 p-6 rounded-lg border border-slate-700">
               <h4 className="font-semibold text-white mb-4">🎯 Features für ML ausschließen</h4>
-              <p className="text-sm text-gray-400 mb-4">
+              <p className="text-sm text-slate-400 mb-4">
                 Schließen Sie Features aus, die nicht für das Machine Learning verwendet werden sollen.
               </p>
               
@@ -668,7 +694,7 @@ const ProjectWizard: React.FC<ProjectWizardProps> = ({ onBack, onSubmit }) => {
           </div>
         )}
 
-        <div className="bg-gradient-to-r from-blue-900/40 to-green-900/40 border border-blue-500/50 rounded-lg p-6">
+        <div className="bg-blue-900/40 border border-blue-500/50 rounded-lg p-6">
           <h5 className="text-blue-400 font-medium mb-2">🔬 Verwendete Features für ML</h5>
           <div className="text-blue-300 text-sm">
             {(availableFeatures || [])
@@ -720,13 +746,13 @@ const ProjectWizard: React.FC<ProjectWizardProps> = ({ onBack, onSubmit }) => {
   ];
   
   return (
-    <div className="max-w-4xl mx-auto bg-gray-800 rounded-lg shadow-xl p-6 sm:p-8 animate-fade-in">
+    <div className="max-w-4xl mx-auto bg-slate-800 rounded-lg shadow-xl p-6 sm:p-8 animate-fade-in">
       <div className="flex justify-between items-start mb-6">
         <div>
           <h2 className="text-3xl font-bold text-white">Intelligenter ML-Wizard</h2>
-          <p className="text-gray-400">Schritt {step} von {steps.length}: {steps[step-1].title}</p>
+          <p className="text-slate-400">Schritt {step} von {steps.length}: {steps[step-1].title}</p>
         </div>
-        <button onClick={onBack} className="text-gray-400 hover:text-white text-xl">&times;</button>
+        <button onClick={onBack} className="text-slate-400 hover:text-white text-xl">&times;</button>
       </div>
 
       {/* Fortschrittsanzeige */}
@@ -735,21 +761,21 @@ const ProjectWizard: React.FC<ProjectWizardProps> = ({ onBack, onSubmit }) => {
           <div key={index} className="flex items-center">
             <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
               index + 1 < step 
-                ? 'bg-green-600 text-white' 
+                ? 'bg-emerald-600 text-white' 
                 : index + 1 === step 
                   ? 'bg-blue-600 text-white' 
-                  : 'bg-gray-600 text-gray-300'
+                  : 'bg-slate-600 text-slate-300'
             }`}>
               {index + 1 < step ? '✓' : index + 1}
             </div>
             <span className={`ml-2 text-sm ${
-              index + 1 <= step ? 'text-white' : 'text-gray-400'
+              index + 1 <= step ? 'text-white' : 'text-slate-400'
             }`}>
               {stepInfo.title}
             </span>
             {index < steps.length - 1 && (
               <div className={`mx-4 h-0.5 w-16 ${
-                index + 1 < step ? 'bg-green-600' : 'bg-gray-600'
+                index + 1 < step ? 'bg-emerald-600' : 'bg-slate-600'
               }`} />
             )}
           </div>
@@ -760,10 +786,10 @@ const ProjectWizard: React.FC<ProjectWizardProps> = ({ onBack, onSubmit }) => {
         {steps[step-1].content}
       </div>
       
-      <div className="flex justify-between items-center pt-6 border-t border-gray-700">
+      <div className="flex justify-between items-center pt-6 border-t border-slate-700">
         <button
           onClick={step === 1 ? onBack : prevStep}
-          className="px-6 py-2 border border-gray-600 text-sm font-medium rounded-md text-gray-300 hover:bg-gray-700 transition-colors"
+          className="px-6 py-2 border border-slate-600 text-sm font-medium rounded-md text-slate-300 hover:bg-slate-700 transition-colors"
         >
           {step === 1 ? 'Abbrechen' : 'Zurück'}
         </button>
@@ -772,7 +798,7 @@ const ProjectWizard: React.FC<ProjectWizardProps> = ({ onBack, onSubmit }) => {
           <button
             onClick={nextStep}
             disabled={!steps[step-1].canProceed || isAnalyzing || isProcessingData}
-            className="px-6 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 disabled:bg-gray-500 disabled:cursor-not-allowed transition-colors"
+            className="px-6 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 disabled:bg-slate-500 disabled:cursor-not-allowed transition-colors"
           >
             {step === 2 && isProcessingData ? (
               <div className="flex items-center space-x-2">
@@ -787,7 +813,7 @@ const ProjectWizard: React.FC<ProjectWizardProps> = ({ onBack, onSubmit }) => {
           <button
             onClick={handleCreateProject}
             disabled={isCreating}
-            className="px-6 py-3 border border-transparent text-sm font-medium rounded-md text-white bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+            className="px-6 py-3 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
           >
             {isCreating ? (
               <div className="flex items-center space-x-2">

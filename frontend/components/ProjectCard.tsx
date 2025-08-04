@@ -23,7 +23,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, onSelect, onDelete }
   return (
     <div 
       onClick={() => onSelect(project)}
-      className="bg-gray-800 rounded-lg shadow-lg overflow-hidden cursor-pointer group transform hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between"
+      className="bg-slate-800 rounded-lg shadow-lg overflow-hidden cursor-pointer group transform hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between border border-slate-700 hover:border-slate-600"
     >
       <div className="p-5">
         <div className="flex justify-between items-start">
@@ -40,16 +40,16 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, onSelect, onDelete }
             )}
         </div>
         <h3 className="text-xl font-bold text-white mt-3 truncate">{project.name}</h3>
-        <p className="text-sm text-gray-400 mt-1">Model: {project.modelType}</p>
-        <p className="text-sm text-gray-400">Data: {project.dataSourceName}</p>
+        <p className="text-sm text-slate-400 mt-1">Model: {project.modelType}</p>
+        <p className="text-sm text-slate-400">Data: {project.dataSourceName}</p>
       </div>
-      <div className="bg-gray-800/50 px-5 py-3 flex justify-between items-center border-t border-gray-700">
-        <p className="text-xs text-gray-500">
+      <div className="bg-slate-800/50 px-5 py-3 flex justify-between items-center border-t border-slate-700">
+        <p className="text-xs text-slate-500">
           Created: {new Date(project.createdAt).toLocaleDateString()}
         </p>
         <button 
             onClick={handleDelete}
-            className="p-1 text-gray-500 hover:text-red-500 transition-colors rounded-full opacity-0 group-hover:opacity-100"
+            className="p-1 text-slate-500 hover:text-red-500 transition-colors rounded-full opacity-0 group-hover:opacity-100"
             aria-label="Delete project"
             >
             <TrashIcon className="h-5 w-5" />

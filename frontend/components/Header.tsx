@@ -19,7 +19,7 @@ const Header: React.FC = () => {
 
   return (
     <>
-      <header className="bg-gray-800 shadow-md">
+      <header className="bg-slate-800 shadow-lg border-b border-slate-700">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center">
@@ -39,7 +39,7 @@ const Header: React.FC = () => {
               {/* Einstellungen Button */}
               <button
                 onClick={() => setIsSettingsOpen(true)}
-                className="p-2 text-gray-300 hover:text-white hover:bg-gray-700 rounded-md transition-colors duration-200"
+                className="p-2 text-gray-300 hover:text-white hover:bg-slate-700 rounded-md transition-colors duration-200"
                 title="Gemini AI Einstellungen"
               >
                 <SettingsIcon className="h-5 w-5" />

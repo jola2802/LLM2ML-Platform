@@ -62,8 +62,8 @@ const LLMConnectionStatus: React.FC<ConnectionStatusProps> = ({ onRefresh }) => 
     if (status.loading) {
       return (
         <div className="flex items-center space-x-2">
-          <div className="w-3 h-3 bg-yellow-400 rounded-full animate-pulse"></div>
-          <span className="text-sm text-gray-300">Prüfe...</span>
+          <div className="w-3 h-3 bg-amber-400 rounded-full animate-pulse"></div>
+          <span className="text-sm text-slate-300">Prüfe...</span>
         </div>
       );
     }
@@ -80,11 +80,11 @@ const LLMConnectionStatus: React.FC<ConnectionStatusProps> = ({ onRefresh }) => 
     if (status.connected) {
       return (
         <div className="flex items-center space-x-2">
-          <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+          <div className="w-3 h-3 bg-emerald-500 rounded-full animate-pulse"></div>
           <div className="flex flex-col">
-            <span className="text-sm text-green-300">LLM verbunden</span>
+            <span className="text-sm text-emerald-300">LLM verbunden</span>
             {status.currentModel && (
-              <span className="text-xs text-gray-400 font-mono">{status.currentModel}</span>
+              <span className="text-xs text-slate-400 font-mono">{status.currentModel}</span>
             )}
           </div>
         </div>

@@ -16,3 +16,4 @@ backend/services/python/*
 # backend/services/python/venv/
 .env
 .env.local
+backend/projects.db

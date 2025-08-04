@@ -405,7 +405,7 @@ WICHTIG:
     };
     
     // Verwende die neue Extraktionsmethode
-    const insights = cleanAndExtractJSON(response.result.message.content);
+    const insights = cleanAndExtractJSON(response.result);
     
     // Bestehende Metadaten-Ergänzung
     insights.evaluatedAt = new Date().toISOString();

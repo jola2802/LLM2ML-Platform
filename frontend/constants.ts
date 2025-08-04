@@ -2,12 +2,12 @@
 import { ProjectStatus, ModelType } from './types';
 
 export const PROJECT_STATUS_COLORS: Record<ProjectStatus, string> = {
-  [ProjectStatus.Training]: 'bg-blue-500 text-white',
-  [ProjectStatus.Completed]: 'bg-green-500 text-white',
-  [ProjectStatus.Failed]: 'bg-red-500 text-white',
-  [ProjectStatus.Paused]: 'bg-yellow-500 text-white',
-  [ProjectStatus['Re-Training']]: 'bg-purple-500 text-white',
-  [ProjectStatus['Re-training Failed']]: 'bg-red-600 text-white',
+  [ProjectStatus.Training]: 'bg-blue-600 text-white',
+  [ProjectStatus.Completed]: 'bg-emerald-600 text-white',
+  [ProjectStatus.Failed]: 'bg-red-600 text-white',
+  [ProjectStatus.Paused]: 'bg-amber-600 text-white',
+  [ProjectStatus['Re-Training']]: 'bg-indigo-600 text-white',
+  [ProjectStatus['Re-training Failed']]: 'bg-red-700 text-white',
 };
 
 export const MODEL_TYPE_DESCRIPTIONS = {

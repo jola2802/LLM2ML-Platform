@@ -133,30 +133,30 @@ const ProjectView: React.FC<ProjectViewProps> = ({ project, onBack, onProjectUpd
   // Utility functions for styling (moved from render functions)
   const getGradeColor = useCallback((grade: string) => {
     switch (grade) {
-      case 'Excellent': return 'text-green-400 border-green-500/50 bg-green-900/30';
+      case 'Excellent': return 'text-emerald-400 border-emerald-500/50 bg-emerald-900/30';
       case 'Good': return 'text-blue-400 border-blue-500/50 bg-blue-900/30';
-      case 'Fair': return 'text-yellow-400 border-yellow-500/50 bg-yellow-900/30';
+      case 'Fair': return 'text-amber-400 border-amber-500/50 bg-amber-900/30';
       case 'Poor': return 'text-orange-400 border-orange-500/50 bg-orange-900/30';
       case 'Critical': return 'text-red-400 border-red-500/50 bg-red-900/30';
-      default: return 'text-gray-400 border-gray-500/50 bg-gray-900/30';
+      default: return 'text-slate-400 border-slate-500/50 bg-slate-900/30';
     }
   }, []);
 
   const getImpactColor = useCallback((impact: string) => {
     switch (impact) {
       case 'High': return 'bg-red-900/50 text-red-400 border border-red-500/50';
-      case 'Medium': return 'bg-yellow-900/50 text-yellow-400 border border-yellow-500/50';
-      case 'Low': return 'bg-green-900/50 text-green-400 border border-green-500/50';
-      default: return 'bg-gray-900/50 text-gray-400 border border-gray-500/50';
+      case 'Medium': return 'bg-amber-900/50 text-amber-400 border border-amber-500/50';
+      case 'Low': return 'bg-emerald-900/50 text-emerald-400 border border-emerald-500/50';
+      default: return 'bg-slate-900/50 text-slate-400 border border-slate-500/50';
     }
   }, []);
 
   const getReadinessColor = useCallback((readiness: string) => {
     switch (readiness) {
-      case 'Production Ready': return 'text-green-400';
-      case 'Needs Improvement': return 'text-yellow-400';
+      case 'Production Ready': return 'text-emerald-400';
+      case 'Needs Improvement': return 'text-amber-400';
       case 'Not Ready': return 'text-red-400';
-      default: return 'text-gray-400';
+      default: return 'text-slate-400';
     }
   }, []);
   
@@ -349,13 +349,13 @@ const ProjectView: React.FC<ProjectViewProps> = ({ project, onBack, onProjectUpd
         <div className="space-y-4">
           {project.features.map(feature => (
             <div key={feature}>
-              <label htmlFor={feature} className="block text-sm font-medium text-gray-300 capitalize">{feature.replace(/_/g, ' ')}</label>
+              <label htmlFor={feature} className="block text-sm font-medium text-slate-300 capitalize">{feature.replace(/_/g, ' ')}</label>
               <input
                 type="text"
                 id={feature}
                 value={predictionInput[feature] || ''}
                 onChange={(e) => handleInputChange(feature, e.target.value)}
-                className="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-white p-2"
+                className="mt-1 block w-full bg-slate-700 border-slate-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-white p-2"
                 disabled={isPredicting}
               />
             </div>
@@ -371,18 +371,18 @@ const ProjectView: React.FC<ProjectViewProps> = ({ project, onBack, onProjectUpd
             <p className="text-center text-yellow-400 text-sm mt-2">Predictions are disabled for projects not in 'Completed' status.</p>}
         </div>
       </div>
-      <div className="bg-gray-800 p-6 rounded-lg flex flex-col items-center justify-center">
+      <div className="bg-slate-800 p-6 rounded-lg flex flex-col items-center justify-center">
         <h3 className="text-xl font-semibold text-white mb-4">Prediction Result</h3>
         <div className="flex-grow flex items-center justify-center w-full">
             {isPredicting && <Spinner size="lg"/>}
             {predictionError && <p className="text-red-400 text-center">{predictionError}</p>}
             {predictionResult && (
                 <div className="text-center">
-                    <p className="text-sm text-gray-400 mb-2">Predicted {project.targetVariable.replace(/_/g, ' ')}:</p>
+                    <p className="text-sm text-slate-400 mb-2">Predicted {project.targetVariable.replace(/_/g, ' ')}:</p>
                     <p className="text-4xl font-bold text-blue-400 break-all">{predictionResult}</p>
                 </div>
             )}
-            {!isPredicting && !predictionError && !predictionResult && <p className="text-gray-500">Result will appear here</p>}
+            {!isPredicting && !predictionError && !predictionResult && <p className="text-slate-500">Result will appear here</p>}
         </div>
       </div>
     </div>
@@ -393,18 +393,18 @@ const ProjectView: React.FC<ProjectViewProps> = ({ project, onBack, onProjectUpd
       <div className="space-y-6">
         {/* KI-Performance-Analyse Evaluation Control */}
         {project.performanceMetrics && (
-          <div className="bg-gradient-to-r from-purple-900/30 to-blue-900/30 border border-purple-500/50 rounded-lg p-6">
+          <div className="bg-gradient-to-r from-slate-800/50 to-blue-900/30 border border-slate-600/50 rounded-lg p-6">
             <div className="flex justify-between items-center">
               <div>
                 <h3 className="text-lg font-semibold text-white mb-2">🤖 KI-Performance-Analyse</h3>
-                <p className="text-purple-200 text-sm">
+                <p className="text-slate-300 text-sm">
                   Lasse die Performance deines Modells intelligent vom LLM bewerten und erhalte detaillierte Insights.
                 </p>
               </div>
               <button
                 onClick={handleEvaluatePerformance}
                 disabled={isEvaluating}
-                className="px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 disabled:from-gray-600 disabled:to-gray-700 text-white font-medium rounded-lg transition-all duration-200 flex items-center space-x-2"
+                className="px-6 py-3 bg-gradient-to-r from-blue-600 to-slate-700 hover:from-blue-700 hover:to-slate-800 disabled:from-slate-600 disabled:to-slate-700 text-white font-medium rounded-lg transition-all duration-200 flex items-center space-x-2"
               >
                 {isEvaluating ? (
                   <>
@@ -433,12 +433,12 @@ const ProjectView: React.FC<ProjectViewProps> = ({ project, onBack, onProjectUpd
           <div className="space-y-6">
             {/* Overall Score & Grade */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="bg-gray-800/50 rounded-lg p-6 text-center">
-                <h4 className="text-gray-400 text-sm font-medium mb-2">Gesamt-Score</h4>
+              <div className="bg-slate-800/50 rounded-lg p-6 text-center">
+                <h4 className="text-slate-400 text-sm font-medium mb-2">Gesamt-Score</h4>
                 <div className="text-4xl font-bold text-white mb-2">
                   {currentProject.performanceInsights.overallScore.toFixed(1)}/10
                 </div>
-                <div className="w-full bg-gray-700 rounded-full h-2">
+                <div className="w-full bg-slate-700 rounded-full h-2">
                   <div
                     className="bg-gradient-to-r from-blue-500 to-purple-500 h-2 rounded-full transition-all duration-500"
                     style={{ width: `${(currentProject.performanceInsights.overallScore / 10) * 100}%` }}
@@ -446,8 +446,8 @@ const ProjectView: React.FC<ProjectViewProps> = ({ project, onBack, onProjectUpd
                 </div>
               </div>
               
-              <div className="bg-gray-800/50 rounded-lg p-6 text-center">
-                <h4 className="text-gray-400 text-sm font-medium mb-2">Performance-Grade</h4>
+              <div className="bg-slate-800/50 rounded-lg p-6 text-center">
+                <h4 className="text-slate-400 text-sm font-medium mb-2">Performance-Grade</h4>
                 <div className={`inline-flex items-center px-4 py-2 rounded-lg border text-lg font-semibold ${getGradeColor(currentProject.performanceInsights.performanceGrade)}`}>
                   {currentProject.performanceInsights.performanceGrade}
                 </div>
@@ -455,49 +455,49 @@ const ProjectView: React.FC<ProjectViewProps> = ({ project, onBack, onProjectUpd
             </div>
 
             {/* Summary */}
-            <div className="bg-blue-900/20 border border-blue-500/50 rounded-lg p-6">
-              <h4 className="text-blue-400 font-medium mb-3">📊 KI-Zusammenfassung</h4>
-              <p className="text-blue-100">{currentProject.performanceInsights.summary}</p>
+            <div className="bg-slate-800/50 border border-slate-600/50 rounded-lg p-6">
+              <h4 className="text-slate-300 font-medium mb-3">📊 KI-Zusammenfassung</h4>
+              <p className="text-slate-200">{currentProject.performanceInsights.summary}</p>
             </div>
 
             {/* Detailed Analysis */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <div className="bg-green-900/20 border border-green-500/50 rounded-lg p-6">
-                <h4 className="text-green-400 font-medium mb-3 flex items-center">
+              <div className="bg-slate-800/50 border border-slate-600/50 rounded-lg p-6">
+                <h4 className="text-emerald-400 font-medium mb-3 flex items-center">
                   <span className="mr-2">✅</span>Stärken
                 </h4>
                 <ul className="space-y-2">
                   {currentProject.performanceInsights.detailedAnalysis.strengths.map((strength, index) => (
-                    <li key={index} className="text-green-100 text-sm flex items-start">
-                      <span className="text-green-400 mr-2 mt-1">•</span>
+                    <li key={index} className="text-slate-200 text-sm flex items-start">
+                      <span className="text-emerald-400 mr-2 mt-1">•</span>
                       {strength}
                     </li>
                   ))}
                 </ul>
               </div>
 
-              <div className="bg-orange-900/20 border border-orange-500/50 rounded-lg p-6">
-                <h4 className="text-orange-400 font-medium mb-3 flex items-center">
+              <div className="bg-slate-800/50 border border-slate-600/50 rounded-lg p-6">
+                <h4 className="text-amber-400 font-medium mb-3 flex items-center">
                   <span className="mr-2">⚠️</span>Schwächen
                 </h4>
                 <ul className="space-y-2">
                   {currentProject.performanceInsights.detailedAnalysis.weaknesses.map((weakness, index) => (
-                    <li key={index} className="text-orange-100 text-sm flex items-start">
-                      <span className="text-orange-400 mr-2 mt-1">•</span>
+                    <li key={index} className="text-slate-200 text-sm flex items-start">
+                      <span className="text-amber-400 mr-2 mt-1">•</span>
                       {weakness}
                     </li>
                   ))}
                 </ul>
               </div>
 
-              <div className="bg-purple-900/20 border border-purple-500/50 rounded-lg p-6">
-                <h4 className="text-purple-400 font-medium mb-3 flex items-center">
+              <div className="bg-slate-800/50 border border-slate-600/50 rounded-lg p-6">
+                <h4 className="text-blue-400 font-medium mb-3 flex items-center">
                   <span className="mr-2">🔍</span>Wichtige Erkenntnisse
                 </h4>
                 <ul className="space-y-2">
                   {currentProject.performanceInsights.detailedAnalysis.keyFindings.map((finding, index) => (
-                    <li key={index} className="text-purple-100 text-sm flex items-start">
-                      <span className="text-purple-400 mr-2 mt-1">•</span>
+                    <li key={index} className="text-slate-200 text-sm flex items-start">
+                      <span className="text-blue-400 mr-2 mt-1">•</span>
                       {finding}
                     </li>
                   ))}
@@ -506,13 +506,13 @@ const ProjectView: React.FC<ProjectViewProps> = ({ project, onBack, onProjectUpd
             </div>
 
             {/* Improvement Suggestions */}
-            <div className="bg-gray-800/50 rounded-lg p-6">
+            <div className="bg-slate-800/50 rounded-lg p-6">
               <h4 className="text-white font-medium mb-4 flex items-center">
                 <span className="mr-2">💡</span>Verbesserungsvorschläge
               </h4>
               <div className="space-y-4">
                 {currentProject.performanceInsights.improvementSuggestions.map((suggestion, index) => (
-                  <div key={index} className="bg-gray-700/50 rounded-lg p-4">
+                  <div key={index} className="bg-slate-700/50 rounded-lg p-4">
                     <div className="flex justify-between items-start mb-3">
                       <div>
                         <span className="text-blue-400 text-sm font-medium">{suggestion.category}</span>
@@ -521,10 +521,10 @@ const ProjectView: React.FC<ProjectViewProps> = ({ project, onBack, onProjectUpd
                         </div>
                       </div>
                     </div>
-                    <p className="text-gray-300 mb-2">{suggestion.suggestion}</p>
+                    <p className="text-slate-300 mb-2">{suggestion.suggestion}</p>
                     <details className="cursor-pointer">
-                      <summary className="text-gray-400 hover:text-gray-300 text-sm">Umsetzung anzeigen</summary>
-                      <p className="text-gray-400 text-sm mt-2 pl-4 border-l-2 border-gray-600">
+                      <summary className="text-slate-400 hover:text-slate-300 text-sm">Umsetzung anzeigen</summary>
+                      <p className="text-slate-400 text-sm mt-2 pl-4 border-l-2 border-slate-600">
                         {suggestion.implementation}
                       </p>
                     </details>
@@ -534,26 +534,26 @@ const ProjectView: React.FC<ProjectViewProps> = ({ project, onBack, onProjectUpd
             </div>
 
             {/* Business Impact */}
-            <div className="bg-gray-800/50 rounded-lg p-6">
+            <div className="bg-slate-800/50 rounded-lg p-6">
               <h4 className="text-white font-medium mb-4 flex items-center">
                 <span className="mr-2">🏢</span>Business Impact
               </h4>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="text-center">
-                  <h5 className="text-gray-400 text-sm mb-2">Produktionsbereitschaft</h5>
+                  <h5 className="text-slate-400 text-sm mb-2">Produktionsbereitschaft</h5>
                   <span className={`font-medium ${getReadinessColor(currentProject.performanceInsights.businessImpact.readiness)}`}>
                     {currentProject.performanceInsights.businessImpact.readiness}
                   </span>
                 </div>
                 <div className="text-center">
-                  <h5 className="text-gray-400 text-sm mb-2">Risikobewertung</h5>
-                  <span className={`font-medium ${currentProject.performanceInsights.businessImpact.riskAssessment === 'Low' ? 'text-green-400' : currentProject.performanceInsights.businessImpact.riskAssessment === 'Medium' ? 'text-yellow-400' : 'text-red-400'}`}>
+                  <h5 className="text-slate-400 text-sm mb-2">Risikobewertung</h5>
+                  <span className={`font-medium ${currentProject.performanceInsights.businessImpact.riskAssessment === 'Low' ? 'text-emerald-400' : currentProject.performanceInsights.businessImpact.riskAssessment === 'Medium' ? 'text-amber-400' : 'text-red-400'}`}>
                     {currentProject.performanceInsights.businessImpact.riskAssessment}
                   </span>
                 </div>
                 <div className="text-center md:col-span-1">
-                  <h5 className="text-gray-400 text-sm mb-2">Empfehlung</h5>
-                  <p className="text-gray-300 text-sm">{currentProject.performanceInsights.businessImpact.recommendation}</p>
+                  <h5 className="text-slate-400 text-sm mb-2">Empfehlung</h5>
+                  <p className="text-slate-300 text-sm">{currentProject.performanceInsights.businessImpact.recommendation}</p>
                 </div>
               </div>
             </div>
@@ -1080,6 +1080,15 @@ const ProjectView: React.FC<ProjectViewProps> = ({ project, onBack, onProjectUpd
       { id: 'export', name: 'Export' }
   ];
 
+  const getTabClasses = (tab: Tab) => {
+    const baseClasses = 'px-4 py-2 text-sm font-medium rounded-md transition-colors';
+    return activeTab === tab 
+      ? `${baseClasses} bg-blue-600 text-white` 
+      : `${baseClasses} text-slate-400 hover:text-white hover:bg-slate-800`;
+  };
+
+
+
   return (
     <ErrorBoundary>
       <div className="bg-gray-800/50 rounded-lg shadow-xl p-6 sm:p-8 animate-fade-in">
@@ -1095,7 +1104,7 @@ const ProjectView: React.FC<ProjectViewProps> = ({ project, onBack, onProjectUpd
               <p className="text-gray-400 mt-1">Model Type: {project.modelType}</p>
               <div className="flex items-center mt-2 space-x-4">
                 <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                  project.status === ProjectStatus.Completed ? 'bg-green-900/50 text-green-400 border border-green-500/50' :
+                  project.status === ProjectStatus.Completed ? 'bg-emerald-900/50 text-emerald-400 border border-emerald-500/50' :
                   project.status === ProjectStatus.Training || project.status === ProjectStatus['Re-Training'] ? 'bg-blue-900/50 text-blue-400 border border-blue-500/50' :
                   'bg-red-900/50 text-red-400 border border-red-500/50'
                 }`}>
