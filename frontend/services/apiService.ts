@@ -1,15 +1,20 @@
-// API-URL für Vercel Deployment
+// API-URL für Docker Deployment
 const getApiBaseUrl = () => {
-  // In der Entwicklung: localhost:3001
+  // In der Entwicklung: Nutze Vite-Proxy (läuft auf gleicher Domain mit /api prefix)
   if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-    return 'http://localhost:3001/api';
+    // Nutze den Vite-Proxy - /api wird an localhost:3001 weitergeleitet
+    return '/api';
   }
   
-  // In Vercel: gleiche Domain mit /api prefix
+  // In Produktion: gleiche Domain mit /api prefix (wird durch nginx proxy gehandhabt)
   return '/api';
 };
 
 const API_BASE_URL = getApiBaseUrl();
+
+// Debug-Logging für URL
+console.log('API_BASE_URL:', API_BASE_URL);
+console.log('Window location:', window.location.hostname, window.location.port);
 
 export interface ApiProject {
   id: string;
@@ -260,9 +265,205 @@ class ApiService {
     window.URL.revokeObjectURL(url);
   }
 
-  // Gemini-Verbindungsstatus prüfen
+  // Erweiterte Datenstatistiken abrufen
+  async getDataStatistics(projectId: string): Promise<any> {
+    const response = await fetch(`${API_BASE_URL}/projects/${projectId}/data-statistics`);
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+    }
+    return response.json();
+  }
+
+  // ===== NEUE LLM API METHODEN =====
+
+  // LLM-Konfiguration abrufen
+  async getLLMConfig(): Promise<{success: boolean, config: any}> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/llm/config`);
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+      }
+      return response.json();
+    } catch (error) {
+      console.error('Fehler beim Abrufen der LLM-Konfiguration:', error);
+      throw error;
+    }
+  }
+
+  // LLM-Status abrufen
+  async getLLMStatus(): Promise<any> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/llm/status`);
+      
+      // Prüfe Content-Type um sicherzustellen, dass wir JSON bekommen
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        console.warn('Server antwortet nicht mit JSON:', contentType);
+        throw new Error(`Server antwortet nicht mit JSON (Content-Type: ${contentType})`);
+      }
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+      }
+      
+      return response.json();
+    } catch (error) {
+      console.error('Fehler beim Abrufen des LLM-Status:', error);
+      
+      // Fallback: Standard-Status zurückgeben
+      const errorMessage = error instanceof Error ? error.message : 'Unbekannter Fehler';
+      return {
+        success: false,
+        activeProvider: 'ollama',
+        ollama: {
+          connected: false,
+          available: false,
+          error: errorMessage,
+          model: 'mistral:latest'
+        },
+        gemini: {
+          connected: false,
+          available: false,
+          hasApiKey: false,
+          error: errorMessage,
+          model: 'gemini-2.5-flash-lite'
+        },
+        lastTested: new Date().toISOString()
+      };
+    }
+  }
+
+  // Aktiven Provider setzen
+  async setLLMProvider(provider: string): Promise<{success: boolean, message?: string, error?: string}> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/llm/provider`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ provider }),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+      }
+      return response.json();
+    } catch (error) {
+      console.error('Fehler beim Setzen des LLM-Providers:', error);
+      throw error;
+    }
+  }
+
+  // Ollama-Modelle abrufen
+  async getOllamaModels(): Promise<{success: boolean, models: any[], error?: string}> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/llm/ollama/models`);
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+      }
+      return response.json();
+    } catch (error) {
+      console.error('Fehler beim Abrufen der Ollama-Modelle:', error);
+      throw error;
+    }
+  }
+
+  // Ollama-Verbindung testen
+  async testOllamaConnection(): Promise<{success: boolean, connected: boolean, error?: string}> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/llm/ollama/test`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+      }
+      return response.json();
+    } catch (error) {
+      console.error('Fehler beim Testen der Ollama-Verbindung:', error);
+      throw error;
+    }
+  }
+
+  // Ollama-Konfiguration aktualisieren
+  async updateOllamaConfig(config: any): Promise<{success: boolean, message?: string, error?: string}> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/llm/ollama/config`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(config),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+      }
+      return response.json();
+    } catch (error) {
+      console.error('Fehler beim Aktualisieren der Ollama-Konfiguration:', error);
+      throw error;
+    }
+  }
+
+  // Gemini-Verbindung testen
+  async testGeminiConnection(): Promise<{success: boolean, connected: boolean, error?: string}> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/llm/gemini/test`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+      }
+      return response.json();
+    } catch (error) {
+      console.error('Fehler beim Testen der Gemini-Verbindung:', error);
+      throw error;
+    }
+  }
+
+  // Gemini-Konfiguration aktualisieren
+  async updateGeminiConfig(config: any): Promise<{success: boolean, message?: string, error?: string}> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/llm/gemini/config`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(config),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+      }
+      return response.json();
+    } catch (error) {
+      console.error('Fehler beim Aktualisieren der Gemini-Konfiguration:', error);
+      throw error;
+    }
+  }
+
+  // ===== VERALTETE METHODEN (für Kompatibilität) =====
+
+  // Gemini-Verbindungsstatus prüfen (veraltet)
   async checkGeminiStatus(): Promise<{connected: boolean, hasApiKey: boolean, error?: string, lastTested?: string}> {
-    const response = await fetch(`${API_BASE_URL}/llm/status`);
+    const response = await fetch(`${API_BASE_URL}/gemini/status`);
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
@@ -324,16 +525,6 @@ class ApiService {
     const response = await fetch(`${API_BASE_URL}/gemini/current-model`);
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    return response.json();
-  }
-
-  // Erweiterte Datenstatistiken abrufen
-  async getDataStatistics(projectId: string): Promise<any> {
-    const response = await fetch(`${API_BASE_URL}/projects/${projectId}/data-statistics`);
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
     }
     return response.json();
   }

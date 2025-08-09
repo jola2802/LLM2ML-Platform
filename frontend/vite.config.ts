@@ -14,6 +14,21 @@ export default defineConfig(({ mode }) => {
           '@': path.resolve(__dirname, '.'),
         }
       },
+      build: {
+        rollupOptions: {
+          external: [],
+          output: {
+            manualChunks: {
+              vendor: ['react', 'react-dom'],
+              charts: ['recharts']
+            }
+          }
+        },
+        commonjsOptions: {
+          include: [/node_modules/],
+          transformMixedEsModules: true
+        }
+      },
       server: {
         proxy: {
           '/api': {

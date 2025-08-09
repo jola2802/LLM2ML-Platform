@@ -1,5 +1,5 @@
 # Multi-stage build für optimierte Image-Größe
-FROM node:18-alpine AS frontend-builder
+FROM node:18-slim AS frontend-builder
 
 WORKDIR /app/frontend
 COPY frontend/package*.json ./
@@ -32,12 +32,12 @@ RUN apt-get update && apt-get install -y \
 WORKDIR /app
 
 # Erstelle Python Virtual Environment
-# RUN python3 -m venv /opt/venv
-# ENV PATH="/opt/venv/bin:$PATH"
+RUN python3 -m venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
 
 # Kopiere Python requirements zuerst für besseres Caching
 COPY requirements.txt ./
-# RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install -r requirements.txt
 
 # Backend dependencies
 COPY backend/package*.json ./backend/
@@ -58,9 +58,9 @@ WORKDIR /app
 
 # Umgebungsvariablen setzen
 ENV NODE_ENV=production
-ENV PORT=3001
+ENV PORT=3000
 
-# Port freigeben (dynamisch über ENV konfigurierbar)
+# Port freigeben (Frontend-Port für die gesamte Anwendung)
 EXPOSE $PORT
 
 # Arbeitsverzeichnis für Start

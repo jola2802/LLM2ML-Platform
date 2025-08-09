@@ -31,16 +31,13 @@ import {
   analyzeGenericFile,
 } from './file_analysis.js';
 import {
-  clearFileCache,
-  getFileCacheStatus
-} from './llm.js';
-import {
   getCachedDataAnalysis,
   clearAnalysisCache,
   getAnalysisCacheStatus,
   analyzeDataForLLM
 } from './data_exploration.js';
 import { logRESTAPIRequest } from './log.js';
+import { getLLMQueueStatus, cancelLLMRequest } from './llm.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -528,8 +525,7 @@ export function setupAPIEndpoints(app, upload, scriptDir, venvDir) {
   app.post('/api/cache/clear', async (req, res) => {
     try {
       logRESTAPIRequest('clear-cache', req.body);
-      await clearFileCache();
-      res.json({ message: 'Cache erfolgreich geleert' });
+      res.json({ message: 'File-Cache wurde entfernt - keine Aktion erforderlich' });
     } catch (error) {
       console.error('Fehler beim Löschen des Caches:', error);
       res.status(500).json({ error: 'Fehler beim Löschen des Caches: ' + error.message });
@@ -540,8 +536,11 @@ export function setupAPIEndpoints(app, upload, scriptDir, venvDir) {
   app.get('/api/cache/status', async (req, res) => {
     try {
       logRESTAPIRequest('get-cache-status', req.body);
-      const status = await getFileCacheStatus();
-      res.json(status);
+      res.json({ 
+        message: 'File-Cache wurde entfernt',
+        cachedFiles: [],
+        cacheSize: 0
+      });
     } catch (error) {
       console.error('Fehler beim Abrufen des Cache-Status:', error);
       res.status(500).json({ error: 'Fehler beim Abrufen des Cache-Status: ' + error.message });
@@ -595,49 +594,225 @@ export function setupAPIEndpoints(app, upload, scriptDir, venvDir) {
     }
   });
 
-  // Gemini-Verbindungsstatus prüfen
-  app.get('/api/llm/status', async (req, res) => {
+  // ===== NEUE EINHEITLICHE LLM API ENDPOINTS =====
+
+  // Test-Endpoint für LLM-API
+  app.get('/api/llm/test', async (req, res) => {
     try {
-      logRESTAPIRequest('llm-status', req.body);
-      const API_KEY = process.env.GEMINI_API_KEY;
+      res.json({
+        success: true,
+        message: 'LLM API funktioniert',
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      res.status(500).json({ error: 'Test failed: ' + error.message });
+    }
+  });
+
+  // Aktuelle LLM-Konfiguration abrufen
+  app.get('/api/llm/config', async (req, res) => {
+    try {
+      logRESTAPIRequest('get-llm-config', req.body);
+      const { getLLMConfig } = await import('./llm.js');
+      const config = getLLMConfig();
       
-      if (!API_KEY) {
-        return res.json({ 
-          connected: false, 
-          error: 'Kein API-Key konfiguriert',
-          hasApiKey: false 
-        });
+      res.json({
+        success: true,
+        config: config
+      });
+    } catch (error) {
+      console.error('Error getting LLM config:', error);
+      res.status(500).json({ error: 'Failed to get config: ' + error.message });
+    }
+  });
+
+  // Aktiven Provider setzen
+  app.post('/api/llm/provider', async (req, res) => {
+    try {
+      logRESTAPIRequest('set-llm-provider', req.body);
+      const { provider } = req.body;
+      
+      if (!provider) {
+        return res.status(400).json({ error: 'Provider erforderlich' });
       }
 
-      // Teste die Verbindung mit einem einfachen Prompt
-      try {
-        const { testLLMAPI } = await import('./llm.js');
-        const testResponseOllama = await testLLMAPI('Antworte nur mit "OK" wenn du diese Nachricht erhältst.', 'ollama');
-        // const testResponseGemini = await testLLMAPI('Antworte nur mit "OK" wenn du diese Nachricht erhältst.', 'gemini-2.5-flash-lite');
-        
-        let isConnected = false;
-        if (testResponseOllama) {
-          isConnected = testResponseOllama.ollama.toLowerCase().includes('ok');
-          console.log('Ollama connected:', isConnected);
-        } else if (testResponseGemini) {
-          isConnected = testResponseGemini.gemini.toLowerCase().includes('ok');
-          console.log('Gemini connected:', isConnected);
-        } else {
-          isConnected = false
-        }
-        
-        res.json({ 
-          connected: isConnected, 
-          hasApiKey: true,
-          lastTested: new Date().toISOString()
-        });
-      } catch (error) {
-        res.json({ 
-          connected: false, 
-          error: error.message,
-          hasApiKey: true
-        });
+      const { setActiveProvider, LLM_PROVIDERS } = await import('./llm.js');
+      
+      if (!Object.values(LLM_PROVIDERS).includes(provider)) {
+        return res.status(400).json({ error: 'Ungültiger Provider' });
       }
+
+      setActiveProvider(provider);
+      
+      res.json({
+        success: true,
+        message: `Provider auf ${provider} gesetzt`,
+        provider: provider
+      });
+    } catch (error) {
+      console.error('Error setting LLM provider:', error);
+      res.status(500).json({ error: 'Failed to set provider: ' + error.message });
+    }
+  });
+
+  // Ollama-spezifische Endpoints
+  app.get('/api/llm/ollama/models', async (req, res) => {
+    try {
+      logRESTAPIRequest('get-ollama-models', req.body);
+      const { getAvailableOllamaModels } = await import('./llm.js');
+      const result = await getAvailableOllamaModels();
+      
+      res.json(result);
+    } catch (error) {
+      console.error('Error getting Ollama models:', error);
+      res.status(500).json({ error: 'Failed to get models: ' + error.message });
+    }
+  });
+
+  app.post('/api/llm/ollama/test', async (req, res) => {
+    try {
+      logRESTAPIRequest('test-ollama-connection', req.body);
+      const { testOllamaConnection } = await import('./llm.js');
+      const result = await testOllamaConnection();
+      
+      res.json(result);
+    } catch (error) {
+      console.error('Error testing Ollama connection:', error);
+      res.status(500).json({ error: 'Failed to test connection: ' + error.message });
+    }
+  });
+
+  app.post('/api/llm/ollama/config', async (req, res) => {
+    try {
+      logRESTAPIRequest('update-ollama-config', req.body);
+      const { host, defaultModel } = req.body;
+      
+      const { updateOllamaConfig } = await import('./llm.js');
+      const config = {};
+      
+      if (host) config.host = host;
+      if (defaultModel) config.defaultModel = defaultModel;
+      
+      updateOllamaConfig(config);
+      
+      res.json({
+        success: true,
+        message: 'Ollama-Konfiguration aktualisiert',
+        config: config
+      });
+    } catch (error) {
+      console.error('Error updating Ollama config:', error);
+      res.status(500).json({ error: 'Failed to update config: ' + error.message });
+    }
+  });
+
+  // Gemini-spezifische Endpoints
+  app.post('/api/llm/gemini/test', async (req, res) => {
+    try {
+      logRESTAPIRequest('test-gemini-connection', req.body);
+      const { testGeminiConnection } = await import('./llm.js');
+      const result = await testGeminiConnection();
+      
+      res.json(result);
+    } catch (error) {
+      console.error('Error testing Gemini connection:', error);
+      res.status(500).json({ error: 'Failed to test connection: ' + error.message });
+    }
+  });
+
+  app.post('/api/llm/gemini/config', async (req, res) => {
+    try {
+      logRESTAPIRequest('update-gemini-config', req.body);
+      const { apiKey, defaultModel } = req.body;
+      
+      const { updateGeminiConfig } = await import('./llm.js');
+      const config = {};
+      
+      if (apiKey) config.apiKey = apiKey;
+      if (defaultModel) config.defaultModel = defaultModel;
+      
+      updateGeminiConfig(config);
+      
+      res.json({
+        success: true,
+        message: 'Gemini-Konfiguration aktualisiert',
+        config: {
+          ...config,
+          apiKey: config.apiKey ? `${config.apiKey.substring(0, 8)}...` : null
+        }
+      });
+    } catch (error) {
+      console.error('Error updating Gemini config:', error);
+      res.status(500).json({ error: 'Failed to update config: ' + error.message });
+    }
+  });
+
+  // Einheitlicher LLM-Status
+  app.get('/api/llm/status', async (req, res) => {
+    try {
+      logRESTAPIRequest('get-llm-status', req.body);
+      
+      const { getLLMConfig, testOllamaConnection, testGeminiConnection } = await import('./llm.js');
+      const config = getLLMConfig();
+      
+      // Teste beide Verbindungen
+      const [ollamaResult, geminiResult] = await Promise.allSettled([
+        testOllamaConnection(),
+        testGeminiConnection()
+      ]);
+      
+      const ollamaStatus = ollamaResult.status === 'fulfilled' ? ollamaResult.value : {
+        success: false,
+        connected: false,
+        error: ollamaResult.reason?.message || 'Test fehlgeschlagen'
+      };
+      
+      const geminiStatus = geminiResult.status === 'fulfilled' ? geminiResult.value : {
+        success: false,
+        connected: false,
+        error: geminiResult.reason?.message || 'Test fehlgeschlagen'
+      };
+      
+      res.json({
+        success: true,
+        activeProvider: config.activeProvider,
+        ollama: {
+          connected: ollamaStatus.connected || false,
+          available: ollamaStatus.success || false,
+          error: ollamaStatus.error || null,
+          model: config.ollama.defaultModel
+        },
+        gemini: {
+          connected: geminiStatus.connected || false,
+          available: geminiStatus.success || false,
+          hasApiKey: !!config.gemini.apiKey,
+          error: geminiStatus.error || null,
+          model: config.gemini.defaultModel
+        },
+        lastTested: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error('Error getting LLM status:', error);
+      res.status(500).json({ error: 'Failed to get status: ' + error.message });
+    }
+  });
+
+  // ===== VERALTETE ENDPOINTS (für Kompatibilität) =====
+
+  // Veralteter Gemini-Status-Endpoint (Kompatibilität)
+  app.get('/api/gemini/status', async (req, res) => {
+    try {
+      logRESTAPIRequest('gemini-status-legacy', req.body);
+      const { getLLMConfig, testGeminiConnection } = await import('./llm.js');
+      
+      const config = getLLMConfig();
+      const result = await testGeminiConnection();
+      
+      res.json({ 
+        connected: result.connected, 
+        error: result.error,
+        hasApiKey: !!config.gemini.apiKey 
+      });
     } catch (error) {
       console.error('Gemini status check error:', error);
       res.status(500).json({ error: 'Status check failed: ' + error.message });
@@ -814,6 +989,59 @@ export function setupPredictionEndpoint(app, scriptDir, venvDir) {
     } catch (error) {
       console.error('Prediction error:', error);
       res.status(500).json({ error: 'Prediction failed: ' + error.message });
+    }
+  });
+
+  // ===== LLM QUEUE MANAGEMENT ENDPOINTS =====
+
+  // LLM Queue Status abrufen
+  app.get('/api/llm/queue/status', async (req, res) => {
+    await logRESTAPIRequest('GET', '/api/llm/queue/status');
+    
+    try {
+      const status = getLLMQueueStatus();
+      res.json({ 
+        success: true, 
+        status,
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error('Queue Status Error:', error);
+      res.status(500).json({ 
+        success: false, 
+        error: 'Failed to get queue status: ' + error.message 
+      });
+    }
+  });
+
+  // LLM Request abbrechen
+  app.post('/api/llm/queue/cancel/:requestId', async (req, res) => {
+    await logRESTAPIRequest('POST', '/api/llm/queue/cancel/:requestId');
+    
+    try {
+      const { requestId } = req.params;
+      const { reason = 'User cancelled' } = req.body;
+      
+      const cancelled = cancelLLMRequest(parseInt(requestId), reason);
+      
+      if (cancelled) {
+        res.json({ 
+          success: true, 
+          message: `Request ${requestId} cancelled`,
+          requestId: parseInt(requestId)
+        });
+      } else {
+        res.status(404).json({ 
+          success: false, 
+          error: `Request ${requestId} not found or already completed` 
+        });
+      }
+    } catch (error) {
+      console.error('Cancel Request Error:', error);
+      res.status(500).json({ 
+        success: false, 
+        error: 'Failed to cancel request: ' + error.message 
+      });
     }
   });
 }

@@ -73,10 +73,10 @@ WICHTIG: Gib NUR das JSON-Objekt zurück, keine Markdown-Formatierung oder zusä
     // Versuche zuerst mit Gemini, dann Fallback auf Ollama
     let response;
     try {
-      response = await callLLMAPI(prompt, null, 'gemini-2.5-flash-lite', 2);
+      response = await callLLMAPI(prompt, null, 'gemini-2.5-flash-lite', 3);
     } catch (geminiError) {
       console.log('Gemini fehlgeschlagen, Fallback auf Ollama:', geminiError.message);
-      response = await callLLMAPI(prompt, null, 'ollama', 2);
+      response = await callLLMAPI(prompt, null, 'mistral:latest', 3);
     }
     
     // Extrahiere JSON aus der Antwort - robuster für verschiedene Response-Formate
@@ -89,8 +89,14 @@ WICHTIG: Gib NUR das JSON-Objekt zurück, keine Markdown-Formatierung oder zusä
       throw new Error('Ungültige Response vom LLM');
     }
     
-    // Entferne Markdown-Formatierung falls vorhanden
+    // Entferne Markdown-Formatierung und führende/nachfolgende Leerzeichen
     jsonText = jsonText.replace(/```json/g, '').replace(/```/g, '').trim();
+    
+    // Entferne führende Anführungszeichen und Leerzeichen die manchmal in LLM-Antworten vorkommen
+    jsonText = jsonText.replace(/^[\s"]*/, '').replace(/[\s"]*$/, '');
+    
+    // Konvertiere Python None zu JSON null
+    jsonText = jsonText.replace(/:\s*None\b/g, ': null');
     
     // Versuche verschiedene JSON-Extraktionsmethoden
     let jsonMatch = null;
@@ -337,7 +343,7 @@ WICHTIG:
 
     // const response = await callLLMAPI(prompt, null, 'gemini-2.5-flash-lite');
     
-    const response = await callLLMAPI(prompt, null, 'ollama');
+    const response = await callLLMAPI(prompt, null, 'mistral:latest');
     
     // Sicherstellen, dass response.result ein String ist
     if (!response || !response.result) {

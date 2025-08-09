@@ -130,6 +130,9 @@ WICHTIGE REGELN:
 Generiere ein vollständiges Python-Script (reiner Code, keine Markdown-Formatierung):`;
 
       // Rufe das LLM API auf (ohne Datei-Upload, da wir die Analyse bereits haben)
+      // const response = await callLLMAPI(prompt, null, 'gemini-2.5-flash-lite', 2);
+      // const response = await callLLMAPI(prompt, null, 'llama3.2:latest', 2);
+      // Verwende immer Gemini für Python-Skript-Generierung (bessere Code-Qualität)
       const response = await callLLMAPI(prompt, null, 'gemini-2.5-flash-lite', 2);
       
       // Stelle sicher, dass wir den Python-Code als String zurückgeben

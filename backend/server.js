@@ -65,9 +65,9 @@ const upload = multer({
     },
     filename: (req, file, cb) => {
       // Behalte die ursprüngliche Dateiendung bei
-      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-      const fileExtension = path.extname(file.originalname);
-      const fileName = uniqueSuffix + fileExtension;
+      const now = new Date();
+      const uniqueSuffix = now.toISOString().split('T')[0] + '-' + now.getHours() + '-' + now.getMinutes() + '-' + now.getSeconds();
+      const fileName =   uniqueSuffix + file.originalname;
       cb(null, fileName);
     }
   }),
@@ -82,6 +82,15 @@ const upload = multer({
   limits: {
     fileSize: 10 * 1024 * 1024 // 10MB Limit
   }
+});
+
+// Health Check Endpoint
+app.get('/health', (req, res) => {
+  res.status(200).json({ 
+    status: 'healthy', 
+    timestamp: new Date().toISOString(),
+    service: 'ml-platform-backend'
+  });
 });
 
 // API Endpoints Setup
