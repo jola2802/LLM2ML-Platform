@@ -28,6 +28,7 @@ export interface ApiProject {
   performanceMetrics?: {
     [key: string]: number;
   };
+  performanceInsights?: any;
   pythonCode?: string;
   originalPythonCode?: string;
   modelPath?: string;
@@ -206,7 +207,12 @@ class ApiService {
   }
 
   // LLM-Empfehlungen für manipulierte Daten
-  async analyzeData(filePath: string, excludedColumns?: string[], excludedFeatures?: string[]): Promise<any> {
+  async analyzeData(
+    filePath: string,
+    excludedColumns?: string[],
+    excludedFeatures?: string[],
+    userPreferences?: string,
+  ): Promise<any> {
     const response = await fetch(`${API_BASE_URL}/analyze-data`, {
       method: 'POST',
       headers: {
@@ -215,7 +221,8 @@ class ApiService {
       body: JSON.stringify({
         filePath,
         excludedColumns,
-        excludedFeatures
+        excludedFeatures,
+        userPreferences,
       }),
     });
 
@@ -239,6 +246,67 @@ class ApiService {
 
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    return response.json();
+  }
+
+  // ========= Monitoring APIs =========
+  async initMonitoring(projectId: string): Promise<any> {
+    const response = await fetch(`${API_BASE_URL}/projects/${projectId}/monitoring/init`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' }
+    });
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+    }
+    return response.json();
+  }
+
+  async logMonitoringEvent(projectId: string, event: { features?: any; prediction?: any; truth?: any; timestamp?: string }): Promise<any> {
+    const response = await fetch(`${API_BASE_URL}/projects/${projectId}/monitoring/event`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(event || {})
+    });
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+    }
+    return response.json();
+  }
+
+  async getMonitoringStatus(projectId: string): Promise<any> {
+    const response = await fetch(`${API_BASE_URL}/projects/${projectId}/monitoring/status`);
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+    }
+    return response.json();
+  }
+
+  async resetMonitoring(projectId: string): Promise<any> {
+    const response = await fetch(`${API_BASE_URL}/projects/${projectId}/monitoring/reset`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' }
+    });
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+    }
+    return response.json();
+  }
+
+  // ========= Auto-Tuning =========
+  async autoTune(projectId: string, iterations: number = 2, apply: boolean = false): Promise<{ success: boolean; proposal: { algorithm: string; hyperparameters: any; expectedGain?: number; rationale?: string }, applied?: boolean }> {
+    const response = await fetch(`${API_BASE_URL}/projects/${projectId}/auto-tune`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ iterations, apply })
+    });
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
     }
     return response.json();
   }
@@ -527,6 +595,40 @@ class ApiService {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
     return response.json();
+  }
+
+  // Datei-Management-Funktionen
+  async getFiles(type: 'scripts' | 'models' | 'uploads'): Promise<any[]> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/files/${type}`);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      return response.json();
+    } catch (error) {
+      console.error(`Fehler beim Abrufen der ${type}-Dateien:`, error);
+      throw error;
+    }
+  }
+
+  async deleteFile(filePath: string, type: 'scripts' | 'models' | 'uploads'): Promise<{success: boolean, message?: string}> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/files/${type}`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ filePath })
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+      }
+      
+      return response.json();
+    } catch (error) {
+      console.error('Fehler beim Löschen der Datei:', error);
+      throw error;
+    }
   }
 }
 

@@ -43,6 +43,7 @@ const ProjectWizard: React.FC<ProjectWizardProps> = ({ onBack, onSubmit }) => {
   const [selectedModelType, setSelectedModelType] = useState<string>('');
   const [manipulatedData, setManipulatedData] = useState<any>(null);
   const [availableFeatures, setAvailableFeatures] = useState<string[]>([]);
+  const [userPreferences, setUserPreferences] = useState<string>('');
   
   // State für ausklappbare Sektionen
   const [showColumnManagement, setShowColumnManagement] = useState(false);
@@ -97,9 +98,10 @@ const ProjectWizard: React.FC<ProjectWizardProps> = ({ onBack, onSubmit }) => {
     try {
       // LLM-Empfehlungen für manipulierte Daten abrufen
       const result = await apiService.analyzeData(
-        csvAnalysis.filePath, 
-        excludedColumns, 
-        excludedFeatures
+        csvAnalysis.filePath,
+        excludedColumns,
+        excludedFeatures,
+        userPreferences,
       );
       
       console.log('AnalyzeData Result:', result); // Debug-Log
@@ -304,8 +306,23 @@ const ProjectWizard: React.FC<ProjectWizardProps> = ({ onBack, onSubmit }) => {
       <p className="text-sm text-slate-400 mb-6">
         Entfernen Sie unerwünschte Spalten und Features bevor die KI-Analyse startet.
       </p>
-      
+
       <div className="space-y-6">
+        {/* Anforderungen an die KI */}
+        <div className="bg-slate-900/50 p-6 rounded-lg border border-slate-700">
+            <h4 className="font-semibold text-white mb-2">📝 Anforderungen</h4>
+            <p className="text-sm text-slate-400 mb-4">
+              Beschreiben Sie hier spezielle Anforderungen, z. B. gewünschte Zielvariable, zu priorisierende Features, bevorzugter Modelltyp/Algorithmus, Metriken oder sonstige Constraints.
+            </p>
+            <textarea
+              value={userPreferences}
+              onChange={(e) => setUserPreferences(e.target.value)}
+              placeholder="Beispiel: Zielvariable = churn; Bevorzugt Klassifikation; Algorithmus: LogisticRegression;"
+              className="w-full bg-slate-700 border-slate-600 rounded-md p-3 text-white focus:ring-blue-500 focus:border-blue-500 min-h-[100px]"
+            />
+            <p className="text-xs text-slate-400 mt-2">Diese Hinweise werden beim Erstellen der Empfehlungen berücksichtigt.</p>
+        </div>
+
         {csvAnalysis && (
           <>
             <div className="bg-slate-900/50 p-6 rounded-lg border border-slate-700">
@@ -703,7 +720,7 @@ const ProjectWizard: React.FC<ProjectWizardProps> = ({ onBack, onSubmit }) => {
           </div>
         </div>
 
-        <div className="bg-yellow-900/30 border border-yellow-500/50 rounded-lg p-4">
+        {/* <div className="bg-yellow-900/30 border border-yellow-500/50 rounded-lg p-4">
           <div className="flex items-start space-x-3">
             <span className="text-yellow-400 text-xl">⚡</span>
             <div>
@@ -713,7 +730,7 @@ const ProjectWizard: React.FC<ProjectWizardProps> = ({ onBack, onSubmit }) => {
               </p>
             </div>
           </div>
-        </div>
+        </div> */}
       </div>
     </div>
   );

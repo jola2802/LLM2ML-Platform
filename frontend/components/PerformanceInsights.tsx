@@ -11,6 +11,7 @@ interface PerformanceInsightsProps {
 const PerformanceInsights: React.FC<PerformanceInsightsProps> = ({ project, onInsightsUpdate }) => {
   const [isEvaluating, setIsEvaluating] = useState(false);
   const [evaluationError, setEvaluationError] = useState<string | null>(null);
+  // Kompakter Modus: keine Monitoring-/Auto-Tuning-UI hier
 
   const handleEvaluatePerformance = async () => {
     setIsEvaluating(true);
@@ -29,6 +30,8 @@ const PerformanceInsights: React.FC<PerformanceInsightsProps> = ({ project, onIn
       setIsEvaluating(false);
     }
   };
+
+  // (bewusst leer)
 
   const getGradeColor = (grade: string) => {
     switch (grade) {
@@ -69,6 +72,7 @@ const PerformanceInsights: React.FC<PerformanceInsightsProps> = ({ project, onIn
 
   return (
     <div className="space-y-6">
+
       {/* Evaluation Control */}
       <div className="bg-gradient-to-r from-purple-900/30 to-blue-900/30 border border-purple-500/50 rounded-lg p-6">
         <div className="flex justify-between items-center">
@@ -103,6 +107,43 @@ const PerformanceInsights: React.FC<PerformanceInsightsProps> = ({ project, onIn
           </div>
         )}
       </div>
+
+      {/* Kompakter Insights-Output (Score, Grade, Summary, Top-Metriken) */}
+      {project.performanceInsights && (
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="bg-gray-800/50 rounded-lg p-6 text-center">
+              <h4 className="text-gray-400 text-sm font-medium mb-2">Gesamt-Score</h4>
+              <div className="text-4xl font-bold text-white mb-2">
+                {project.performanceInsights.overallScore.toFixed(1)}/10
+              </div>
+            </div>
+            <div className="bg-gray-800/50 rounded-lg p-6 text-center">
+              <h4 className="text-gray-400 text-sm font-medium mb-2">Grade</h4>
+              <div className={`inline-flex items-center px-4 py-2 rounded-lg border text-lg font-semibold ${getGradeColor(project.performanceInsights.performanceGrade)}`}>
+                {project.performanceInsights.performanceGrade}
+              </div>
+            </div>
+          </div>
+          <div className="bg-gray-800/50 rounded-lg p-6">
+            <h4 className="text-white font-medium mb-3">Kurz-Zusammenfassung</h4>
+            <p className="text-gray-200">{project.performanceInsights.summary}</p>
+          </div>
+          {project.performanceMetrics && (
+            <div className="bg-gray-800/50 rounded-lg p-6">
+              <h4 className="text-white font-medium mb-3">Wichtigste Metriken</h4>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                {Object.entries(project.performanceMetrics).slice(0, 6).map(([name, value]) => (
+                  <div key={name} className="bg-gray-900/50 rounded p-3 flex items-center justify-between">
+                    <span className="text-gray-300 capitalize text-sm">{name.replace(/_/g, ' ')}</span>
+                    <span className="text-blue-400 font-mono text-sm">{typeof value === 'number' ? value.toFixed(4) : String(value)}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Performance Insights Display */}
       {project.performanceInsights && (

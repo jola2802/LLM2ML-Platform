@@ -52,10 +52,8 @@ const LLMConnectionStatus: React.FC<ConnectionStatusProps> = ({ onRefresh }) => 
   useEffect(() => {
     checkStatus();
     
-    // Prüfe Status alle 30 Sekunden
-    const interval = setInterval(checkStatus, 30000);
-    
-    return () => clearInterval(interval);
+    // Entferne automatisches Polling - Status wird über Header-Komponente verwaltet
+    // Interval nur bei manueller Aktualisierung
   }, []);
 
   const getStatusIndicator = () => {

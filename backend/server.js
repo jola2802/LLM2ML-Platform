@@ -5,42 +5,61 @@ import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
+import { PythonWorkerPool } from './services/execution/python_worker_pool.js';
+import { jobQueue } from './services/monitoring/job_queue.js';
 
 // Service-Imports
-import { initializeLogging } from './services/log.js';
+import { initializeLogging } from './services/monitoring/log.js';
 import { 
   validatePythonCodeWithLLM,
-  validatePythonCode,
   executePythonScript,
-  extractMetricsFromOutput
-} from './services/code_exec.js';
-import { generatePythonScriptWithLLM } from './services/python_generator.js';
+  generatePredictionScript,
+  extractMetricsFromOutput,
+  cleanupOldPredictScripts
+} from './services/execution/code_exec.js';
 import { 
   initializeDatabase,
   getProject,
   updateProjectTraining,
-  updateProjectStatus,
-  updateProjectInsights
-} from './services/db.js';
-import { setupAPIEndpoints, setTrainingFunctions, setupPredictionEndpoint } from './services/api_endpoints.js';
-import { evaluatePerformanceWithLLM } from './services/llm_api.js';
+  updateProjectCode,
+  updateProjectInsights,
+  extractHyperparametersFromCode
+} from './services/database/db.js';
+import { generatePythonScriptWithLLM } from './services/execution/python_generator.js';
+import { evaluatePerformanceWithLLM } from './services/llm/llm_api.js';
 
+// Route-Imports
+import { setupAPIEndpoints, setTrainingFunctions, setupPredictionEndpoint } from './services/api/api_endpoints.js';
+import { setupProjectRoutes } from './services/api/routes/projects.js';
+import { setupUploadRoutes } from './services/api/routes/upload.js';
+import { setupAnalyzeRoutes } from './services/api/routes/analyze.js';
+import { setupLLMRoutes } from './services/api/routes/llm.js';
+import { setupCacheRoutes } from './services/api/routes/cache.js';
+import { setupMonitoringRoutes } from './services/api/routes/monitoring.js';
+import { setupQueueRoutes } from './services/api/routes/queue.js';
+import { setupFileRoutes } from './services/api/routes/files.js';
+import { setupWorkerStatusRoutes } from './services/api/routes/worker_status.js';
+import { setupScalingRoutes } from './services/api/routes/scaling.js';
+import { setupPredictCacheRoutes } from './services/api/routes/predict_cache.js';
 
-// Environment-Variablen laden
 dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Initialisierungen
+// Logging initialisieren
 await initializeLogging();
-await initializeDatabase();
 
+// Express-App initialisieren
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-// Middleware
-app.use(cors());
+// CORS für Frontend (React läuft auf Port 5173)
+app.use(cors({
+  origin: 'http://localhost:5173',
+  credentials: true
+}));
+
 app.use(express.json());
 
 // Upload-Ordner erstellen falls nicht vorhanden
@@ -49,128 +68,125 @@ const modelDir = path.join(__dirname, 'models');
 const scriptDir = path.join(__dirname, 'scripts');
 const venvDir = path.join(__dirname, 'services/python/venv');
 
+// Python Worker Pool initialisieren
+const pythonWorkerPool = new PythonWorkerPool(scriptDir, venvDir, 5);
+
+// Worker Pool Event-Handler
+pythonWorkerPool.on('jobProgress', ({ jobId, progress, workerId }) => {
+  console.log(`Worker ${workerId} Progress für Job ${jobId}:`, progress);
+});
+
+// Job-Completion-Handler
+jobQueue.on('jobCompleted', async (job) => {
+  try {
+    if (job.type === 'training') {
+      await handleTrainingJobCompleted(job);
+    } else if (job.type === 'retraining') {
+      await handleRetrainingJobCompleted(job);
+    }
+  } catch (error) {
+    console.error(`Fehler beim Verarbeiten des abgeschlossenen Jobs ${job.id}:`, error.message);
+  }
+});
+
+// Job-Failure-Handler
+jobQueue.on('jobCompleted', async (job) => {
+  if (job.status === 'failed') {
+    try {
+      if (job.type === 'training' || job.type === 'retraining') {
+        await handleTrainingJobFailed(job);
+      }
+    } catch (error) {
+      console.error(`Fehler beim Verarbeiten des fehlgeschlagenen Jobs ${job.id}:`, error.message);
+    }
+  }
+});
+
 try {
   await fs.mkdir(uploadDir, { recursive: true });
   await fs.mkdir(modelDir, { recursive: true }); 
   await fs.mkdir(scriptDir, { recursive: true });
-} catch (err) {
-  console.log('Directories already exist or error creating them:', err.message);
+  // console.log('Upload-, Model- und Script-Ordner erstellt');
+} catch (error) {
+  console.error('Fehler beim Erstellen der Ordner:', error);
 }
 
-// Multer für File Uploads konfigurieren
-const upload = multer({ 
-  storage: multer.diskStorage({
-    destination: (req, file, cb) => {
-      cb(null, uploadDir);
-    },
-    filename: (req, file, cb) => {
-      // Behalte die ursprüngliche Dateiendung bei
-      const now = new Date();
-      const uniqueSuffix = now.toISOString().split('T')[0] + '-' + now.getHours() + '-' + now.getMinutes() + '-' + now.getSeconds();
-      const fileName =   uniqueSuffix + file.originalname;
-      cb(null, fileName);
-    }
-  }),
-  fileFilter: (req, file, cb) => {
-    // Nur CSV-, Excel-, JSON-, Text-, XML-, Word- und PDF-Dateien erlauben
-    if (file.mimetype === 'text/csv' || file.originalname.endsWith('.csv') || file.originalname.endsWith('.xlsx') || file.originalname.endsWith('.xls') || file.originalname.endsWith('.json') || file.originalname.endsWith('.txt') || file.originalname.endsWith('.xml') || file.originalname.endsWith('.docx') || file.originalname.endsWith('.doc')) {
-      cb(null, true);
-    } else {
-      cb(new Error('Nur CSV-, Excel-, JSON-, Text-, XML-, Word- und PDF-Dateien sind erlaubt'), false);
-    }
+// Datenbank initialisieren
+try {
+  await initializeDatabase();
+  // console.log('Datenbank initialisiert');
+} catch (error) {
+  console.error('Fehler bei der Datenbankinitialisierung:', error);
+  process.exit(1);
+}
+
+// Multer für Datei-Uploads konfigurieren
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, uploadDir);
   },
-  limits: {
-    fileSize: 10 * 1024 * 1024 // 10MB Limit
+  filename: (req, file, cb) => {
+    // Extension am Ende beibehalten, Name sicher normalisieren
+    const ext = path.extname(file.originalname);
+    const base = path.basename(file.originalname, ext).replace(/[^a-zA-Z0-9._-]+/g, '_');
+    const uniqueName = `${base}-${Date.now()}-${Math.round(Math.random() * 1E3)}${ext}`;
+    cb(null, uniqueName);
   }
 });
 
-// Health Check Endpoint
-app.get('/health', (req, res) => {
-  res.status(200).json({ 
-    status: 'healthy', 
-    timestamp: new Date().toISOString(),
-    service: 'ml-platform-backend'
-  });
+const upload = multer({ 
+  storage,
+  limits: {
+    fileSize: 50 * 1024 * 1024 // 50MB limit
+  },
+  fileFilter: (req, file, cb) => {
+    const allowedTypes = ['.csv', '.json', '.xlsx', '.xls', '.txt'];
+    const fileExt = path.extname(file.originalname).toLowerCase();
+    if (allowedTypes.includes(fileExt)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Nur CSV, JSON, Excel und TXT Dateien sind erlaubt'), false);
+    }
+  }
 });
 
-// API Endpoints Setup
+// API-Routen einrichten
 setupAPIEndpoints(app, upload, scriptDir, venvDir);
+setupProjectRoutes(app, scriptDir, venvDir, trainModelAsync, retrainModelAsync);
+setupUploadRoutes(app, upload);
+setupAnalyzeRoutes(app, upload, venvDir);
+setupLLMRoutes(app);
+setupCacheRoutes(app);
+setupMonitoringRoutes(app);
+setupQueueRoutes(app);
+setupFileRoutes(app);
+setupWorkerStatusRoutes(app, pythonWorkerPool);
+setupScalingRoutes(app);
+setupPredictCacheRoutes(app, scriptDir);
 setupPredictionEndpoint(app, scriptDir, venvDir);
 
-// Training-Funktionen den API-Endpoints zur Verfügung stellen
-setTrainingFunctions(trainModelAsync, retrainModelAsync);
-
-// Asynchrone Trainingsfunktion
-async function trainModelAsync(projectId) {
-  let pythonCode = '';
+// Job-Handler-Funktionen
+async function handleTrainingJobCompleted(job) {
+  const { projectId } = job.data;
+  
+  // Prüfe ob job.result existiert (kann bei fehlgeschlagenen Jobs null sein)
+  if (!job.result) {
+    console.error(`Job ${job.id} für Projekt ${projectId} hat kein result - möglicherweise fehlgeschlagen`);
+    await handleTrainingJobFailed(job);
+    return;
+  }
+  
+  const { output, stderr } = job.result;
   
   try {
     const project = await getProject(projectId);
     if (!project) return;
-        
-    // Python Script mit LLM generieren
-    try {
-      const response = await generatePythonScriptWithLLM(project);
-      
-      // Validiere Response-Format
-      if (typeof response === 'string') {
-        pythonCode = response;
-      } else if (response && response.result) {
-        pythonCode = response.result;
-      } else if (response && response.text) {
-        pythonCode = response.text;
-      } else {
-        throw new Error('Ungültiges Response-Format vom Python-Generator');
-      }
-      
-      // Validiere Python-Code
-      if (!pythonCode || typeof pythonCode !== 'string') {
-        throw new Error('Leerer oder ungültiger Python-Code erhalten');
-      }
-      
-      console.log(`Python-Code erfolgreich generiert (${pythonCode.length} Zeichen)`);
-      
-    } catch (generationError) {
-      console.error('Fehler bei Python-Code-Generierung:', generationError.message);
-      throw new Error(`Python-Code-Generierung fehlgeschlagen: ${generationError.message}`);
-    }
-
-    const scriptPath = path.join(scriptDir, `${projectId}.py`);
     
-    // Script in Datei schreiben
-    try {
-      await fs.writeFile(scriptPath, pythonCode);
-      console.log(`Python-Script gespeichert: ${scriptPath}`);
-    } catch (writeError) {
-      console.error('Fehler beim Schreiben der Python-Datei:', writeError.message);
-      throw new Error(`Datei-Schreibfehler: ${writeError.message}`);
-    }
-    
-    // Python Script ausführen
-    let executionResult;
-    try {
-      executionResult = await executePythonScript(scriptPath, scriptDir, venvDir);
-      console.log('Python-Script erfolgreich ausgeführt');
-    } catch (executionError) {
-      console.error('Fehler bei Python-Script-Ausführung:', executionError.message);
-      throw new Error(`Python-Ausführungsfehler: ${executionError.message}`);
-    }
-    
-    const { stdout, stderr } = executionResult;
-    
-    // Log Ausgabe für Debugging
-    if (stdout) {
-      console.log('Python stdout (erste 500 Zeichen):', stdout.substring(0, 500));
-    }
-    if (stderr) {
-      console.log('Python stderr (erste 500 Zeichen):', stderr.substring(0, 500));
-    }
-
     // Performance Metriken aus der Ausgabe extrahieren
     let metrics = {};
     try {
-      metrics = extractMetricsFromOutput(stdout, project.modelType);
-      console.log('Extrahierte Metriken:', metrics);
+      metrics = extractMetricsFromOutput(output, project.modelType);
+      // console.log('Extrahierte Metriken:', metrics);
     } catch (metricsError) {
       console.error('Fehler bei Metrik-Extraktion:', metricsError.message);
       metrics = { error: 'Metrik-Extraktion fehlgeschlagen' };
@@ -186,195 +202,77 @@ async function trainModelAsync(projectId) {
     try {
       await fs.access(tempModelPath);
       await fs.rename(tempModelPath, fullModelPath);
-      console.log(`Model-Datei verschoben: ${fullModelPath}`);
+      // console.log(`Model-Datei verschoben: ${fullModelPath}`);
     } catch (modelError) {
       console.log('Model-Datei nicht gefunden oder Fehler beim Verschieben:', modelError.message);
     }
     
-    // Hyperparameter aus dem Python-Code extrahieren
+    // Hyperparameter aus dem gespeicherten Python-Code extrahieren
     let hyperparameters = {};
     try {
-      hyperparameters = extractHyperparametersFromCode(pythonCode);
-      console.log('Extrahierte Hyperparameter:', hyperparameters);
+      if (project.pythonCode) {
+        hyperparameters = extractHyperparametersFromCode(project.pythonCode);
+      } else {
+        hyperparameters = project.hyperparameters || {};
+      }
+      //console.log('Extrahierte Hyperparameter:', hyperparameters);
     } catch (hyperError) {
       console.error('Fehler bei Hyperparameter-Extraktion:', hyperError.message);
       hyperparameters = project.hyperparameters || {};
     }
     
-    // Projekt in DB aktualisieren (inkl. originalPythonCode und Hyperparameter)
-    try {
-      await updateProjectTraining(projectId, {
-        status: 'Completed',
-        performanceMetrics: metrics,
-        pythonCode: pythonCode, // Bearbeitbar
-        originalPythonCode: pythonCode, // Original für Backup
-        modelPath: modelPath,
-        hyperparameters: hyperparameters
-      });
-      console.log(`Projekt ${project.name} erfolgreich aktualisiert`);
-    } catch (dbError) {
-      console.error('Fehler beim DB-Update:', dbError.message);
-      throw new Error(`DB-Update fehlgeschlagen: ${dbError.message}`);
-    }
+    // Projekt in DB aktualisieren
+    await updateProjectTraining(projectId, {
+      status: 'Completed',
+      performanceMetrics: metrics,
+      pythonCode: project.pythonCode, // Bereits in DB gespeichert
+      originalPythonCode: project.pythonCode,
+      modelPath: modelPath,
+      hyperparameters: hyperparameters
+    });
     
-    // Automatische Performance-Evaluation nach erfolgreichem Training
+    // Automatische Performance-Evaluation
     try {
-      console.log(`Starte automatische Performance-Evaluation für Projekt: ${project.name}`);
+      // console.log(`Starte automatische Performance-Evaluation für Projekt: ${project.name}`);
       const performanceInsights = await evaluatePerformanceWithLLM(await getProject(projectId));
-      
-      // Performance-Insights in DB speichern
-      try {
-        await updateProjectInsights(projectId, performanceInsights);
-        console.log(`Performance-Evaluation erfolgreich abgeschlossen für Projekt: ${project.name}`);
-      } catch (insightsError) {
-        console.error('Fehler beim Speichern der Performance-Insights:', insightsError.message);
-        // Nicht kritisch - Training war erfolgreich
-      }
+      await updateProjectInsights(projectId, performanceInsights);
+      // console.log(`Performance-Evaluation erfolgreich abgeschlossen für Projekt: ${project.name}`);
     } catch (evaluationError) {
       console.error(`Performance-Evaluation fehlgeschlagen für Projekt ${projectId}:`, evaluationError.message);
-      // Training ist erfolgreich, auch wenn Evaluation fehlschlägt
     }
     
-    console.log(`Training erfolgreich abgeschlossen für Projekt: ${project.name}`);
+    // console.log(`Training erfolgreich abgeschlossen für Projekt: ${project.name}`);
     
   } catch (error) {
-    console.error(`Training failed for project ${projectId}:`, error.message);
-    
-    // Hyperparameter aus dem Python-Code extrahieren (falls vorhanden)
-    let hyperparameters = {};
-    try {
-      hyperparameters = pythonCode ? extractHyperparametersFromCode(pythonCode) : (project?.hyperparameters || {});
-    } catch (hyperError) {
-      console.error('Fehler bei Hyperparameter-Extraktion im Fehlerfall:', hyperError.message);
-      hyperparameters = project?.hyperparameters || {};
-    }
-    
-    // Status auf Failed setzen
-    try {
-      await updateProjectTraining(projectId, {
-        status: 'Failed',
-        performanceMetrics: { error: error.message },
-        pythonCode: pythonCode,
-        originalPythonCode: '',
-        modelPath: '',
-        hyperparameters: hyperparameters
-      });
-      console.log(`Projekt ${projectId} als fehlgeschlagen markiert`);
-    } catch (dbError) {
-      console.error('Fehler beim Markieren des Projekts als fehlgeschlagen:', dbError.message);
-    }
+    console.error(`Fehler beim Verarbeiten des abgeschlossenen Training-Jobs für Projekt ${projectId}:`, error.message);
   }
 }
 
-// Hyperparameter aus Python-Code extrahieren
-function extractHyperparametersFromCode(pythonCode) {
-  try {
-    // Suche nach der hyperparameters-Zeile
-    const lines = pythonCode.split('\n');
-    for (const line of lines) {
-      if (line.includes('hyperparameters = ')) {
-        // Verschiedene Formate unterstützen
-        let match = line.match(/hyperparameters = "(.+)"/);
-        if (match) {
-          const jsonStr = match[1].replace(/\\"/g, '"');
-          const hyperparameters = JSON.parse(jsonStr);
-          return convertHyperparametersToNumbers(hyperparameters);
-        }
-        
-        // Alternative: hyperparameters = {...}
-        match = line.match(/hyperparameters = (\{.*\})/);
-        if (match) {
-          const hyperparameters = JSON.parse(match[1]);
-          return convertHyperparametersToNumbers(hyperparameters);
-        }
-        
-        // Alternative: hyperparameters = {...} (mit Zeilenumbrüchen)
-        const startIndex = line.indexOf('hyperparameters = {');
-        if (startIndex !== -1) {
-          let jsonStr = line.substring(startIndex + 'hyperparameters = '.length);
-          let braceCount = 0;
-          let inString = false;
-          let escapeNext = false;
-          
-          for (let i = 0; i < jsonStr.length; i++) {
-            const char = jsonStr[i];
-            if (escapeNext) {
-              escapeNext = false;
-              continue;
-            }
-            if (char === '\\') {
-              escapeNext = true;
-              continue;
-            }
-            if (char === '"' && !escapeNext) {
-              inString = !inString;
-            }
-            if (!inString) {
-              if (char === '{') braceCount++;
-              if (char === '}') {
-                braceCount--;
-                if (braceCount === 0) {
-                  jsonStr = jsonStr.substring(0, i + 1);
-                  break;
-                }
-              }
-            }
-          }
-          
-          try {
-            const hyperparameters = JSON.parse(jsonStr);
-            return convertHyperparametersToNumbers(hyperparameters);
-          } catch (e) {
-            console.error('Fehler beim Parsen der Hyperparameter:', e);
-          }
-        }
-      }
-    }
-    return null;
-  } catch (error) {
-    console.error('Fehler beim Extrahieren der Hyperparameter:', error);
-    return null;
-  }
-}
-
-// Hyperparameter zu numerischen Werten konvertieren
-function convertHyperparametersToNumbers(hyperparameters) {
-  if (!hyperparameters || typeof hyperparameters !== 'object') {
-    return hyperparameters;
+async function handleRetrainingJobCompleted(job) {
+  const { projectId } = job.data;
+  
+  // Prüfe ob job.result existiert (kann bei fehlgeschlagenen Jobs null sein)
+  if (!job.result) {
+    console.error(`Retraining-Job ${job.id} für Projekt ${projectId} hat kein result - möglicherweise fehlgeschlagen`);
+    await handleTrainingJobFailed(job);
+    return;
   }
   
-  const converted = {};
-  for (const [key, value] of Object.entries(hyperparameters)) {
-    if (typeof value === 'string' && !isNaN(Number(value)) && value.trim() !== '') {
-      converted[key] = Number(value);
-    } else {
-      converted[key] = value;
-    }
-  }
-  return converted;
-}
-
-// Re-Training mit bearbeitetem Code
-async function retrainModelAsync(projectId, customPythonCode) {
+  const { output, stderr } = job.result;
+  
   try {
     const project = await getProject(projectId);
     if (!project) return;
     
-    // console.log(`Re-Training model for project: ${project.name} with custom code`);
-    
-    const scriptPath = path.join(scriptDir, `${projectId}.py`);
-    
-    // Bearbeiteten Python-Code in Datei schreiben
-    await fs.writeFile(scriptPath, customPythonCode);
-    
-    // Python Script ausführen
-    const { stdout, stderr } = await executePythonScript(scriptPath, scriptDir, venvDir);
-    
-    // console.log('Re-training Python output:', stdout);
-    if (stderr) console.log('Re-training Python stderr:', stderr);
-    
     // Performance Metriken aus der Ausgabe extrahieren
-    const metrics = extractMetricsFromOutput(stdout, project.modelType);
+    let metrics = {};
+    try {
+      metrics = extractMetricsFromOutput(output, project.modelType);
+      // console.log('Extrahierte Re-Training Metriken:', metrics);
+    } catch (metricsError) {
+      console.error('Fehler bei Metrik-Extraktion:', metricsError.message);
+      metrics = { error: 'Metrik-Extraktion fehlgeschlagen' };
+    }
     
     // Model-Datei pfad (neues Model)
     const modelFileName = `model_${projectId}.pkl`;
@@ -399,56 +297,190 @@ async function retrainModelAsync(projectId, customPythonCode) {
       await fs.rename(tempModelPath, fullModelPath);
       // console.log(`Re-trained model erfolgreich verschoben: ${fullModelPath}`);
     } catch (err) {
-      // console.log('Could not move retrained model file:', err.message);
+      console.log('Could not move retrained model file:', err.message);
     }
     
     // Hyperparameter aus dem Python-Code extrahieren
-    const hyperparameters = extractHyperparametersFromCode(customPythonCode);
+    const hyperparameters = extractHyperparametersFromCode(project.pythonCode);
     
     // Projekt in DB aktualisieren
     await updateProjectTraining(projectId, {
       status: 'Completed',
       performanceMetrics: metrics,
-      pythonCode: customPythonCode, // Wichtig: Python-Code aktualisieren
+      pythonCode: project.pythonCode, // Python-Code bereits in DB
       modelPath: modelPath,
       hyperparameters: hyperparameters
     });
     
-    // console.log(`Re-training completed for project: ${project.name}`);
-    
-    // Automatische Performance-Evaluation nach erfolgreichem Re-Training
+    // Automatische Performance-Evaluation
     try {
-      // console.log(`Starte automatische Performance-Evaluation nach Re-Training für Projekt: ${project.name}`);
       const performanceInsights = await evaluatePerformanceWithLLM(await getProject(projectId));
-      
-      // Performance-Insights in DB speichern
-      try {
-        await updateProjectInsights(projectId, performanceInsights);
-        //console.log(`Performance-Evaluation nach Re-Training erfolgreich abgeschlossen für Projekt: ${project.name}`);
-      } catch (err) {
-        console.error('Fehler beim Speichern der Performance-Insights nach Re-Training:', err);
-      }
+      await updateProjectInsights(projectId, performanceInsights);
+      // console.log(`Performance-Evaluation nach Re-Training erfolgreich abgeschlossen für Projekt: ${project.name}`);
     } catch (evaluationError) {
-      console.error(`Performance-Evaluation nach Re-Training fehlgeschlagen für Projekt ${projectId}:`, evaluationError);
-      // Re-Training ist erfolgreich, auch wenn Evaluation fehlschlägt
+      console.error(`Performance-Evaluation nach Re-Training fehlgeschlagen für Projekt ${projectId}:`, evaluationError.message);
     }
     
+    // console.log(`Re-Training erfolgreich abgeschlossen für Projekt: ${project.name}`);
+    
   } catch (error) {
-    console.error(`Re-training failed for project ${projectId}:`, error);
-    
-    // Hyperparameter aus dem Python-Code extrahieren (falls vorhanden)
-    const hyperparameters = customPythonCode ? extractHyperparametersFromCode(customPythonCode) : null;
-    
-    // Status auf Failed setzen
-    await updateProjectTraining(projectId, {
-      status: 'Re-training Failed',
-      pythonCode: customPythonCode, // Python-Code auch bei Fehler beibehalten
-      hyperparameters: hyperparameters
-    });
+    console.error(`Fehler beim Verarbeiten des abgeschlossenen Re-Training-Jobs für Projekt ${projectId}:`, error.message);
   }
 }
 
+async function handleTrainingJobFailed(job) {
+  const { projectId } = job.data;
+  
+  try {
+    const project = await getProject(projectId);
+    const status = job.type === 'training' ? 'Failed' : 'Re-training Failed';
+    
+    await updateProjectTraining(projectId, {
+      status: status,
+      performanceMetrics: { error: job.error },
+      pythonCode: project?.pythonCode || '',
+      originalPythonCode: project?.originalPythonCode || '',
+      modelPath: project?.modelPath || '',
+      hyperparameters: project?.hyperparameters || {}
+    });
+    
+    // console.log(`Projekt ${projectId} als fehlgeschlagen markiert: ${job.error}`);
+    
+  } catch (error) {
+    console.error(`Fehler beim Verarbeiten des fehlgeschlagenen Training-Jobs für Projekt ${projectId}:`, error.message);
+  }
+}
+
+// Training-Funktionen den API-Endpoints zur Verfügung stellen
+setTrainingFunctions(trainModelAsync, retrainModelAsync);
+
+// Asynchrone Trainingsfunktion mit Worker Pool
+async function trainModelAsync(projectId) {
+  try {
+    const project = await getProject(projectId);
+    if (!project) return;
+        
+    // Python Script mit LLM generieren
+    let pythonCode = '';
+    try {
+      const response = await generatePythonScriptWithLLM(project);
+      
+      // Validiere Response-Format
+      if (typeof response === 'string') {
+        pythonCode = response;
+      } else if (response && response.result) {
+        pythonCode = response.result;
+      } else if (response && response.text) {
+        pythonCode = response.text;
+      } else {
+        throw new Error('Ungültiges Response-Format vom Python-Generator');
+      }
+      
+      // Validiere Python-Code
+      if (!pythonCode || typeof pythonCode !== 'string') {
+        throw new Error('Leerer oder ungültiger Python-Code erhalten');
+      }
+      
+      // console.log(`Python-Code erfolgreich generiert (${pythonCode.length} Zeichen)`);
+      
+    } catch (generationError) {
+      console.error('Fehler bei Python-Code-Generierung:', generationError.message);
+      await updateProjectTraining(projectId, {
+        status: 'Failed',
+        performanceMetrics: { error: `Python-Code-Generierung fehlgeschlagen: ${generationError.message}` },
+        pythonCode: '',
+        originalPythonCode: '',
+        modelPath: '',
+        hyperparameters: project?.hyperparameters || {}
+      });
+      return;
+    }
+
+    // Python-Code in der DB speichern vor der Ausführung
+    await updateProjectCode(projectId, pythonCode);
+
+    // Job zur Worker Queue hinzufügen
+    const jobId = pythonWorkerPool.addTrainingJob(projectId, pythonCode, 1);
+    // console.log(`Training-Job ${jobId} für Projekt ${projectId} zur Queue hinzugefügt`);
+    
+  } catch (error) {
+    console.error(`Fehler beim Vorbereiten des Trainings für Projekt ${projectId}:`, error.message);
+    
+    try {
+      await updateProjectTraining(projectId, {
+        status: 'Failed',
+        performanceMetrics: { error: error.message },
+        pythonCode: '',
+        originalPythonCode: '',
+        modelPath: '',
+        hyperparameters: {}
+      });
+    } catch (dbError) {
+      console.error('Fehler beim Markieren des Projekts als fehlgeschlagen:', dbError.message);
+    }
+  }
+}
+
+// Re-Training mit bearbeitetem Code (mit Worker Pool)
+async function retrainModelAsync(projectId, customPythonCode) {
+  try {
+    const project = await getProject(projectId);
+    if (!project) return;
+    
+    // console.log(`Re-Training für Projekt ${project.name} mit bearbeitetem Code gestartet`);
+    
+    // Bearbeiteten Python-Code in der DB aktualisieren
+    await updateProjectCode(projectId, customPythonCode);
+    
+    // Job zur Worker Queue hinzufügen
+    const jobId = pythonWorkerPool.addRetrainingJob(projectId, customPythonCode, 1);
+    // console.log(`Re-Training-Job ${jobId} für Projekt ${projectId} zur Queue hinzugefügt`);
+    
+  } catch (error) {
+    console.error(`Fehler beim Re-Training für Projekt ${projectId}:`, error.message);
+    
+    try {
+      await updateProjectTraining(projectId, {
+        status: 'Re-training Failed',
+        performanceMetrics: { error: error.message },
+        pythonCode: customPythonCode || project?.pythonCode || '',
+        originalPythonCode: project?.originalPythonCode || '',
+        modelPath: project?.modelPath || '',
+        hyperparameters: project?.hyperparameters || {}
+      });
+    } catch (dbError) {
+      console.error('Fehler beim Markieren des Re-Trainings als fehlgeschlagen:', dbError.message);
+    }
+  }
+}
+
+// Automatische Bereinigung alter Predict-Skripte (alle 24 Stunden)
+setInterval(async () => {
+  try {
+    // console.log('Starte automatische Bereinigung alter Predict-Skripte...');
+    const cleaned = await cleanupOldPredictScripts(scriptDir, 168); // 7 Tage
+    if (cleaned > 0) {
+      console.log(`Automatische Bereinigung abgeschlossen: ${cleaned} Skripte entfernt`);
+    }
+  } catch (error) {
+    console.error('Fehler bei automatischer Bereinigung:', error.message);
+  }
+}, 24 * 60 * 60 * 1000); // 24 Stunden
+
+// Initiale Bereinigung beim Server-Start (nach 60 Sekunden)
+setTimeout(async () => {
+  try {
+    // console.log('Führe initiale Bereinigung alter Predict-Skripte durch...');
+    const cleaned = await cleanupOldPredictScripts(scriptDir, 168);
+    if (cleaned > 0) {
+      console.log(`Initiale Bereinigung abgeschlossen: ${cleaned} Skripte entfernt`);
+    }
+  } catch (error) {
+    console.error('Fehler bei initialer Bereinigung:', error.message);
+  }
+}, 60000); // 60 Sekunden nach Server-Start
+
 // Server starten
 app.listen(PORT, () => {
-  console.log(`Server läuft auf Port ${PORT}`);
+  console.log(`Backend läuft auf Port ${PORT}`);
 });

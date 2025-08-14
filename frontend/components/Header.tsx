@@ -1,37 +1,52 @@
 
 import React, { useState, useEffect } from 'react';
-import { apiService } from '../services/apiService';
 import LLMSettingsModal from './LLMSettingsModal';
+import FileManagementModal from './FileManagementModal';
 import LLMSwitch from './LLMSwitch';
+import { llmStatusService, LLMStatus } from '../services/llmStatusService';
 
 interface HeaderProps {
   title: string;
 }
 
 const Header: React.FC<HeaderProps> = ({ title }) => {
-  const [llmStatus, setLlmStatus] = useState<any>(null);
+  const [llmStatus, setLlmStatus] = useState<LLMStatus | null>(null);
   const [isLlmModalOpen, setIsLlmModalOpen] = useState(false);
+  const [isFileModalOpen, setIsFileModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Lade LLM-Status
-  const loadLLMStatus = async () => {
-    try {
-      setIsLoading(true);
-      const status = await apiService.getLLMStatus();
-      setLlmStatus(status);
-    } catch (error) {
-      console.error('Fehler beim Laden des LLM-Status:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   useEffect(() => {
-    loadLLMStatus();
+    let unsubscribe: (() => void) | null = null;
+
+    const initializeStatus = async () => {
+      setIsLoading(true);
+      
+      // Status abonnieren für automatische Updates
+      unsubscribe = llmStatusService.subscribe((status: LLMStatus) => {
+        setLlmStatus(status);
+        setIsLoading(false);
+      });
+
+      // Initial laden
+      try {
+        await llmStatusService.getStatus();
+      } catch (error) {
+        console.error('Fehler beim Laden des LLM-Status:', error);
+        setIsLoading(false);
+      }
+    };
+
+    initializeStatus();
     
-    // Aktualisiere Status alle 30 Sekunden
-    const interval = setInterval(loadLLMStatus, 30000);
-    return () => clearInterval(interval);
+    // Aktualisiere Status alle 10 Minuten (reduziert von 5 Minuten)
+    const interval = setInterval(() => {
+      llmStatusService.getStatus(true);
+    }, 600000);
+
+    return () => {
+      if (unsubscribe) unsubscribe();
+      clearInterval(interval);
+    };
   }, []);
 
   // LLM-Status-Indikator
@@ -82,11 +97,20 @@ const Header: React.FC<HeaderProps> = ({ title }) => {
             />
             <h1 className="text-xl font-bold">{title}</h1>
           </div>
+          <div>
+            <button
+              onClick={() => setIsFileModalOpen(true)}
+              className="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 transition-colors flex items-center gap-2"
+              title="Datei-Management"
+            >
+              <i className="fa-solid fa-folder-open"></i>📂 Files
+            </button>
+          </div>
 
           {/* Rechts: LLM-Status und Einstellungen */}
           <div className="flex items-center space-x-4">
             {/* LLM-Switch mit Status */}
-            <LLMSwitch onProviderChange={loadLLMStatus} />
+            <LLMSwitch onProviderChange={() => {}} />
             
             {/* LLM-Status-Anzeige */}
             {/* {getLLMStatusIndicator()} */}
@@ -96,18 +120,23 @@ const Header: React.FC<HeaderProps> = ({ title }) => {
               className="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 transition-colors"
               title="LLM-Einstellungen"
             >
-              <i className="fa-solid fa-gear"></i> Settings
-            </button>
-            
+              <i className="fa-solid fa-gear"></i>⚙️
+            </button>                        
           </div>
         </div>
       </header>
+
+      {/* Datei-Management Modal */}
+      <FileManagementModal
+        isOpen={isFileModalOpen}
+        onClose={() => setIsFileModalOpen(false)}
+      />
 
       {/* LLM-Einstellungen Modal */}
       <LLMSettingsModal
         isOpen={isLlmModalOpen}
         onClose={() => setIsLlmModalOpen(false)}
-        onConfigUpdated={loadLLMStatus}
+        onConfigUpdated={() => llmStatusService.getStatus(true)}
       />
     </>
   );

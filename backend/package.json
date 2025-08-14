@@ -14,6 +14,10 @@
   "dependencies": {
     "@google/genai": "^1.11.0",
     "@google/generative-ai": "^0.2.1",
+    "@langchain/community": "latest",
+    "@langchain/core": "latest",
+    "@langchain/langgraph": "latest",
+    "@langchain/google-genai": "latest",
     "child_process": "latest",
     "cors": "^2.8.5",
     "dotenv": "^16.3.1",

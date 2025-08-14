@@ -6,6 +6,7 @@ import { ChevronLeftIcon } from './icons/ChevronLeftIcon';
 import { Spinner } from './ui/Spinner';
 import ErrorBoundary from './ui/ErrorBoundary';
 import HyperparameterEditor from './HyperparameterEditor';
+import PerformanceInsights from './PerformanceInsights';
 
 interface ProjectViewProps {
   project: Project;
@@ -48,9 +49,14 @@ const ProjectView: React.FC<ProjectViewProps> = ({ project, onBack, onProjectUpd
   const [isLoadingData, setIsLoadingData] = useState(false);
   const [dataError, setDataError] = useState<string | null>(null);
 
-  // Performance Tab State (moved from render function)
-  const [isEvaluating, setIsEvaluating] = useState(false);
-  const [evaluationError, setEvaluationError] = useState<string | null>(null);
+  // Performance Tab: automatische Aktualisierung statt manueller Trigger
+
+  // Monitoring State
+  const [monitoring, setMonitoring] = useState<{ driftScore?: number; accuracy?: number; rmse?: number; alerts?: any[] } | null>(null);
+  const [isLoadingMonitoring, setIsLoadingMonitoring] = useState(false);
+  const [monitoringError, setMonitoringError] = useState<string | null>(null);
+  const [autoTuneProposal, setAutoTuneProposal] = useState<{ algorithm: string; hyperparameters: any; expectedGain?: number; rationale?: string } | null>(null);
+  const [isApplyingAutoTune, setIsApplyingAutoTune] = useState(false);
 
   const handleInsightsUpdate = useCallback((insights: PerformanceInsightsType) => {
     const updatedProject = { ...currentProject, performanceInsights: insights };
@@ -75,22 +81,111 @@ const ProjectView: React.FC<ProjectViewProps> = ({ project, onBack, onProjectUpd
     }
   }, [project.id]);
 
-  // Performance evaluation handler (moved from render function)
-  const handleEvaluatePerformance = useCallback(async () => {
-    setIsEvaluating(true);
-    setEvaluationError(null);
-    
-    try {
-      const response = await apiService.evaluatePerformance(project.id);
-      const insights = response.insights;
-      
-      handleInsightsUpdate(insights);
-    } catch (error) {
-      setEvaluationError(error instanceof Error ? error.message : 'Evaluation fehlgeschlagen');
-    } finally {
-      setIsEvaluating(false);
+  // Automatisches Refreshing des Projekts bis Training abgeschlossen ist
+  React.useEffect(() => {
+    let timer: any;
+    const needsInsights = !currentProject.performanceInsights;
+    const shouldPoll = currentProject.status !== ProjectStatus.Completed || needsInsights;
+    const poll = async () => {
+      try {
+        const latest = await apiService.getProject(project.id);
+        setCurrentProject(latest as any);
+        // Stoppen wenn abgeschlossen und Insights vorhanden
+        if (latest.status === ProjectStatus.Completed && latest.performanceInsights && timer) {
+          clearInterval(timer);
+          timer = null;
+        }
+      } catch (e) {
+        // ignorieren
+      }
+    };
+    if (shouldPoll) {
+      // sofort und dann alle 5s
+      poll();
+      timer = setInterval(poll, 5000);
     }
-  }, [project.id, handleInsightsUpdate]);
+    return () => {
+      if (timer) clearInterval(timer);
+    };
+  }, [project.id, currentProject.status, currentProject.performanceInsights]);
+
+  // Beim Öffnen des Performance-Tabs einmal aktuell laden
+  React.useEffect(() => {
+    const refreshOnTab = async () => {
+      if (activeTab === 'performance') {
+        try {
+          const latest = await apiService.getProject(project.id);
+          setCurrentProject(latest as any);
+        } catch (e) {}
+      }
+    };
+    refreshOnTab();
+  }, [activeTab, project.id]);
+
+  const initMonitoring = useCallback(async () => {
+    setIsLoadingMonitoring(true);
+    setMonitoringError(null);
+    try {
+      await apiService.initMonitoring(project.id);
+      const status = await apiService.getMonitoringStatus(project.id);
+      setMonitoring({
+        driftScore: status?.rollingMetrics?.driftScore,
+        accuracy: status?.rollingMetrics?.accuracy,
+        rmse: status?.rollingMetrics?.rmse,
+        alerts: status?.alerts || []
+      });
+    } catch (error) {
+      setMonitoringError(error instanceof Error ? error.message : 'Monitoring-Initialisierung fehlgeschlagen');
+    } finally {
+      setIsLoadingMonitoring(false);
+    }
+  }, [project.id]);
+
+  const refreshMonitoring = useCallback(async () => {
+    try {
+      const status = await apiService.getMonitoringStatus(project.id);
+      setMonitoring({
+        driftScore: status?.rollingMetrics?.driftScore,
+        accuracy: status?.rollingMetrics?.accuracy,
+        rmse: status?.rollingMetrics?.rmse,
+        alerts: status?.alerts || []
+      });
+    } catch (error) {
+      // ignore
+    }
+  }, [project.id]);
+
+  const handleAutoTune = useCallback(async () => {
+    setAutoTuneProposal(null);
+    try {
+      const result = await apiService.autoTune(project.id, 3);
+      setAutoTuneProposal(result.proposal);
+    } catch (error) {
+      alert(error instanceof Error ? error.message : 'Auto-Tuning fehlgeschlagen');
+    }
+  }, [project.id]);
+
+  const handleApplyAutoTune = useCallback(async () => {
+    if (!autoTuneProposal) return;
+    setIsApplyingAutoTune(true);
+    try {
+      const result = await apiService.autoTune(project.id, 1, true);
+      // UI-Update: Algorithmus und Hyperparameter im lokalen State anpassen
+      if (onProjectUpdate) {
+        onProjectUpdate({
+          ...project,
+          algorithm: autoTuneProposal.algorithm,
+          hyperparameters: autoTuneProposal.hyperparameters,
+          status: 'Re-Training' as any
+        });
+      }
+      alert('Vorschlag übernommen. Re-Training gestartet.');
+    } catch (error) {
+      alert(error instanceof Error ? error.message : 'Übernehmen fehlgeschlagen');
+    } finally {
+      setIsApplyingAutoTune(false);
+    }
+  }, [autoTuneProposal, onProjectUpdate, project, project.id]);
 
   // Load data statistics when data tab is accessed
   React.useEffect(() => {
@@ -391,42 +486,87 @@ const ProjectView: React.FC<ProjectViewProps> = ({ project, onBack, onProjectUpd
   const renderPerformanceTab = () => {
     return (
       <div className="space-y-6">
-        {/* KI-Performance-Analyse Evaluation Control */}
-        {project.performanceMetrics && (
-          <div className="bg-gradient-to-r from-slate-800/50 to-blue-900/30 border border-slate-600/50 rounded-lg p-6">
-            <div className="flex justify-between items-center">
-              <div>
-                <h3 className="text-lg font-semibold text-white mb-2">🤖 KI-Performance-Analyse</h3>
-                <p className="text-slate-300 text-sm">
-                  Lasse die Performance deines Modells intelligent vom LLM bewerten und erhalte detaillierte Insights.
-                </p>
-              </div>
-              <button
-                onClick={handleEvaluatePerformance}
-                disabled={isEvaluating}
-                className="px-6 py-3 bg-gradient-to-r from-blue-600 to-slate-700 hover:from-blue-700 hover:to-slate-800 disabled:from-slate-600 disabled:to-slate-700 text-white font-medium rounded-lg transition-all duration-200 flex items-center space-x-2"
-              >
-                {isEvaluating ? (
-                  <>
-                    <Spinner size="sm" />
-                    <span>Analysiere...</span>
-                  </>
-                ) : (
-                  <>
-                    <span>🔍</span>
-                    <span>Performance analysieren</span>
-                  </>
-                )}
-              </button>
+        {/* Monitoring Panel */}
+        {/* <div className="bg-slate-800/50 border border-slate-600/50 rounded-lg p-6">
+          <div className="flex items-start justify-between">
+            <div>
+              <h3 className="text-lg font-semibold text-white mb-1">📡 Live-Monitoring</h3>
+              <p className="text-slate-300 text-sm">Drift-Score, Rolling-Metriken und aktuelle Alerts</p>
             </div>
-            
-            {evaluationError && (
-              <div className="mt-4 p-4 bg-red-900/30 border border-red-500/50 rounded-lg">
-                <p className="text-red-400 text-sm">❌ {evaluationError}</p>
-              </div>
-            )}
+            <div className="flex space-x-2">
+              <button onClick={initMonitoring} disabled={isLoadingMonitoring} className="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded disabled:bg-gray-600 text-sm">
+                {isLoadingMonitoring ? 'Init...' : 'Baseline initialisieren'}
+              </button>
+              <button onClick={refreshMonitoring} className="px-3 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded text-sm">Aktualisieren</button>
+            </div>
           </div>
-        )}
+          {monitoringError && <p className="text-red-400 text-sm mt-2">❌ {monitoringError}</p>}
+          {monitoring && (
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-4">
+              <div className="bg-slate-900/50 rounded p-4 text-center">
+                <div className="text-slate-400 text-xs mb-1">Drift-Score</div>
+                <div className={`text-2xl font-bold ${monitoring.driftScore && monitoring.driftScore >= 3 ? 'text-red-400' : 'text-emerald-400'}`}>{monitoring.driftScore ?? '-'}</div>
+              </div>
+              <div className="bg-slate-900/50 rounded p-4 text-center">
+                <div className="text-slate-400 text-xs mb-1">Rolling Accuracy</div>
+                <div className="text-2xl font-bold text-blue-400">{monitoring.accuracy ?? '-'}</div>
+              </div>
+              <div className="bg-slate-900/50 rounded p-4 text-center">
+                <div className="text-slate-400 text-xs mb-1">Rolling RMSE</div>
+                <div className="text-2xl font-bold text-purple-400">{monitoring.rmse ?? '-'}</div>
+              </div>
+              <div className="bg-slate-900/50 rounded p-4">
+                <div className="text-slate-400 text-xs mb-1">Alerts</div>
+                <div className="space-y-1 max-h-24 overflow-auto pr-1">
+                  {monitoring.alerts && monitoring.alerts.length > 0 ? monitoring.alerts.slice(-4).reverse().map((a: any) => (
+                    <div key={a.id} className={`text-xs ${a.severity === 'warning' ? 'text-amber-400' : a.severity === 'critical' ? 'text-red-400' : 'text-slate-300'}`}>• {a.message}</div>
+                  )) : <div className="text-slate-500 text-xs">Keine Alerts</div>}
+                </div>
+              </div>
+            </div>
+          )}
+        </div> */}
+
+        {/* Hinweis: Performance-Analyse wird nun automatisch nach dem Training durchgeführt */}
+
+        {/* Auto-Tuning Panel */}
+        <div className="bg-slate-800/50 border border-slate-600/50 rounded-lg p-6">
+          <div className="flex justify-between items-center">
+            <div>
+              <h3 className="text-lg font-semibold text-white mb-1">🧠 Auto-Tuning (LLM)</h3>
+              <p className="text-slate-300 text-sm">Lass das LLM eine verbesserte Konfiguration vorschlagen.</p>
+            </div>
+            <div className="space-x-2">
+              <button onClick={handleAutoTune} className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-sm">Vorschlag abrufen</button>
+              {autoTuneProposal && (
+                <button onClick={handleApplyAutoTune} disabled={isApplyingAutoTune} className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm disabled:bg-slate-600">
+                  {isApplyingAutoTune ? 'Wird übernommen...' : 'Vorschlag übernehmen & trainieren'}
+                </button>
+              )}
+            </div>
+          </div>
+          {autoTuneProposal && (
+            <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="bg-slate-900/40 rounded p-4">
+                <div className="text-slate-400 text-xs mb-1">Vorgeschlagener Algorithmus</div>
+                <div className="text-white font-medium">{autoTuneProposal.algorithm}</div>
+                {typeof autoTuneProposal.expectedGain === 'number' && (
+                  <div className="text-slate-400 text-xs mt-1">Erwarteter Gewinn: {(autoTuneProposal.expectedGain * 100).toFixed(1)}%</div>
+                )}
+              </div>
+              <div className="bg-slate-900/40 rounded p-4">
+                <div className="text-slate-400 text-xs mb-1">Hyperparameter</div>
+                <pre className="text-slate-300 text-xs whitespace-pre-wrap">{JSON.stringify(autoTuneProposal.hyperparameters, null, 2)}</pre>
+              </div>
+              {autoTuneProposal.rationale && (
+                <div className="md:col-span-2 bg-slate-900/40 rounded p-4">
+                  <div className="text-slate-400 text-xs mb-1">Begründung</div>
+                  <div className="text-slate-200 text-sm">{autoTuneProposal.rationale}</div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
 
         {/* KI-Performance Insights Display */}
         {currentProject.performanceInsights && (
@@ -467,7 +607,7 @@ const ProjectView: React.FC<ProjectViewProps> = ({ project, onBack, onProjectUpd
                   <span className="mr-2">✅</span>Stärken
                 </h4>
                 <ul className="space-y-2">
-                  {currentProject.performanceInsights.detailedAnalysis.strengths.map((strength, index) => (
+                  {(currentProject.performanceInsights?.detailedAnalysis?.strengths || []).map((strength, index) => (
                     <li key={index} className="text-slate-200 text-sm flex items-start">
                       <span className="text-emerald-400 mr-2 mt-1">•</span>
                       {strength}
@@ -481,7 +621,7 @@ const ProjectView: React.FC<ProjectViewProps> = ({ project, onBack, onProjectUpd
                   <span className="mr-2">⚠️</span>Schwächen
                 </h4>
                 <ul className="space-y-2">
-                  {currentProject.performanceInsights.detailedAnalysis.weaknesses.map((weakness, index) => (
+                  {(currentProject.performanceInsights?.detailedAnalysis?.weaknesses || []).map((weakness, index) => (
                     <li key={index} className="text-slate-200 text-sm flex items-start">
                       <span className="text-amber-400 mr-2 mt-1">•</span>
                       {weakness}
@@ -495,7 +635,7 @@ const ProjectView: React.FC<ProjectViewProps> = ({ project, onBack, onProjectUpd
                   <span className="mr-2">🔍</span>Wichtige Erkenntnisse
                 </h4>
                 <ul className="space-y-2">
-                  {currentProject.performanceInsights.detailedAnalysis.keyFindings.map((finding, index) => (
+                  {(currentProject.performanceInsights?.detailedAnalysis?.keyFindings || []).map((finding, index) => (
                     <li key={index} className="text-slate-200 text-sm flex items-start">
                       <span className="text-blue-400 mr-2 mt-1">•</span>
                       {finding}
@@ -511,7 +651,7 @@ const ProjectView: React.FC<ProjectViewProps> = ({ project, onBack, onProjectUpd
                 <span className="mr-2">💡</span>Verbesserungsvorschläge
               </h4>
               <div className="space-y-4">
-                {currentProject.performanceInsights.improvementSuggestions.map((suggestion, index) => (
+                {(currentProject.performanceInsights?.improvementSuggestions || []).map((suggestion, index) => (
                   <div key={index} className="bg-slate-700/50 rounded-lg p-4">
                     <div className="flex justify-between items-start mb-3">
                       <div>

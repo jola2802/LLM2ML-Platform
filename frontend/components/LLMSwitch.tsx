@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { llmStatusService, LLMStatus } from '../services/llmStatusService';
 import { apiService } from '../services/apiService';
 
 interface LLMSwitchProps {
@@ -9,30 +10,28 @@ interface LLMSwitchProps {
 const LLMSwitch: React.FC<LLMSwitchProps> = ({ onProviderChange, className = '' }) => {
   const [activeProvider, setActiveProvider] = useState<string>('ollama');
   const [isLoading, setIsLoading] = useState(false);
-  const [status, setStatus] = useState<any>(null);
-
-  // Lade aktuellen Status
-  const loadStatus = async () => {
-    try {
-      const response = await apiService.getLLMStatus();
-      setStatus(response);
-      if (response.activeProvider) {
-        setActiveProvider(response.activeProvider);
-      }
-    } catch (error) {
-      console.error('Fehler beim Laden des LLM-Status:', error);
-      // Fallback-Status setzen
-      setStatus({
-        success: false,
-        activeProvider: 'ollama',
-        ollama: { connected: false, available: false },
-        gemini: { connected: false, available: false }
-      });
-    }
-  };
+  const [status, setStatus] = useState<LLMStatus | null>(null);
 
   useEffect(() => {
-    loadStatus();
+    // Status abonnieren für automatische Updates
+    const unsubscribe = llmStatusService.subscribe((newStatus: LLMStatus) => {
+      setStatus(newStatus);
+      if (newStatus.activeProvider) {
+        setActiveProvider(newStatus.activeProvider);
+      }
+    });
+
+    // Initial laden (verwendet Cache falls verfügbar)
+    llmStatusService.getStatus().then((initialStatus) => {
+      setStatus(initialStatus);
+      if (initialStatus.activeProvider) {
+        setActiveProvider(initialStatus.activeProvider);
+      }
+    }).catch((error) => {
+      console.error('Fehler beim Laden des LLM-Status:', error);
+    });
+
+    return unsubscribe;
   }, []);
 
   // Provider wechseln
@@ -41,11 +40,10 @@ const LLMSwitch: React.FC<LLMSwitchProps> = ({ onProviderChange, className = '' 
 
     try {
       setIsLoading(true);
-      const result = await apiService.setLLMProvider(provider);
+      const result = await llmStatusService.setProvider(provider);
       
       if (result.success) {
         setActiveProvider(provider);
-        await loadStatus(); // Status neu laden
         
         if (onProviderChange) {
           onProviderChange(provider);

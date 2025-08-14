@@ -31,6 +31,7 @@ const HyperparameterEditor: React.FC<HyperparameterEditorProps> = ({
   const getHyperparameterConfigs = (): HyperparameterConfig[] => {
     switch (algorithm.toLowerCase()) {
       case 'randomforestclassifier':
+      case 'randomforestregressor':
       case 'randomforest':
         return [
           {
@@ -172,6 +173,121 @@ const HyperparameterEditor: React.FC<HyperparameterEditorProps> = ({
               { value: 'distance', label: 'Nach Distanz' }
             ],
             description: 'Gewichtung der Nachbarn'
+          }
+        ];
+      
+      case 'xgboostclassifier':
+      case 'xgboostregressor':
+      case 'xgboost':
+        return [
+          {
+            name: 'n_estimators',
+            displayName: 'Anzahl Bäume',
+            type: 'number',
+            min: 10,
+            max: 1000,
+            step: 10,
+            description: 'Anzahl der Boosting-Runden'
+          },
+          {
+            name: 'learning_rate',
+            displayName: 'Lernrate',
+            type: 'number',
+            min: 0.01,
+            max: 1,
+            step: 0.01,
+            description: 'Boosting-Lernrate'
+          },
+          {
+            name: 'max_depth',
+            displayName: 'Maximale Tiefe',
+            type: 'number',
+            min: 1,
+            max: 20,
+            step: 1,
+            description: 'Maximale Tiefe der Bäume'
+          }
+        ];
+      
+      case 'linearregression':
+        return [
+          {
+            name: 'fit_intercept',
+            displayName: 'Achsenabschnitt',
+            type: 'select',
+            options: [
+              { value: 'true', label: 'Ja (empfohlen)' },
+              { value: 'false', label: 'Nein' }
+            ],
+            description: 'Ob ein Achsenabschnitt berechnet werden soll'
+          }
+        ];
+      
+      case 'svr':
+        return [
+          {
+            name: 'C',
+            displayName: 'Regularisierung (C)',
+            type: 'number',
+            min: 0.01,
+            max: 100,
+            step: 0.01,
+            description: 'Regularisierungsparameter'
+          },
+          {
+            name: 'kernel',
+            displayName: 'Kernel',
+            type: 'select',
+            options: [
+              { value: 'rbf', label: 'RBF (Standard)' },
+              { value: 'linear', label: 'Linear' },
+              { value: 'poly', label: 'Polynomial' },
+              { value: 'sigmoid', label: 'Sigmoid' }
+            ],
+            description: 'Kernel-Funktion für SVR'
+          },
+          {
+            name: 'epsilon',
+            displayName: 'Epsilon',
+            type: 'number',
+            min: 0.01,
+            max: 1,
+            step: 0.01,
+            description: 'Epsilon-Parameter für SVR'
+          }
+        ];
+      
+      case 'neuralnetworkclassifier':
+      case 'neuralnetworkregressor':
+      case 'mlpclassifier':
+      case 'mlpregressor':
+        return [
+          {
+            name: 'hidden_layer_sizes',
+            displayName: 'Versteckte Schichten',
+            type: 'number',
+            min: 10,
+            max: 500,
+            step: 10,
+            description: 'Größe der versteckten Schichten'
+          },
+          {
+            name: 'learning_rate_init',
+            displayName: 'Anfangslernrate',
+            type: 'number',
+            min: 0.001,
+            max: 1,
+            step: 0.001,
+            description: 'Anfängliche Lernrate'
+          },
+          {
+            name: 'max_iter',
+            displayName: 'Max. Iterationen',
+            type: 'number',
+            min: 100,
+            max: 2000,
+            step: 100,
+            description: 'Maximale Anzahl Iterationen'
           }
         ];
       
