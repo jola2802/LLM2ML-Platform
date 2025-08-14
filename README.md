@@ -283,6 +283,5 @@ curl -X POST 'http://localhost:3001/api/predict/{PROJECT_ID}' \
 ### Performance-Dashboard  
 ![Dashboard](docs/performance.png)
 
-## 📄 Lizenz
-
-Dieses Projekt steht unter der MIT-Lizenz.
+### Demo  
+![Dashboard](docs/Demo-LLM2ML-09092025.mp4)
