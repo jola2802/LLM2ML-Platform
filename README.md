@@ -29,9 +29,9 @@ Eine vollständige Machine Learning Platform, die es ermöglicht ohne Programmie
 - **Provider flexibel**: Umschaltbar zwischen Ollama und Gemini inkl. Model-Konfiguration
 - **Auto-Tuning**: Endpoint für automatische Hyperparameter-/Algorithmus-Vorschläge
 
-### 🚀 **Echte REST-API**
+### 🚀 **REST-API**
 - **Training-API**: Automatisches Model-Training mit echten Python-Scripts (Worker-Pool)
-- **Prediction-API**: Echte Vorhersagen mit trainierten Modellen
+- **Prediction-API**: Vorhersagen mit trainierten Modellen zur externen Nutzung und zu Testzwecken
 - **Model-Export**: Download der trainierten .pkl-Modelle
 - **Persistente Speicherung**: SQLite-Datenbank für alle Projekte
 - **Monitoring & Scaling**: Endpoints für Queue-, Worker- und Scaling-Status
@@ -284,4 +284,4 @@ curl -X POST 'http://localhost:3001/api/predict/{PROJECT_ID}' \
 ![Dashboard](docs/performance.png)
 
 ### Demo  
-![Dashboard](docs/Demo-LLM2ML-09092025.mp4)
+![Demo](docs/Demo-LLM2ML-09092025.mp4)
