@@ -7,6 +7,7 @@ import { Spinner } from './ui/Spinner';
 import ErrorBoundary from './ui/ErrorBoundary';
 import HyperparameterEditor from './HyperparameterEditor';
 import PerformanceInsights from './PerformanceInsights';
+import AgentStatusIndicator from './AgentStatusIndicator';
 
 interface ProjectViewProps {
   project: Project;
@@ -14,7 +15,99 @@ interface ProjectViewProps {
   onProjectUpdate?: (updatedProject: Project) => void;
 }
 
-type Tab = 'predict' | 'performance' | 'data' | 'code' | 'api' | 'export';
+type Tab = 'predict' | 'performance' | 'data' | 'code' | 'agents' | 'api' | 'export';
+
+// Vereinfachte Agent-Historie-Komponente  
+const SimpleAgentHistoryComponent: React.FC<{ projectId: string }> = ({ projectId }) => {
+  const [agentHistory, setAgentHistory] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const fetchAgentHistory = async () => {
+    try {
+      const response = await fetch(`/api/agents/activities/${projectId}`);
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.activities) {
+          // Nur die letzten 5 Activities anzeigen
+          const recentActivities = data.activities.slice(-5).reverse();
+          setAgentHistory(recentActivities);
+        }
+      }
+    } catch (error) {
+      console.error('Fehler beim Laden der Agent-Historie:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  React.useEffect(() => {
+    fetchAgentHistory();
+  }, [projectId]);
+
+  const getAgentIcon = (agentKey: string) => {
+    switch (agentKey) {
+      case 'DOMAIN_HYPERPARAMS': return '⚙️';
+      case 'CODE_GENERATOR': return '🔧';
+      case 'CODE_REVIEWER': return '🔍';
+      case 'PERFORMANCE_ANALYST': return '📊';
+      case 'DATA_EXPLORER': return '🔍';
+      case 'AUTO_TUNER': return '🎯';
+      default: return '🤖';
+    }
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'completed': return 'text-green-400';
+      case 'running': return 'text-blue-400 animate-pulse';
+      case 'failed': return 'text-red-400';
+      default: return 'text-gray-400';
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center space-x-2">
+        <Spinner size="sm" />
+        <span className="text-slate-400 text-sm">Lade Agent-Historie...</span>
+      </div>
+    );
+  }
+
+  if (agentHistory.length === 0) {
+    return (
+      <div className="text-center py-4 text-slate-400">
+        <span className="text-2xl mb-2 block">🤖</span>
+        <p className="text-sm">Noch keine Agent-Aktivitäten</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-3">
+      {agentHistory.map((activity, index) => (
+        <div key={activity.id || index} className="flex items-center space-x-3 p-3 bg-slate-700/30 rounded-lg">
+          <span className="text-xl">{getAgentIcon(activity.agentKey)}</span>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center space-x-2">
+              <span className="font-medium text-white text-sm">{activity.agentName}</span>
+              <span className={`text-xs ${getStatusColor(activity.status)}`}>
+                {activity.status === 'running' ? '🔄' : activity.status === 'completed' ? '✅' : '❌'}
+              </span>
+            </div>
+            <p className="text-xs text-slate-400 truncate">{activity.operation}</p>
+          </div>
+          <span className="text-xs text-slate-500">
+            {new Date(activity.startTime).toLocaleTimeString('de-DE', { 
+              hour: '2-digit', 
+              minute: '2-digit' 
+            })}
+          </span>
+        </div>
+      ))}
+    </div>
+  );
+};
 
 const ProjectView: React.FC<ProjectViewProps> = ({ project, onBack, onProjectUpdate }) => {
   const [activeTab, setActiveTab] = useState<Tab>('predict');
@@ -991,6 +1084,43 @@ const ProjectView: React.FC<ProjectViewProps> = ({ project, onBack, onProjectUpd
     </div>
   );
 
+  const renderAgentsTab = () => (
+    <div className="space-y-6">
+      {/* Aktueller Agent */}
+      <div className="bg-slate-800/50 rounded-lg border border-slate-600/50 p-6">
+        <h3 className="text-lg font-semibold text-white mb-4 flex items-center">
+          <span className="mr-2">🤖</span>Agent-Status
+        </h3>
+        <AgentStatusIndicator 
+          projectId={project.id} 
+          showDetails={true}
+          className="bg-slate-700/50 rounded-lg p-4"
+        />
+      </div>
+
+      {/* Vereinfachte Agent-Historie */}
+      <div className="bg-slate-800/50 rounded-lg border border-slate-600/50 p-6">
+        <h4 className="text-white font-medium mb-4 flex items-center">
+          <span className="mr-2">📋</span>Agent-Aktivitäten
+        </h4>
+        <p className="text-slate-400 text-sm mb-4">
+          Zeigt welche Agents bereits am Projekt gearbeitet haben und welcher gerade aktiv ist.
+        </p>
+        <SimpleAgentHistoryComponent projectId={project.id} />
+      </div>
+
+      {/* Hilfe-Text */}
+      <div className="bg-blue-900/20 border border-blue-500/50 rounded-lg p-4">
+        <h4 className="text-blue-400 font-medium mb-2">💡 Agent-System</h4>
+        <ul className="text-blue-200 text-sm space-y-1">
+          <li>• <strong>Aktiver Agent:</strong> Der Agent, der gerade am Projekt arbeitet</li>
+          <li>• <strong>Status:</strong> Zeigt an, ob ein Agent gerade eine Aufgabe bearbeitet</li>
+          <li>• <strong>Historie:</strong> Überblick über alle Agents, die am Projekt beteiligt waren</li>
+        </ul>
+      </div>
+    </div>
+  );
+
   const renderDataTab = () => {
     return (
       <div className="space-y-6">
@@ -1216,6 +1346,7 @@ const ProjectView: React.FC<ProjectViewProps> = ({ project, onBack, onProjectUpd
       { id: 'performance', name: 'Performance' },
       { id: 'data', name: 'Data Insights' },
       { id: 'code', name: 'Code Editor' },
+      { id: 'agents', name: 'Agents' },
       { id: 'api', name: 'API Info' },
       { id: 'export', name: 'Export' }
   ];
@@ -1290,6 +1421,7 @@ const ProjectView: React.FC<ProjectViewProps> = ({ project, onBack, onProjectUpd
             {activeTab === 'performance' && renderPerformanceTab()}
             {activeTab === 'data' && renderDataTab()}
             {activeTab === 'code' && renderCodeTab()}
+            {activeTab === 'agents' && renderAgentsTab()}
             {activeTab === 'api' && renderApiTab()}
             {activeTab === 'export' && renderExportTab()}
           </ErrorBoundary>

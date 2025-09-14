@@ -1,5 +1,4 @@
-import { callLLMAPI } from '../llm/llm.js';
-import { runMultiAgentPipeline } from '../llm/multi_agent_orchestrator.js';
+import { runNetworkAgentPipeline } from '../llm/master_agent.js';
 import { getCachedDataAnalysis } from '../data/data_exploration.js';
 
 // Python-Code Syntax-Validierung und Bereinigung
@@ -129,8 +128,8 @@ export async function generatePythonScriptWithLLM(project, maxRetries = 3) {
         return generatePythonScriptTemplate(project);
       }
 
-      // Multi-Agent Orchestrator aufrufen (inkl. Review/Optimierung/Validierung)
-      let pythonCode = await runMultiAgentPipeline(project);
+      console.log('🤖 Verwende Netzwerk-Agent-Pipeline...');
+      let pythonCode = await runNetworkAgentPipeline(project);
       
       // Validiere den generierten Code
       if (!pythonCode || typeof pythonCode !== 'string') {

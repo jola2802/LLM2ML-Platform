@@ -1,35 +1,17 @@
 import { parentPort } from 'worker_threads';
 import { logLLMCommunication } from '../monitoring/log.js';
 import { ChatOllama } from '@langchain/community/chat_models/ollama';
-import { ChatGoogleGenerativeAI } from '@langchain/google-genai';
 
 // LLM Provider Enum
 const LLM_PROVIDERS = {
-  OLLAMA: 'ollama',
-  GEMINI: 'gemini'
+  OLLAMA: 'ollama'
 };
 
-// Gemini-Modelle (zur automatischen Provider-Erkennung)
-const GEMINI_MODELS = [
-  'gemini-2.0-flash',
-  'gemini-2.0-flash-lite', 
-  'gemini-2.5-flash',
-  'gemini-2.5-flash-lite'
-];
 
 // Provider basierend auf Modell-Name bestimmen
 function determineProvider(modelName) {
-  if (!modelName) {
-    return llmConfig.activeProvider;
-  }
-  
-  // Prüfe ob es ein Gemini-Modell ist
-  if (GEMINI_MODELS.some(geminiModel => modelName.includes(geminiModel))) {
-    return LLM_PROVIDERS.GEMINI;
-  }
-  
-  // Fallback auf konfigurierten Provider
-  return llmConfig.activeProvider;
+  // Für lokale Implementierung immer Ollama verwenden
+  return LLM_PROVIDERS.OLLAMA;
 }
 
 // Worker State
@@ -38,14 +20,10 @@ let currentRequestId = null;
 
 // LLM Konfiguration (aus Environment Variables)
 const llmConfig = {
-  activeProvider: process.env.LLM_PROVIDER || LLM_PROVIDERS.OLLAMA,
+  activeProvider: LLM_PROVIDERS.OLLAMA,
   ollama: {
     host: process.env.OLLAMA_URL || 'http://127.0.0.1:11434',
     defaultModel: 'mistral:latest'
-  },
-  gemini: {
-    apiKey: process.env.GEMINI_API_KEY || null,
-    defaultModel: 'gemini-2.5-flash-lite'
   }
 };
 
@@ -81,9 +59,9 @@ async function handleProcessRequest({ requestId, prompt, filePath, customModel, 
   try {
     sendProgress(requestId, { status: 'started', message: 'LLM Request gestartet' });
     
-    // Provider und Model bestimmen - automatische Provider-Erkennung basierend auf Modell
-    const model = customModel || (llmConfig.activeProvider === LLM_PROVIDERS.OLLAMA ? llmConfig.ollama.defaultModel : llmConfig.gemini.defaultModel);
-    const provider = determineProvider(model);
+    // Provider und Model bestimmen - nur Ollama
+    const model = customModel || llmConfig.ollama.defaultModel;
+    const provider = LLM_PROVIDERS.OLLAMA;
     
     let attempt = 0;
     let lastError = null;
@@ -113,14 +91,8 @@ async function handleProcessRequest({ requestId, prompt, filePath, customModel, 
 
         let response;
         
-        // Provider-spezifische API-Calls
-        if (provider === LLM_PROVIDERS.OLLAMA) {
-          response = await callOllamaAPI(model, prompt);
-        } else if (provider === LLM_PROVIDERS.GEMINI) {
-          response = await callGeminiAPI(model, prompt);
-        } else {
-          throw new Error(`Unbekannter Provider: ${provider}`);
-        }
+        // Ollama API-Call
+        response = await callOllamaAPI(model, prompt);
         
         // Validiere Response
         if (!response.text && !response.result) {
@@ -196,16 +168,6 @@ async function callOllamaAPI(model, prompt) {
   return { text, result: text };
 }
 
-// Gemini API Call via LangChain
-async function callGeminiAPI(model, prompt) {
-  if (!llmConfig.gemini.apiKey) {
-    throw new Error('GEMINI_API_KEY nicht gesetzt');
-  }
-  const chat = new ChatGoogleGenerativeAI({ apiKey: llmConfig.gemini.apiKey, model, temperature: 0.1 });
-  const aiMessage = await chat.invoke(prompt);
-  const text = extractAIMessageText(aiMessage);
-  return { text, result: text };
-}
 
 // Hilfsfunktion: AIMessage zu String extrahieren
 function extractAIMessageText(aiMessage) {

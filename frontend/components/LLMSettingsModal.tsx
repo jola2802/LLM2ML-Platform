@@ -8,14 +8,9 @@ interface LLMSettingsModalProps {
 }
 
 interface LLMConfig {
-  activeProvider: 'ollama' | 'gemini';
+  activeProvider: 'ollama';
   ollama: {
     host: string;
-    defaultModel: string;
-    availableModels: string[];
-  };
-  gemini: {
-    apiKey: string | null;
     defaultModel: string;
     availableModels: string[];
   };
@@ -27,13 +22,6 @@ interface LLMStatus {
   ollama: {
     connected: boolean;
     available: boolean;
-    error?: string;
-    model?: string;
-  };
-  gemini: {
-    connected: boolean;
-    available: boolean;
-    hasApiKey: boolean;
     error?: string;
     model?: string;
   };
@@ -62,10 +50,6 @@ const LLMSettingsModal: React.FC<LLMSettingsModalProps> = ({
     modified_at: string;
   }>>([]);
 
-  // Gemini-spezifische States
-  const [geminiApiKey, setGeminiApiKey] = useState('');
-  const [selectedGeminiModel, setSelectedGeminiModel] = useState('');
-
   // Lade Konfiguration und Status
   const loadConfigAndStatus = async () => {
     try {
@@ -80,7 +64,6 @@ const LLMSettingsModal: React.FC<LLMSettingsModalProps> = ({
       if (configResponse.config) {
         setOllamaHost(configResponse.config.ollama?.host || '');
         setSelectedOllamaModel(configResponse.config.ollama?.defaultModel || '');
-        setSelectedGeminiModel(configResponse.config.gemini?.defaultModel || '');
       }
       
       // Lade Status
@@ -129,12 +112,11 @@ const LLMSettingsModal: React.FC<LLMSettingsModalProps> = ({
     if (isOpen) {
       loadConfigAndStatus();
       setMessage(null);
-      setGeminiApiKey('');
     }
   }, [isOpen]);
 
   // Provider wechseln
-  const handleProviderChange = async (provider: 'ollama' | 'gemini') => {
+  const handleProviderChange = async (provider: 'ollama') => {
     try {
       setIsLoading(true);
       setMessage(null);
@@ -215,62 +197,14 @@ const LLMSettingsModal: React.FC<LLMSettingsModalProps> = ({
     }
   };
 
-  // Gemini-Konfiguration speichern
-  const handleGeminiConfigSave = async () => {
-    try {
-      setIsLoading(true);
-      setMessage(null);
-      
-      const config: any = {};
-      if (geminiApiKey) config.apiKey = geminiApiKey;
-      if (selectedGeminiModel) config.defaultModel = selectedGeminiModel;
-      
-      console.log('Speichere Gemini-Konfiguration:', { ...config, apiKey: config.apiKey ? '***' : 'nicht gesetzt' });
-      const result = await apiService.updateGeminiConfig(config);
-      console.log('Gemini-Konfiguration Ergebnis:', result);
-      
-      if (result.success) {
-        setMessage({
-          type: 'success',
-          text: 'Gemini-Konfiguration erfolgreich gespeichert'
-        });
-        
-        setGeminiApiKey('');
-        await loadConfigAndStatus();
-        
-        if (onConfigUpdated) {
-          onConfigUpdated();
-        }
-      } else {
-        setMessage({
-          type: 'error',
-          text: result.error || 'Konfiguration konnte nicht gespeichert werden'
-        });
-      }
-    } catch (error) {
-      console.error('Fehler beim Speichern der Gemini-Konfiguration:', error);
-      setMessage({
-        type: 'error',
-        text: `Fehler beim Speichern: ${error instanceof Error ? error.message : 'Unbekannter Fehler'}`
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   // Verbindung testen
-  const handleTestConnection = async (provider: 'ollama' | 'gemini') => {
+  const handleTestConnection = async (provider: 'ollama') => {
     try {
       setIsLoading(true);
       setMessage(null);
       
       console.log(`Teste ${provider} Verbindung...`);
-      let result;
-      if (provider === 'ollama') {
-        result = await apiService.testOllamaConnection();
-      } else {
-        result = await apiService.testGeminiConnection();
-      }
+      const result = await apiService.testOllamaConnection();
       
       console.log(`${provider} Test Ergebnis:`, result);
       
@@ -329,36 +263,6 @@ const LLMSettingsModal: React.FC<LLMSettingsModalProps> = ({
                     {status.activeProvider}
                   </span>
                 </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-300">Ollama Status:</span>
-                  <div className="flex items-center space-x-2">
-                    <span className={`px-2 py-1 rounded text-sm ${
-                      status.ollama.connected ? 'bg-green-600 text-green-200' : 'bg-red-600 text-red-200'
-                    }`}>
-                      {status.ollama.connected ? 'Verbunden' : 'Nicht verbunden'}
-                    </span>
-                    {status.ollama.error && (
-                      <span className="text-xs text-red-400" title={status.ollama.error}>
-                        ⚠️
-                      </span>
-                    )}
-                  </div>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-300">Gemini Status:</span>
-                  <div className="flex items-center space-x-2">
-                    <span className={`px-2 py-1 rounded text-sm ${
-                      status.gemini.connected ? 'bg-green-600 text-green-200' : 'bg-red-600 text-red-200'
-                    }`}>
-                      {status.gemini.connected ? 'Verbunden' : 'Nicht verbunden'}
-                    </span>
-                    {status.gemini.error && (
-                      <span className="text-xs text-red-400" title={status.gemini.error}>
-                        ⚠️
-                      </span>
-                    )}
-                  </div>
-                </div>
               </div>
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
@@ -366,25 +270,15 @@ const LLMSettingsModal: React.FC<LLMSettingsModalProps> = ({
                   <span className="text-sm font-mono text-gray-200">{status.ollama.model || 'N/A'}</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-300">Gemini Modell:</span>
-                  <span className="text-sm font-mono text-gray-200">{status.gemini.model || 'N/A'}</span>
-                </div>
-                <div className="flex items-center justify-between">
                   <span className="text-sm text-gray-300">Letzter Test:</span>
                   <span className="text-sm text-gray-400">
                     {new Date(status.lastTested).toLocaleString('de-DE')}
                   </span>
                 </div>
-                {status.gemini.hasApiKey && (
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-300">Gemini API-Key:</span>
-                    <span className="text-sm text-green-400">✓ Konfiguriert</span>
-                  </div>
-                )}
               </div>
             </div>
             {/* Fehler-Details */}
-            {(status.ollama.error || status.gemini.error) && (
+            {(status.ollama.error) && (
               <div className="mt-3 p-3 bg-red-900 bg-opacity-50 rounded border border-red-600">
                 <h4 className="text-sm font-medium text-red-200 mb-2">Fehler-Details:</h4>
                 {status.ollama.error && (
@@ -392,46 +286,12 @@ const LLMSettingsModal: React.FC<LLMSettingsModalProps> = ({
                     <strong>Ollama:</strong> {status.ollama.error}
                   </p>
                 )}
-                {status.gemini.error && (
-                  <p className="text-xs text-red-300">
-                    <strong>Gemini:</strong> {status.gemini.error}
-                  </p>
-                )}
               </div>
             )}
           </div>
         )}
 
-        {/* Provider-Auswahl */}
-        <div className="mb-6 p-4 bg-gray-700 rounded border border-gray-600">
-          <h3 className="font-semibold text-gray-200 mb-3">Aktiver Provider</h3>
-          <div className="flex space-x-4">
-            <button
-              onClick={() => handleProviderChange('ollama')}
-              disabled={isLoading || status?.activeProvider === 'ollama'}
-              className={`px-4 py-2 rounded font-medium transition-colors ${
-                status?.activeProvider === 'ollama'
-                  ? 'bg-blue-600 text-blue-200 cursor-not-allowed'
-                  : 'bg-gray-600 text-gray-200 hover:bg-blue-600 hover:text-blue-200'
-              }`}
-            >
-              Ollama
-            </button>
-            <button
-              onClick={() => handleProviderChange('gemini')}
-              disabled={isLoading || status?.activeProvider === 'gemini'}
-              className={`px-4 py-2 rounded font-medium transition-colors ${
-                status?.activeProvider === 'gemini'
-                  ? 'bg-green-600 text-green-200 cursor-not-allowed'
-                  : 'bg-gray-600 text-gray-200 hover:bg-green-600 hover:text-green-200'
-              }`}
-            >
-              Gemini
-            </button>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols gap-6">
           {/* Ollama-Konfiguration */}
           <div className="p-4 bg-gray-700 rounded border border-gray-600">
             <h3 className="font-semibold text-gray-200 mb-4">Ollama-Konfiguration</h3>
@@ -501,78 +361,6 @@ const LLMSettingsModal: React.FC<LLMSettingsModalProps> = ({
             </div>
           </div>
 
-          {/* Gemini-Konfiguration */}
-          <div className="p-4 bg-gray-700 rounded border border-gray-600">
-            <h3 className="font-semibold text-gray-200 mb-4">Gemini-Konfiguration</h3>
-            
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-200 mb-2">
-                  API-Key
-                </label>
-                <input
-                  type="password"
-                  value={geminiApiKey}
-                  onChange={(e) => setGeminiApiKey(e.target.value)}
-                  placeholder="Geben Sie Ihren Gemini API-Key ein..."
-                  className="w-full px-3 py-2 bg-gray-600 border border-gray-500 text-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  disabled={isLoading}
-                />
-                {config?.gemini.apiKey && (
-                  <p className="text-xs text-gray-400 mt-1">
-                    Aktueller Key: {config.gemini.apiKey}
-                  </p>
-                )}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-200 mb-2">
-                  Standard-Modell
-                </label>
-                <select
-                  value={selectedGeminiModel}
-                  onChange={(e) => setSelectedGeminiModel(e.target.value)}
-                  className="w-full px-3 py-2 bg-gray-600 border border-gray-500 text-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  disabled={isLoading}
-                >
-                  {config?.gemini.availableModels?.map((model) => (
-                    <option key={model} value={model}>
-                      {model}
-                    </option>
-                  )) || [
-                    'gemini-2.5-flash-lite',
-                    'gemini-2.5-flash',
-                    'gemini-2.0-flash-lite',
-                    'gemini-2.0-flash'
-                  ].map((model) => (
-                    <option key={model} value={model}>
-                      {model}
-                    </option>
-                  ))}
-                </select>
-                <p className="text-xs text-gray-400 mt-1">
-                  Standard-Gemini-Modelle verfügbar
-                </p>
-              </div>
-
-              <div className="flex space-x-2">
-                <button
-                  onClick={() => handleTestConnection('gemini')}
-                  disabled={isLoading}
-                  className="px-4 py-2 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 disabled:opacity-50"
-                >
-                  {isLoading ? 'Teste...' : 'Verbindung testen'}
-                </button>
-                <button
-                  onClick={handleGeminiConfigSave}
-                  disabled={isLoading}
-                  className="px-4 py-2 bg-green-600 text-white text-sm rounded hover:bg-green-700 disabled:opacity-50"
-                >
-                  {isLoading ? 'Speichere...' : 'Speichern'}
-                </button>
-              </div>
-            </div>
-          </div>
         </div>
 
         {/* Nachricht anzeigen */}

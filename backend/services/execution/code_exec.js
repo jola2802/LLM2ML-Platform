@@ -58,7 +58,7 @@ function handleError(error, context, attempt = null) {
 export async function validatePythonCodeWithLLM(pythonCode) {
   try {
     const prompt = `Du bist ein extrem erfahrener Machine Learning Engineer, Python Programmierer und Fehlerbehebungs-Experte. Überprüfe den folgenden Python-Code auf Fehler und optimiere ihn: ${pythonCode}`;
-    let response = await callLLMAPI(prompt, null, 'gemini-2.5-flash-lite');
+    let response = await callLLMAPI(prompt, null, 'mistral:latest');
 
     // Stelle sicher, dass wir den Python-Code als String zurückgeben
     let codeToValidate;
@@ -113,7 +113,7 @@ KORRIGIERTER CODE (gib nur den korrigierten Code zurück, ohne Erklärungen):`;
 
     console.log(`LLM-Korrektur - Versuch ${attempt}:`, errorMessage.substring(0, 100) + '...');
     
-    const response = await callLLMAPI(prompt, null, 'gemini-2.5-flash-lite');
+    const response = await callLLMAPI(prompt, null, 'mistral:latest');
     
     // Stelle sicher, dass wir den Python-Code als String zurückgeben
     let correctedCode;

@@ -62,11 +62,8 @@ const LLMSwitch: React.FC<LLMSwitchProps> = ({ onProviderChange, className = '' 
     
     // Sicherheitsprüfung für Status-Struktur
     const ollamaStatus = status.ollama || { connected: false, available: false };
-    const geminiStatus = status.gemini || { connected: false, available: false };
-    
-    const isConnected = activeProvider === 'ollama' 
-      ? ollamaStatus.connected 
-      : geminiStatus.connected;
+
+    const isConnected = ollamaStatus.connected;
     
     return {
       connected: isConnected,
@@ -100,17 +97,6 @@ const LLMSwitch: React.FC<LLMSwitchProps> = ({ onProviderChange, className = '' 
           } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
         >
           Ollama
-        </button>
-        <button
-          onClick={() => handleProviderChange('gemini')}
-          disabled={isLoading}
-          className={`px-3 py-1 text-sm rounded-md transition-colors ${
-            activeProvider === 'gemini'
-              ? 'bg-green-600 text-green-200'
-              : 'text-gray-300 hover:text-white hover:bg-gray-600'
-          } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
-        >
-          Gemini
         </button>
       </div>
       

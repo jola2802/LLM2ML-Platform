@@ -41,6 +41,7 @@ import { setupFileRoutes } from './services/api/routes/files.js';
 import { setupWorkerStatusRoutes } from './services/api/routes/worker_status.js';
 import { setupScalingRoutes } from './services/api/routes/scaling.js';
 import { setupPredictCacheRoutes } from './services/api/routes/predict_cache.js';
+import { setupAgentRoutes } from './services/api/routes/agents.js';
 
 dotenv.config();
 
@@ -156,6 +157,7 @@ setupProjectRoutes(app, scriptDir, venvDir, trainModelAsync, retrainModelAsync);
 setupUploadRoutes(app, upload);
 setupAnalyzeRoutes(app, upload, venvDir);
 setupLLMRoutes(app);
+setupAgentRoutes(app);
 setupCacheRoutes(app);
 setupMonitoringRoutes(app);
 setupQueueRoutes(app);

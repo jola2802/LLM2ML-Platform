@@ -392,13 +392,6 @@ class ApiService {
           error: errorMessage,
           model: 'mistral:latest'
         },
-        gemini: {
-          connected: false,
-          available: false,
-          hasApiKey: false,
-          error: errorMessage,
-          model: 'gemini-2.5-flash-lite'
-        },
         lastTested: new Date().toISOString()
       };
     }
@@ -484,118 +477,6 @@ class ApiService {
     }
   }
 
-  // Gemini-Verbindung testen
-  async testGeminiConnection(): Promise<{success: boolean, connected: boolean, error?: string}> {
-    try {
-      const response = await fetch(`${API_BASE_URL}/llm/gemini/test`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
-      }
-      return response.json();
-    } catch (error) {
-      console.error('Fehler beim Testen der Gemini-Verbindung:', error);
-      throw error;
-    }
-  }
-
-  // Gemini-Konfiguration aktualisieren
-  async updateGeminiConfig(config: any): Promise<{success: boolean, message?: string, error?: string}> {
-    try {
-      const response = await fetch(`${API_BASE_URL}/llm/gemini/config`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(config),
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
-      }
-      return response.json();
-    } catch (error) {
-      console.error('Fehler beim Aktualisieren der Gemini-Konfiguration:', error);
-      throw error;
-    }
-  }
-
-  // ===== VERALTETE METHODEN (für Kompatibilität) =====
-
-  // Gemini-Verbindungsstatus prüfen (veraltet)
-  async checkGeminiStatus(): Promise<{connected: boolean, hasApiKey: boolean, error?: string, lastTested?: string}> {
-    const response = await fetch(`${API_BASE_URL}/gemini/status`);
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    return response.json();
-  }
-
-  // API-Key setzen
-  async setGeminiApiKey(apiKey: string): Promise<{success: boolean, connected: boolean, message?: string, error?: string}> {
-    const response = await fetch(`${API_BASE_URL}/gemini/api-key`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ apiKey }),
-    });
-    
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    return response.json();
-  }
-
-  // API-Key-Status abrufen
-  async getGeminiApiKeyStatus(): Promise<{hasApiKey: boolean, keyPreview?: string}> {
-    const response = await fetch(`${API_BASE_URL}/gemini/api-key-status`);
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    return response.json();
-  }
-
-  // Verfügbare Gemini-Modelle abrufen
-  async getGeminiModels(): Promise<{availableModels: string[], currentModel: string, customModelSupported: boolean}> {
-    const response = await fetch(`${API_BASE_URL}/gemini/models`);
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    return response.json();
-  }
-
-  // Gemini-Modell setzen
-  async setGeminiModel(model: string): Promise<{success: boolean, model: string, isCustomModel: boolean, tested: boolean, working: boolean, message?: string, error?: string}> {
-    const response = await fetch(`${API_BASE_URL}/gemini/model`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ model }),
-    });
-    
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    return response.json();
-  }
-
-  // Aktuelles Gemini-Modell abrufen
-  async getCurrentGeminiModel(): Promise<{currentModel: string, isCustomModel: boolean}> {
-    const response = await fetch(`${API_BASE_URL}/gemini/current-model`);
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    return response.json();
-  }
 
   // Datei-Management-Funktionen
   async getFiles(type: 'scripts' | 'models' | 'uploads'): Promise<any[]> {
@@ -629,6 +510,36 @@ class ApiService {
       console.error('Fehler beim Löschen der Datei:', error);
       throw error;
     }
+  }
+
+  // ========= Agent-Management =========
+  async getAgentFrontendConfig() {
+    const response = await fetch('/api/agents/frontend-config');
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    return response.json();
+  }
+
+  async getAgentStats() {
+    const response = await fetch('/api/agents/stats');
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    return response.json();
+  }
+
+  async testAgentConnection(agentKey: string) {
+    const response = await fetch(`/api/agents/${agentKey}/test`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      }
+    });
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    return response.json();
   }
 }
 

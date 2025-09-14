@@ -21,13 +21,14 @@ Eine vollständige Machine Learning Platform, die es ermöglicht ohne Programmie
 - **Regression**: MAE, MSE, RMSE, R², MAPE
 - **Feature Importance**: Visualisierung der wichtigsten Features
 
-### 🧠 **LLM-basierte Script-Generierung**
-- **Intelligente Python-Scripts**: Maßgeschneidert für jedes Projekt
-- **Adaptive Preprocessing**: Automatisch angepasst an Datentypen
-- **Optimierte Algorithmen**: LLM wählt beste Parameter
+### 🧠 **Dynamische Multi-Agent-Orchestrierung**
+- **Autonome Agent-Entscheidungen**: Agents entscheiden eigenständig über nächste Schritte
+- **Event-basiertes Tracking**: Real-time Verfolgung aller Agent-Aktivitäten
+- **Intelligente Übergaben**: Agents können an jeden anderen Agent übergeben
+- **Adaptive Pipeline**: Keine starre Reihenfolge - dynamische Workflows
+- **Zentrale Agent-Konfiguration**: Jeder Agent kann eigenes LLM-Modell verwenden
 - **Zero-Template-Ansatz**: Vollständig generierte Scripts statt starrer Templates
-- **Provider flexibel**: Umschaltbar zwischen Ollama und Gemini inkl. Model-Konfiguration
-- **Auto-Tuning**: Endpoint für automatische Hyperparameter-/Algorithmus-Vorschläge
+- **Lokale LLM-Provider**: Vollständig lokale Implementierung mit Ollama
 
 ### 🚀 **REST-API**
 - **Training-API**: Automatisches Model-Training mit echten Python-Scripts (Worker-Pool)
@@ -51,9 +52,9 @@ ML-Platform/
 ├── backend/                      # Node.js + Express + SQLite
 │   ├── server.js                 # Haupt-Server mit REST-API
 │   ├── services/
-│   │   ├── api/                  # Endpoints (projects, upload, analyze, predict, files, ...)
+│   │   ├── api/                  # Endpoints (projects, upload, analyze, predict, files, agents, ...)
 │   │   ├── execution/            # Python-Exec, Code-Gen, Worker, Predict-Cache
-│   │   ├── llm/                  # LLM-Provider (Ollama/Gemini), Queue, Tuning
+│   │   ├── llm/                  # Dynamische Agents, Agent-Config, Queue, Tuning
 │   │   ├── monitoring/           # Job-Queue, Scaling-Monitor, Logs
 │   │   └── config/               # Worker-Scaling-Konfiguration
 │   ├── models/                   # Gespeicherte .pkl-Modelle
@@ -131,23 +132,27 @@ POST   /api/predict/:id            # Vorhersage mit trainiertem Modell
 ### 🤖 LLM-Management
 ```http
 GET    /api/llm/config             # Aktuelle LLM-Konfiguration
-POST   /api/llm/provider           # Aktiven Provider setzen ("ollama" | "gemini")
-GET    /api/llm/status             # Gesamtstatus (Ollama/Gemini)
-
+GET    /api/llm/status             # Ollama-Status
 GET    /api/llm/ollama/models      # Verfügbare Ollama-Modelle
 POST   /api/llm/ollama/test        # Ollama-Verbindung testen
 POST   /api/llm/ollama/config      # Ollama-Host/Default-Model anpassen
+```
 
-POST   /api/llm/gemini/test        # Gemini-Verbindung testen
-POST   /api/llm/gemini/config      # Gemini-API-Key/Default-Model setzen
+### 🤖 Agent-Management
+```http
+GET    /api/agents                 # Alle verfügbaren Agents abrufen
+GET    /api/agents/:agentKey       # Spezifische Agent-Konfiguration
+PUT    /api/agents/:agentKey/model # Agent-Modell aktualisieren
+PUT    /api/agents/models/bulk     # Mehrere Agent-Modelle auf einmal ändern
+PUT    /api/agents/models/all      # Alle Agents auf dasselbe Modell setzen
+GET    /api/agents/stats           # Agent-Statistiken
+POST   /api/agents/:agentKey/test  # Agent-Konfiguration testen
 
-# Legacy (Kompatibilität):
-GET    /api/gemini/status
-POST   /api/gemini/api-key
-GET    /api/gemini/models
-POST   /api/gemini/model
-GET    /api/gemini/current-model
-GET    /api/gemini/api-key-status
+GET    /api/agents/activities      # Alle Agent-Activities
+GET    /api/agents/activities/:projectId  # Agent-Activities für Projekt
+GET    /api/agents/active          # Aktuell aktive Agents
+DELETE /api/agents/activities/:projectId # Agent-Activities löschen
+GET    /api/agents/activities/:projectId/stream # Real-time Agent-Updates
 ```
 
 ### 📈 Monitoring
@@ -212,7 +217,9 @@ GET    /api/worker/stats                # Worker/Queue Kennzahlen
 - Zielvarible und Features festlegen
 
 ### 2️⃣ **Training starten**
-- **LLM generiert intelligentes Python-Script** basierend auf Ihren Daten
+- **Dynamische Multi-Agent-Pipeline** mit autonomen Entscheidungen
+- **Agent-zu-Agent-Kommunikation** für optimale Code-Generierung
+- **Real-time Agent-Tracking** im Frontend
 - **Adaptive Preprocessing-Pipeline** je nach Datentypen
 - **Echte scikit-learn/XGBoost Ausführung** mit optimierten Parametern
 - **Live-Status-Updates** während des Trainings
@@ -268,14 +275,12 @@ curl -X POST 'http://localhost:3001/api/predict/{PROJECT_ID}' \
 - **joblib** - Model-Serialisierung
 
 ### LLM
-- **Ollama** (Standard) mit z. B. `mistral:latest`
-- **Google Gemini** (via API Key)
+- **Ollama** (Lokal) mit z. B. `mistral:latest`
 - **LangGraph/LangChain** für Multi-Agent Orchestrierung (Code-Gen/Review)
 
 ## ⚙️ Umgebungsvariablen
 
 - `PORT` (optional, Default: `3001`)
-- `GEMINI_API_KEY` (für Gemini)
 - `OLLAMA_URL` (Default: `http://127.0.0.1:11434`)
 
 ## 🎨 Screenshots

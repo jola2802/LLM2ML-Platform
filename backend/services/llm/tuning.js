@@ -1,7 +1,14 @@
 import { callLLMAPI } from './llm.js';
+import { getAgentModel, logAgentCall, AGENTS, getAgentConfig } from './agent_config.js';
 
 // LLM-getriebenes Auto-Tuning (Algorithmus + Hyperparameter)
 export async function autoTuneModelWithLLM(project, maxIterations = 2) {
+  const agentModel = getAgentModel(AGENTS.AUTO_TUNER);
+  const agentConfig = getAgentConfig(AGENTS.AUTO_TUNER);
+  
+  logAgentCall(AGENTS.AUTO_TUNER, agentModel, 'Auto-Tuning für Modell-Optimierung');
+  console.log(`🤖 ${agentConfig.name} startet Auto-Tuning mit Modell: ${agentModel}`);
+
   let best = {
     algorithm: project.algorithm,
     hyperparameters: project.hyperparameters || {},
@@ -10,7 +17,9 @@ export async function autoTuneModelWithLLM(project, maxIterations = 2) {
   };
 
   for (let i = 0; i < maxIterations; i++) {
-    const prompt = `Du bist ein erfahrener ML-AutoML-Experte. Basierend auf diesem Kontext, schlage eine verbesserte Konfiguration (Algorithmus + Hyperparameter) vor, die die Performance voraussichtlich erhöht. Gib NUR JSON zurück.
+    console.log(`📊 Auto-Tuning Iteration ${i + 1}/${maxIterations}`);
+    
+    const prompt = `Du bist ein erfahrener Machine-Learning-Experte. Basierend auf diesem Kontext, schlage eine verbesserte Konfiguration (Algorithmus + Hyperparameter) vor, die die Performance voraussichtlich erhöht. Gib NUR JSON zurück.
 
 KONTEXT:
 - Modelltyp: ${project.modelType}
@@ -29,14 +38,20 @@ ANTWORTFORMAT (JSON):
   "rationale": "kurze Begründung"
 }`;
 
-    const response = await callLLMAPI(prompt, null, 'gemini-2.5-flash-lite', 2);
-    let jsonText = response?.result || String(response || '');
-    jsonText = jsonText.replace(/```json/g, '').replace(/```/g, '').trim();
-    const match = jsonText.match(/\{[\s\S]*\}/);
-    if (!match) continue;
     try {
+      const response = await callLLMAPI(prompt, null, agentModel, agentConfig.retries || 2);
+      let jsonText = response?.result || String(response || '');
+      jsonText = jsonText.replace(/```json/g, '').replace(/```/g, '').trim();
+      const match = jsonText.match(/\{[\s\S]*\}/);
+      
+      if (!match) {
+        console.warn(`⚠️ Keine gültige JSON-Antwort in Iteration ${i + 1}`);
+        continue;
+      }
+      
       const proposal = JSON.parse(match[0]);
       if (typeof proposal.expectedGain === 'number' && proposal.expectedGain > (best.expectedGain || 0)) {
+        console.log(`✅ Bessere Konfiguration gefunden: Expected Gain ${proposal.expectedGain}`);
         best = {
           algorithm: proposal.algorithm || best.algorithm,
           hyperparameters: proposal.hyperparameters || best.hyperparameters,
@@ -44,8 +59,12 @@ ANTWORTFORMAT (JSON):
           rationale: proposal.rationale || best.rationale
         };
       }
-    } catch {}
+    } catch (error) {
+      console.warn(`⚠️ Fehler in Auto-Tuning Iteration ${i + 1}:`, error.message);
+    }
   }
+  
+  console.log(`✅ ${agentConfig.name} Auto-Tuning abgeschlossen. Beste Konfiguration: Expected Gain ${best.expectedGain}`);
   return best;
 }
 

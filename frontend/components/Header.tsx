@@ -63,7 +63,7 @@ const Header: React.FC<HeaderProps> = ({ title }) => {
     const activeProvider = llmStatus.activeProvider;
     const isConnected = activeProvider === 'ollama' 
       ? llmStatus.ollama.connected 
-      : llmStatus.gemini.connected;
+      : llmStatus.ollama.connected;
 
     return (
       <div className="flex items-center space-x-2">
@@ -71,7 +71,7 @@ const Header: React.FC<HeaderProps> = ({ title }) => {
           isConnected ? 'bg-green-400' : 'bg-red-400'
         }`}></div>
         <span className="text-sm text-gray-300">
-          {activeProvider === 'ollama' ? 'Ollama' : 'Gemini'}
+          {activeProvider === 'ollama' ? 'Ollama' : 'Ollama'}
         </span>
         <span className={`text-xs px-2 py-1 rounded ${
           isConnected 

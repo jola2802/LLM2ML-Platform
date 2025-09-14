@@ -7,7 +7,7 @@ node_modules
 backend/models/*
 backend/uploads/*
 backend/scripts/*
-backend/logs/*
+backend/logs
 backend/services/python/*
 
 */projects.db
@@ -16,5 +16,4 @@ backend/services/python/*
 # backend/services/python/venv/
 .env
 .env.local
-backend/projects.db
 backend/projects.db

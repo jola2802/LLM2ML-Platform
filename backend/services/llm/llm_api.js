@@ -2,6 +2,7 @@ import fs from 'fs/promises';
 import path from 'path';
 import { callLLMAPI } from './llm.js';
 import { getCachedDataAnalysis } from '../data/data_exploration.js';
+import { getAgentModel, logAgentCall, AGENTS, getAgentConfig } from './agent_config.js';
 
 // LLM-Empfehlungen für Algorithmus und Features
 export async function getLLMRecommendations(analysis, filePath = null, venvDir, selectedFeatures = null, excludedFeatures = null, userPreferences = null) {
@@ -75,14 +76,14 @@ AUFGABE: Analysiere die Daten und gib EXAKT die folgenden Empfehlungen zurück i
  WICHTIG: Gib NUR das JSON-Objekt zurück, keine Markdown-Formatierung oder zusätzlichen Text.`;
 
   try {
-    // Versuche zuerst mit Gemini, dann Fallback auf Ollama
-    let response;
-    try {
-      response = await callLLMAPI(prompt, null, 'gemini-2.5-flash-lite', 3);
-    } catch (geminiError) {
-      console.log('Gemini fehlgeschlagen, Fallback auf Ollama:', geminiError.message);
-      response = await callLLMAPI(prompt, null, 'mistral:latest', 3);
-    }
+    // Verwende den speziell konfigurierten Data Explorer Agent
+    const agentModel = getAgentModel(AGENTS.DATA_EXPLORER);
+    const agentConfig = getAgentConfig(AGENTS.DATA_EXPLORER);
+    
+    logAgentCall(AGENTS.DATA_EXPLORER, agentModel, 'LLM-Empfehlungen für ML-Pipeline');
+    console.log(`🤖 ${agentConfig.name} startet mit Modell: ${agentModel}`);
+    
+    const response = await callLLMAPI(prompt, null, agentModel, agentConfig.retries || 3);
     
     // Extrahiere JSON aus der Antwort - robuster für verschiedene Response-Formate
     let jsonText = '';
@@ -345,9 +346,14 @@ WICHTIG:
 - Antworte NUR mit dem JSON-Objekt, keine zusätzlichen Erklärungen außerhalb
 - Antworten müssen in deutscher Sprache sein`;
 
-    // const response = await callLLMAPI(prompt, null, 'gemini-2.5-flash-lite');
+    // Verwende den Performance Analyst Agent für Performance-Evaluation
+    const agentModel = getAgentModel(AGENTS.PERFORMANCE_ANALYST);
+    const agentConfig = getAgentConfig(AGENTS.PERFORMANCE_ANALYST);
     
-    const response = await callLLMAPI(prompt, null, 'mistral:latest');
+    logAgentCall(AGENTS.PERFORMANCE_ANALYST, agentModel, 'Performance-Evaluation');
+    console.log(`🤖 ${agentConfig.name} startet Performance-Analyse mit Modell: ${agentModel}`);
+    
+    const response = await callLLMAPI(prompt, null, agentModel);
     
     // Sicherstellen, dass response.result ein String ist
     if (!response || !response.result) {

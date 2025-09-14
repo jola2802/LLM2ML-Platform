@@ -9,13 +9,6 @@ export interface LLMStatus {
     error?: string;
     model: string;
   };
-  gemini: {
-    connected: boolean;
-    available: boolean;
-    hasApiKey: boolean;
-    error?: string;
-    model: string;
-  };
   lastTested: string;
 }
 
@@ -74,13 +67,6 @@ class LLMStatusService {
           available: false,
           error: error instanceof Error ? error.message : 'Unbekannter Fehler',
           model: 'mistral:latest'
-        },
-        gemini: {
-          connected: false,
-          available: false,
-          hasApiKey: false,
-          error: error instanceof Error ? error.message : 'Unbekannter Fehler',
-          model: 'gemini-2.5-flash-lite'
         },
         lastTested: new Date().toISOString()
       };

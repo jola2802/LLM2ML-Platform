@@ -5,10 +5,12 @@ export const codeGenSystem = (project, dataAnalysis, hyperparamsSuggestion) => `
 # führt Train/Test-Split durch, trainiert das angegebene Modell mit bereitgestellten
 # Hyperparametern und einer optionalen, automatischen Feinabstimmung um die Vorgaben herum,
 # gibt mehrere Metriken aus und speichert Modell sowie Label-Encoder.
+# Die folgenden Hyperparameter sind bereits vorgegeben:
+# ${JSON.stringify(hyperparamsSuggestion)}
 
 # WICHTIG:
 # - Dateipfad MUSS r"${project.csvFilePath}" sein.
-# - hyperparameters MUSS in main() als JSON-String zugewiesen werden:
+# - hyperparameters MUSS in main() als JSON-String zugewiesen werden (wie im Beispiel):
 # hyperparameters = "${JSON.stringify(project.hyperparameters).replace(/"/g, '\\"')}"
 # - Dieses Skript nutzt scikit-learn Pipelines und kann XGBoost unterstützen (falls installiert).
 # - Alle Ausgaben sind so formatiert, dass sie maschinell parsebar sind (z.B. "Accuracy: 0.8524").
@@ -523,4 +525,59 @@ export const domainHPSystem = (dataAnalysis) => `Du bist ein Fachdomänen-Expert
 # ${dataAnalysis.llm_summary}
 
 Basierend auf Datenanalyse (Zielvariable, Feature-Typen, Balance) schlage präzisere Hyperparameter vor.
-Gib ein JSON mit Schlüssel/Wert zurück, Werte als numerische Typen wo sinnvoll.`;
+Gib ein JSON mit Schlüssel/Wert zurück, Werte als numerische Typen wo sinnvoll.
+
+Hier ist ein Beispiel für ein JSON für RandomForestClassifier:
+{
+  "n_estimators": 100,
+  "max_depth": 10,
+  "min_samples_split": 2,
+  "min_samples_leaf": 1,
+  "max_features": "sqrt",
+  "bootstrap": true
+}
+
+Hier ist ein Beispiel für ein JSON für RandomForestRegressor:
+{
+  "n_estimators": 100,
+  "max_depth": 10,
+  "min_samples_split": 2,
+  "min_samples_leaf": 1,
+}
+
+Hier ist ein Beispiel für ein JSON für LinearRegression:
+{
+  "n_estimators": 100,
+  "max_depth": 10,
+  "min_samples_split": 2,
+  "min_samples_leaf": 1,
+}
+
+Hier ist ein Beispiel für ein JSON für SVR:
+{
+  "n_estimators": 100,
+  "max_depth": 10,
+  "min_samples_split": 2,
+  "min_samples_leaf": 1,
+}
+
+Hier ist ein Beispiel für ein JSON für XGBoostClassifier:
+{
+  "n_estimators": 100,
+  "max_depth": 10,
+  "min_samples_split": 2,
+  "min_samples_leaf": 1,
+}
+
+Hier ist ein Beispiel für ein JSON für XGBoostRegressor:
+{
+  "n_estimators": 100,
+  "max_depth": 10,
+  "min_samples_split": 2,
+  "min_samples_leaf": 1,
+}
+
+Gib nur das JSON zurück, keine zusätzlichen Erklärungen oder Markdown-Formatierung.
+Gib nur das entsprechende JSON für den Algorithmus und den Modelltyp zurück.
+
+`;
