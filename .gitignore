@@ -8,7 +8,7 @@ backend/models/*
 backend/uploads/*
 backend/scripts/*
 backend/logs
-backend/services/python/*
+backend/services/python/.venv/
 
 */projects.db
 
@@ -17,3 +17,4 @@ backend/services/python/*
 .env
 .env.local
 backend/projects.db
+backend/services/logs/*
