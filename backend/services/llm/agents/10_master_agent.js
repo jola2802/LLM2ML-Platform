@@ -7,8 +7,6 @@
  */
 
 import { EventEmitter } from 'events';
-import { callLLMAPI } from './llm.js';
-import { getCachedDataAnalysis } from '../data/data_exploration.js';
 import { 
   MASTER_AGENT,
   WORKER_AGENTS,
@@ -17,16 +15,16 @@ import {
   getAgentModel,
   getNextPipelineStep,
   logAgentCall
-} from './network_agent_config.js';
+} from './config_agent_network.js';
 
 /**
  * Worker-Agent-Implementierungen
  */
-import { DataAnalyzerWorker } from './workers/data_analyzer_worker.js';
-import { HyperparameterOptimizerWorker } from './workers/hyperparameter_optimizer_worker.js';
-import { CodeGeneratorWorker } from './workers/code_generator_worker.js';
-import { CodeReviewerWorker } from './workers/code_reviewer_worker.js';
-import { PerformanceAnalyzerWorker } from './workers/performance_analyzer_worker.js';
+import { DataAnalyzerWorker } from './1_data_analyzer_agent.js';
+import { HyperparameterOptimizerWorker } from './2_hyperparameter_optimizer_agent.js';
+import { CodeGeneratorWorker } from './3_code_generator_agent.js';
+import { CodeReviewerWorker } from './4_code_reviewer_agent.js';
+import { PerformanceAnalyzerWorker } from './5_performance_analyzer_agent.js';
 
 /**
  * Master-Agent-Klasse

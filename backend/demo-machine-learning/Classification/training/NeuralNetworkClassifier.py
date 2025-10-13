@@ -1,4 +1,37 @@
-# Demo-Code für NeuralNetworkClassifier
+# Generiere einen vollständigen Python-Code für Machine Learning Training:
+
+# **Code-Muster:** Muss dem bereitgestellten Muster folgen, einschließlich der Schritte Laden/Splitten, Instanziieren/Trainieren, Vorhersagen, Bewerten und Speichern.
+
+# **Projektname:** PyTorch_NeuralNet_Demo
+
+# **Daten laden und aufteilen (Schritt 1):**
+# * **Laden:** Funktion 'load_and_split_data' verwenden. **ACHTUNG:** Die geladenen Daten müssen sofort in PyTorch-Tensoren umgewandelt und ein DataLoader erstellt werden.
+# * **Dateipfad:** '../../dummy_classification_data.csv'
+# * **Features:** Alle Features
+
+# **Hyperparameter (Schritt 2):**
+# * **Algorithmus:** PyTorch Neural Network Classifier
+# * **Hyperparameter:** {
+#   "input_size": "dynamisch (X_train.shape[1])",
+#   "num_classes": 2,
+#   "num_epochs": 10,
+#   "batch_size": 16,
+#   "learning_rate": 0.001
+# }
+# * **Zielspalte:** target
+
+# **Vorhersagen (Schritt 3):**
+# * **Bibliothek:** **PyTorch** Logik (z.B. `torch.max(outputs.data, 1)`) verwenden, Ergebnisse in NumPy konvertieren.
+
+# **Performance-Metriken (Schritt 4):**
+# * **Test-Metriken:** Implementiere **alle Standardmetriken** für den definierten **Problemtyp** (BinaryClassification).
+#     * **Falls Klassifikation:** **'classification_report'** und **'confusion_matrix'** (Visualisiert mit 'seaborn') mit den NumPy-konvertierten Ergebnissen.
+#     * **Falls Regression:** 'mean_squared_error' ('MSE') und 'r2_score'.
+#     * **Zusätzlich:** Gib den **Loss** während des Trainings aus.
+
+# **Speichern (Schritt 5):**
+# * **Bibliothek:** **'torch.save'** verwenden (Speichern des `state_dict`).
+# * **Dateiname:** '../models/neural_net_classifier.pth'.
 
 import pandas as pd
 import numpy as np
@@ -26,7 +59,7 @@ def load_and_split_data(file_path, target_column, problem_type='classification')
     return train_test_split(X, y, test_size=0.2, random_state=42)
 
 # 1. Daten laden und in Tensoren umwandeln
-X_train, X_test, y_train, y_test = load_and_split_data('dummy_classification_data.csv', 'target')
+X_train, X_test, y_train, y_test = load_and_split_data('../../dummy_classification_data.csv', 'target')
 X_train_tensor = torch.Tensor(X_train.values)
 y_train_tensor = torch.Tensor(y_train.values).long()
 X_test_tensor = torch.Tensor(X_test.values)
@@ -50,7 +83,7 @@ class NeuralNet(nn.Module):
         out = self.fc2(out)
         return out
 
-model_nn_clf = NeuralNet(input_size=X_train.shape[1], num_classes=2)
+model_nn _clf = NeuralNet(input_size=X_train.shape[1], num_classes=2)
 criterion = nn.CrossEntropyLoss()
 optimizer = optim.Adam(model_nn_clf.parameters(), lr=0.001)
 
@@ -73,14 +106,14 @@ with torch.no_grad():
     y_test_np = y_test_tensor.numpy()
     print(classification_report(y_test_np, y_pred_np))
 
-    # Konfusionsmatrix visualisieren
-    cm = confusion_matrix(y_test_np, y_pred_np)
-    plt.figure(figsize=(8, 6))
-    sns.heatmap(cm, annot=True, fmt='d', cmap='Blues')
-    plt.title('Konfusionsmatrix - NeuralNetworkClassifier')
-    plt.xlabel('Vorhergesagte Klasse')
-    plt.ylabel('Tatsächliche Klasse')
-    plt.show()
+    # # Konfusionsmatrix visualisieren
+    # cm = confusion_matrix(y_test_np, y_pred_np)
+    # plt.figure(figsize=(8, 6))
+    # sns.heatmap(cm, annot=True, fmt='d', cmap='Blues')
+    # plt.title('Konfusionsmatrix - NeuralNetworkClassifier')
+    # plt.xlabel('Vorhergesagte Klasse')
+    # plt.ylabel('Tatsächliche Klasse')
+    # plt.show()
 
 # 4. Modell speichern
-torch.save(model_nn_clf.state_dict(), 'neural_net_classifier.pth')
+torch.save(model_nn_clf.state_dict(), '../models/neural_net_classifier.pth')

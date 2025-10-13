@@ -12,7 +12,7 @@ import {
   updateProjectInsights,
   deleteProject 
 } from '../../database/db.js';
-import { evaluatePerformanceWithLLM } from '../../llm/llm_api.js';
+import { evaluatePerformanceWithLLM } from '../../llm/api/llm_api.js';
 
 export function setupProjectRoutes(app, scriptDir, venvDir, trainModelAsync, retrainModelAsync) {
   // Intelligentes Projekt erstellen (mit LLM-Empfehlungen)

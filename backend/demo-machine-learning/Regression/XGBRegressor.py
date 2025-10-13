@@ -1,3 +1,36 @@
+# Generiere einen vollständigen Python-Code für Machine Learning Training:
+
+# **Code-Muster:** Muss dem bereitgestellten Muster folgen, einschließlich der Schritte Laden/Splitten, Instanziieren/Trainieren, Vorhersagen, Bewerten und Speichern.
+
+# **Projektname:** XGBRegressor_Demo
+
+# **Daten laden und aufteilen (Schritt 1):**
+# * **Laden:** Funktion 'load_and_split_data' verwenden. **ACHTUNG:** Der Parameter `problem_type` muss auf `'regression'` gesetzt werden.
+# * **Dateipfad:** 'dummy_regression_data.csv'
+# * **Features:** Alle Features
+
+# **Hyperparameter (Schritt 2):**
+# * **Algorithmus:** XGBRegressor
+# * **Hyperparameter:** {
+#   "objective": "reg:squarederror",
+#   "n_estimators": 100,
+#   "random_state": 42
+# }
+# * **Zielspalte:** target
+
+# **Vorhersagen (Schritt 3):**
+# * **Bibliothek:** 'predict' verwenden.
+
+# **Performance-Metriken (Schritt 4):**
+# * **Test-Metriken:** Implementiere **alle Standardmetriken** für den definierten **Problemtyp** (Regression).
+#     * **Falls Klassifikation:** 'classification_report' und 'confusion_matrix' (Visualisiert mit 'seaborn').
+#     * **Falls Regression:** **'mean_squared_error'** ('MSE') und **'r2_score'**.
+#     * **Zusätzlich:** Füge die Berechnung des **R² Scores** für das **Trainings-Set** (`model_xgb_reg.score(X_train, y_train)`) hinzu und visualisiere die Vorhersagen gegen die tatsächlichen Werte (Streudiagramm).
+
+# **Speichern (Schritt 5):**
+# * **Bibliothek:** 'joblib.dump' verwenden.
+# * **Dateiname:** 'xgb_regressor_demo_model.pkl'.
+
 # Demo-Code für XGBRegressor
 
 import pandas as pd

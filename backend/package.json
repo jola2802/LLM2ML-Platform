@@ -15,6 +15,7 @@
     "@langchain/community": "latest",
     "@langchain/core": "latest",
     "@langchain/langgraph": "latest",
+    "@langchain/ollama": "^0.2.4",
     "child_process": "latest",
     "cors": "^2.8.5",
     "dotenv": "^16.3.1",

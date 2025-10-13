@@ -1,12 +1,13 @@
-import { callLLMAPI } from './llm.js';
-import { getAgentModel, logAgentCall, AGENTS, getAgentConfig } from './agent_config.js';
+import { callLLMAPI } from '../api/llm.js';
+import { getAgentModel, logAgentCall, getAgentConfig, WORKER_AGENTS } from './config_agent_network.js';
+import { AUTO_TUNING_PROMPT, formatPrompt } from './prompts.js';
 
 // LLM-getriebenes Auto-Tuning (Algorithmus + Hyperparameter)
 export async function autoTuneModelWithLLM(project, maxIterations = 2) {
-  const agentModel = getAgentModel(AGENTS.AUTO_TUNER);
-  const agentConfig = getAgentConfig(AGENTS.AUTO_TUNER);
+  const agentModel = getAgentModel(WORKER_AGENTS.HYPERPARAMETER_OPTIMIZER.key);
+  const agentConfig = getAgentConfig(WORKER_AGENTS.HYPERPARAMETER_OPTIMIZER.key);
   
-  logAgentCall(AGENTS.AUTO_TUNER, agentModel, 'Auto-Tuning für Modell-Optimierung');
+  logAgentCall(WORKER_AGENTS.HYPERPARAMETER_OPTIMIZER.key, agentModel, 'Auto-Tuning für Modell-Optimierung');
   console.log(`🤖 ${agentConfig.name} startet Auto-Tuning mit Modell: ${agentModel}`);
 
   let best = {
@@ -19,24 +20,15 @@ export async function autoTuneModelWithLLM(project, maxIterations = 2) {
   for (let i = 0; i < maxIterations; i++) {
     console.log(`📊 Auto-Tuning Iteration ${i + 1}/${maxIterations}`);
     
-    const prompt = `Du bist ein erfahrener Machine-Learning-Experte. Basierend auf diesem Kontext, schlage eine verbesserte Konfiguration (Algorithmus + Hyperparameter) vor, die die Performance voraussichtlich erhöht. Gib NUR JSON zurück.
-
-KONTEXT:
-- Modelltyp: ${project.modelType}
-- Aktueller Algorithmus: ${project.algorithm}
-- Aktuelle Hyperparameter: ${JSON.stringify(project.hyperparameters)}
-- Features: ${Array.isArray(project.features) ? project.features.join(', ') : ''}
-- Zielvariable: ${project.targetVariable}
-- Letzte Performance-Metriken: ${JSON.stringify(project.performanceMetrics || {})}
-- Datensatz: ${project.dataSourceName}
-
-ANTWORTFORMAT (JSON):
-{
-  "algorithm": "Name des Algorithmus",
-  "hyperparameters": { "param": Wert },
-  "expectedGain": Zahl zwischen 0 und 1,
-  "rationale": "kurze Begründung"
-}`;
+    const prompt = formatPrompt(AUTO_TUNING_PROMPT, {
+      modelType: project.modelType,
+      algorithm: project.algorithm,
+      hyperparameters: JSON.stringify(project.hyperparameters),
+      features: Array.isArray(project.features) ? project.features.join(', ') : '',
+      targetVariable: project.targetVariable,
+      performanceMetrics: JSON.stringify(project.performanceMetrics || {}),
+      dataSourceName: project.dataSourceName
+    });
 
     try {
       const response = await callLLMAPI(prompt, null, agentModel, agentConfig.retries || 2);

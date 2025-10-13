@@ -669,20 +669,28 @@ const ProjectView: React.FC<ProjectViewProps> = ({ project, onBack, onProjectUpd
               <div className="bg-slate-800/50 rounded-lg p-6 text-center">
                 <h4 className="text-slate-400 text-sm font-medium mb-2">Gesamt-Score</h4>
                 <div className="text-4xl font-bold text-white mb-2">
-                  {currentProject.performanceInsights.overallScore.toFixed(1)}/10
+                  {currentProject.performanceInsights?.overallScore ? 
+                    Number(currentProject.performanceInsights.overallScore).toFixed(1) : 
+                    'N/A'
+                  }/10
                 </div>
                 <div className="w-full bg-slate-700 rounded-full h-2">
                   <div
                     className="bg-gradient-to-r from-blue-500 to-purple-500 h-2 rounded-full transition-all duration-500"
-                    style={{ width: `${(currentProject.performanceInsights.overallScore / 10) * 100}%` }}
+                    style={{ 
+                      width: `${currentProject.performanceInsights?.overallScore ? 
+                        (Number(currentProject.performanceInsights.overallScore) / 10) * 100 : 
+                        0
+                      }%` 
+                    }}
                   ></div>
                 </div>
               </div>
               
               <div className="bg-slate-800/50 rounded-lg p-6 text-center">
                 <h4 className="text-slate-400 text-sm font-medium mb-2">Performance-Grade</h4>
-                <div className={`inline-flex items-center px-4 py-2 rounded-lg border text-lg font-semibold ${getGradeColor(currentProject.performanceInsights.performanceGrade)}`}>
-                  {currentProject.performanceInsights.performanceGrade}
+                <div className={`inline-flex items-center px-4 py-2 rounded-lg border text-lg font-semibold ${getGradeColor(currentProject.performanceInsights?.performanceGrade || 'Unknown')}`}>
+                  {currentProject.performanceInsights?.performanceGrade || 'N/A'}
                 </div>
               </div>
             </div>
@@ -690,7 +698,7 @@ const ProjectView: React.FC<ProjectViewProps> = ({ project, onBack, onProjectUpd
             {/* Summary */}
             <div className="bg-slate-800/50 border border-slate-600/50 rounded-lg p-6">
               <h4 className="text-slate-300 font-medium mb-3">📊 KI-Zusammenfassung</h4>
-              <p className="text-slate-200">{currentProject.performanceInsights.summary}</p>
+              <p className="text-slate-200">{currentProject.performanceInsights?.summary || 'Keine Zusammenfassung verfügbar'}</p>
             </div>
 
             {/* Detailed Analysis */}
@@ -774,19 +782,19 @@ const ProjectView: React.FC<ProjectViewProps> = ({ project, onBack, onProjectUpd
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="text-center">
                   <h5 className="text-slate-400 text-sm mb-2">Produktionsbereitschaft</h5>
-                  <span className={`font-medium ${getReadinessColor(currentProject.performanceInsights.businessImpact.readiness)}`}>
-                    {currentProject.performanceInsights.businessImpact.readiness}
+                  <span className={`font-medium ${getReadinessColor(currentProject.performanceInsights?.businessImpact?.readiness || 'Unknown')}`}>
+                    {currentProject.performanceInsights?.businessImpact?.readiness || 'N/A'}
                   </span>
                 </div>
                 <div className="text-center">
                   <h5 className="text-slate-400 text-sm mb-2">Risikobewertung</h5>
-                  <span className={`font-medium ${currentProject.performanceInsights.businessImpact.riskAssessment === 'Low' ? 'text-emerald-400' : currentProject.performanceInsights.businessImpact.riskAssessment === 'Medium' ? 'text-amber-400' : 'text-red-400'}`}>
-                    {currentProject.performanceInsights.businessImpact.riskAssessment}
+                  <span className={`font-medium ${currentProject.performanceInsights?.businessImpact?.riskAssessment === 'Low' ? 'text-emerald-400' : currentProject.performanceInsights?.businessImpact?.riskAssessment === 'Medium' ? 'text-amber-400' : 'text-red-400'}`}>
+                    {currentProject.performanceInsights?.businessImpact?.riskAssessment || 'N/A'}
                   </span>
                 </div>
                 <div className="text-center md:col-span-1">
                   <h5 className="text-slate-400 text-sm mb-2">Empfehlung</h5>
-                  <p className="text-slate-300 text-sm">{currentProject.performanceInsights.businessImpact.recommendation}</p>
+                  <p className="text-slate-300 text-sm">{currentProject.performanceInsights?.businessImpact?.recommendation || 'Keine Empfehlung verfügbar'}</p>
                 </div>
               </div>
             </div>
@@ -797,7 +805,7 @@ const ProjectView: React.FC<ProjectViewProps> = ({ project, onBack, onProjectUpd
                 <span className="mr-2">🚀</span>Nächste Schritte
               </h4>
               <ol className="space-y-2">
-                {currentProject.performanceInsights.nextSteps.map((step, index) => (
+                {(currentProject.performanceInsights?.nextSteps || []).map((step, index) => (
                   <li key={index} className="text-gray-300 flex items-start">
                     <span className="bg-blue-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm mr-3 mt-0.5 flex-shrink-0">
                       {index + 1}
@@ -1084,42 +1092,42 @@ const ProjectView: React.FC<ProjectViewProps> = ({ project, onBack, onProjectUpd
     </div>
   );
 
-  const renderAgentsTab = () => (
-    <div className="space-y-6">
-      {/* Aktueller Agent */}
-      <div className="bg-slate-800/50 rounded-lg border border-slate-600/50 p-6">
-        <h3 className="text-lg font-semibold text-white mb-4 flex items-center">
-          <span className="mr-2">🤖</span>Agent-Status
-        </h3>
-        <AgentStatusIndicator 
-          projectId={project.id} 
-          showDetails={true}
-          className="bg-slate-700/50 rounded-lg p-4"
-        />
-      </div>
+  // const renderAgentsTab = () => (
+  //   <div className="space-y-6">
+  //     {/* Aktueller Agent */}
+  //     <div className="bg-slate-800/50 rounded-lg border border-slate-600/50 p-6">
+  //       <h3 className="text-lg font-semibold text-white mb-4 flex items-center">
+  //         <span className="mr-2">🤖</span>Agent-Status
+  //       </h3>
+  //       <AgentStatusIndicator 
+  //         projectId={project.id} 
+  //         showDetails={true}
+  //         className="bg-slate-700/50 rounded-lg p-4"
+  //       />
+  //     </div>
 
-      {/* Vereinfachte Agent-Historie */}
-      <div className="bg-slate-800/50 rounded-lg border border-slate-600/50 p-6">
-        <h4 className="text-white font-medium mb-4 flex items-center">
-          <span className="mr-2">📋</span>Agent-Aktivitäten
-        </h4>
-        <p className="text-slate-400 text-sm mb-4">
-          Zeigt welche Agents bereits am Projekt gearbeitet haben und welcher gerade aktiv ist.
-        </p>
-        <SimpleAgentHistoryComponent projectId={project.id} />
-      </div>
+  //     {/* Vereinfachte Agent-Historie */}
+  //     <div className="bg-slate-800/50 rounded-lg border border-slate-600/50 p-6">
+  //       <h4 className="text-white font-medium mb-4 flex items-center">
+  //         <span className="mr-2">📋</span>Agent-Aktivitäten
+  //       </h4>
+  //       <p className="text-slate-400 text-sm mb-4">
+  //         Zeigt welche Agents bereits am Projekt gearbeitet haben und welcher gerade aktiv ist.
+  //       </p>
+  //       <SimpleAgentHistoryComponent projectId={project.id} />
+  //     </div>
 
-      {/* Hilfe-Text */}
-      <div className="bg-blue-900/20 border border-blue-500/50 rounded-lg p-4">
-        <h4 className="text-blue-400 font-medium mb-2">💡 Agent-System</h4>
-        <ul className="text-blue-200 text-sm space-y-1">
-          <li>• <strong>Aktiver Agent:</strong> Der Agent, der gerade am Projekt arbeitet</li>
-          <li>• <strong>Status:</strong> Zeigt an, ob ein Agent gerade eine Aufgabe bearbeitet</li>
-          <li>• <strong>Historie:</strong> Überblick über alle Agents, die am Projekt beteiligt waren</li>
-        </ul>
-      </div>
-    </div>
-  );
+  //     {/* Hilfe-Text */}
+  //     <div className="bg-blue-900/20 border border-blue-500/50 rounded-lg p-4">
+  //       <h4 className="text-blue-400 font-medium mb-2">💡 Agent-System</h4>
+  //       <ul className="text-blue-200 text-sm space-y-1">
+  //         <li>• <strong>Aktiver Agent:</strong> Der Agent, der gerade am Projekt arbeitet</li>
+  //         <li>• <strong>Status:</strong> Zeigt an, ob ein Agent gerade eine Aufgabe bearbeitet</li>
+  //         <li>• <strong>Historie:</strong> Überblick über alle Agents, die am Projekt beteiligt waren</li>
+  //       </ul>
+  //     </div>
+  //   </div>
+  // );
 
   const renderDataTab = () => {
     return (
@@ -1346,7 +1354,7 @@ const ProjectView: React.FC<ProjectViewProps> = ({ project, onBack, onProjectUpd
       { id: 'performance', name: 'Performance' },
       { id: 'data', name: 'Data Insights' },
       { id: 'code', name: 'Code Editor' },
-      { id: 'agents', name: 'Agents' },
+      // { id: 'agents', name: 'Agents' },
       { id: 'api', name: 'API Info' },
       { id: 'export', name: 'Export' }
   ];

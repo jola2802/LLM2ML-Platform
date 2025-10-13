@@ -5,7 +5,8 @@
  * Fokussiert auf Fehler, Performance-Probleme und Best Practices.
  */
 
-import { BaseWorker } from './base_worker.js';
+import { BaseWorker } from './0_base_agent.js';
+import { CODE_REVIEW_PROMPT, CODE_REVIEWER_TEST_PROMPT, formatPrompt } from './prompts.js';
 
 export class CodeReviewerWorker extends BaseWorker {
   constructor() {
@@ -23,7 +24,7 @@ export class CodeReviewerWorker extends BaseWorker {
     }
 
     try {
-      const reviewedCode = await this.reviewAndOptimizeCode(results.CODE_GENERATOR);
+      // const reviewedCode = await this.reviewAndOptimizeCode(results.CODE_GENERATOR);
       
       this.log('success', 'Code-Review erfolgreich abgeschlossen');
       return reviewedCode;
@@ -35,39 +36,9 @@ export class CodeReviewerWorker extends BaseWorker {
   }
 
   async reviewAndOptimizeCode(pythonCode) {
-    const prompt = `Überprüfe und optimiere den folgenden Python-Code für Machine Learning:
-
-CODE ZUM REVIEW:
-\`\`\`python
-${pythonCode}
-\`\`\`
-
-REVIEW-KRITERIEN:
-1. **Syntax und Fehler**: Prüfe auf Syntax-Fehler und logische Probleme
-2. **Performance**: Identifiziere Performance-Bottlenecks und Optimierungsmöglichkeiten
-3. **Best Practices**: Überprüfe Python- und ML-Best-Practices
-4. **Code-Qualität**: Verbessere Lesbarkeit, Struktur und Dokumentation
-5. **Fehlerbehandlung**: Ergänze robuste Fehlerbehandlung
-6. **Moderne Bibliotheken**: Verwende aktuelle und effiziente Bibliotheken
-7. **Memory-Effizienz**: Optimiere Speicherverbrauch
-8. **Skalierbarkeit**: Verbessere Code für größere Datasets
-
-OPTIMIERUNGEN:
-- Verbessere Code-Struktur und Modularität
-- Ergänze aussagekräftige Kommentare und Docstrings
-- Optimiere Imports und Abhängigkeiten
-- Verbessere Fehlerbehandlung und Logging
-- Optimiere Performance-kritische Bereiche
-- Ergänze Validierung und Checks
-
-ANTWORTFORMAT:
-Gib den vollständigen, optimierten Python-Code zurück. Der Code sollte:
-- Syntaktisch korrekt und ausführbar sein
-- Bessere Performance haben
-- Robuster und wartbarer sein
-- Best Practices befolgen
-
-Falls der Code bereits gut ist, gib ihn mit minimalen Verbesserungen zurück.`;
+    const prompt = formatPrompt(CODE_REVIEW_PROMPT, {
+      pythonCode
+    });
 
     const response = await this.callLLM(prompt);
     const text = typeof response === 'string' ? response : response?.result || '';
@@ -152,24 +123,9 @@ Datum: ${new Date().toISOString()}
   }
 
   async test() {
-    const testPrompt = `Du bist der ${this.agentKey}. 
-Teste die Code-Review-Funktionalität mit einem einfachen Beispiel:
-
-Code zum Review:
-\`\`\`python
-import pandas as pd
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.model_selection import train_test_split
-
-df = pd.read_csv('data.csv')
-X = df.iloc[:, :-1]
-y = df.iloc[:, -1]
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
-model = RandomForestClassifier()
-model.fit(X_train, y_train)
-\`\`\`
-
-Antworte nur mit "OK" wenn du bereit bist, diesen Code zu reviewen.`;
+    const testPrompt = formatPrompt(CODE_REVIEWER_TEST_PROMPT, {
+      agentName: this.agentKey
+    });
 
     try {
       const response = await this.callLLM(testPrompt, null, 10);

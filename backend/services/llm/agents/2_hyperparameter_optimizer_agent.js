@@ -5,7 +5,8 @@
  * Berücksichtigt Datencharakteristika, Problemtyp und verfügbare Ressourcen.
  */
 
-import { BaseWorker } from './base_worker.js';
+import { BaseWorker } from './0_base_agent.js';
+import { HYPERPARAMETER_OPTIMIZATION_PROMPT, HYPERPARAMETER_OPTIMIZER_TEST_PROMPT, formatPrompt } from './prompts.js';
 
 export class HyperparameterOptimizerWorker extends BaseWorker {
   constructor() {
@@ -38,40 +39,13 @@ export class HyperparameterOptimizerWorker extends BaseWorker {
   }
 
   async optimizeHyperparameters(dataAnalysis, project) {
-    const prompt = `Basierend auf der folgenden Datenanalyse und deinem Fachwissen, schlage optimale Hyperparameter vor:
-
-DATENANALYSE:
-${JSON.stringify(dataAnalysis, null, 2)}
-
-PROJEKT-KONTEXT:
-- Name: ${project.name}
-- Algorithmus: ${project.algorithm || 'Nicht spezifiziert'}
-- Features: ${Array.isArray(project.features) ? project.features.length : 0} ausgewählt
-- Dataset-Größe: ${dataAnalysis.dataset ? 'Verfügbar' : 'Unbekannt'}
-
-AUFGABE:
-Schlage für den angegebenen Algorithmus (oder für mehrere geeignete Algorithmen) optimale Hyperparameter vor.
-
-Berücksichtige:
-1. Dataset-Größe und -Komplexität
-2. Feature-Anzahl und -Typen
-3. Problemtyp (Klassifikation/Regression)
-4. Erwartete Trainingszeit
-5. Modell-Interpretierbarkeit vs. Performance
-
-ANTWORTFORMAT:
-Gib eine JSON-Antwort zurück mit folgender Struktur:
-{
-  "primary_algorithm": "Algorithmus-Name",
-  "hyperparameters": {
-    "algorithm_name": {
-      "param1": "wert1",
-      "param2": "wert2"
-    }
-  },
-  "reasoning": "Erklärung der Hyperparameter-Auswahl",
-  "expected_performance": "Erwartete Performance-Indikatoren"
-}`;
+    const prompt = formatPrompt(HYPERPARAMETER_OPTIMIZATION_PROMPT, {
+      dataAnalysis: JSON.stringify(dataAnalysis, null, 2),
+      projectName: project.name,
+      algorithm: project.algorithm || 'Nicht spezifiziert',
+      featuresCount: Array.isArray(project.features) ? project.features.length : 0,
+      datasetSize: dataAnalysis.dataset ? 'Verfügbar' : 'Unbekannt'
+    });
 
     const response = await this.callLLM(prompt);
     const text = typeof response === 'string' ? response : response?.result || '';
@@ -178,12 +152,9 @@ Gib eine JSON-Antwort zurück mit folgender Struktur:
   }
 
   async test() {
-    const testPrompt = `Du bist der ${this.config.name}. 
-Teste die Hyperparameter-Optimierung mit einem einfachen Beispiel:
-Dataset: Iris (150 Samples, 4 Features, 3 Klassen)
-Algorithmus: RandomForestClassifier
-
-Antworte nur mit "OK" wenn du bereit bist.`;
+    const testPrompt = formatPrompt(HYPERPARAMETER_OPTIMIZER_TEST_PROMPT, {
+      agentName: this.config.name
+    });
 
     try {
       const response = await this.callLLM(testPrompt, null, 10);

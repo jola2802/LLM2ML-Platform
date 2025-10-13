@@ -1,8 +1,9 @@
 import fs from 'fs/promises';
 import path from 'path';
 import { callLLMAPI } from './llm.js';
-import { getCachedDataAnalysis } from '../data/data_exploration.js';
-import { getAgentModel, logAgentCall, AGENTS, getAgentConfig } from './agent_config.js';
+import { getCachedDataAnalysis } from '../../data/data_exploration.js';
+import { getAgentModel, logAgentCall, getAgentConfig, WORKER_AGENTS } from '../agents/config_agent_network.js';
+import { LLM_RECOMMENDATIONS_PROMPT, PERFORMANCE_EVALUATION_PROMPT, formatPrompt } from '../agents/prompts.js';
 
 // LLM-Empfehlungen für Algorithmus und Features
 export async function getLLMRecommendations(analysis, filePath = null, venvDir, selectedFeatures = null, excludedFeatures = null, userPreferences = null) {
@@ -33,110 +34,33 @@ export async function getLLMRecommendations(analysis, filePath = null, venvDir, 
 - Anzahl Zeilen: ${analysis.rowCount}
 - Datentypen: ${Object.entries(filteredDataTypes).map(([col, type]) => `${col}: ${type}`).join(', ')}
 
-BEISPIEL-DATEN (erste 5 Zeilen):
+BEISPIEL-DATEN (erste 10 Zeilen):
 ${filteredSampleData.map((row, i) => 
   `Zeile ${i+1}: ${filteredColumns.map((col, j) => `${col}=${row[j]}`).join(', ')}`
 ).join('\n')}`;
   }
 
-  const prompt = `Du bist ein erfahrener Machine Learning Experte. Analysiere diese automatische Datenübersicht und gib PRÄZISE Empfehlungen zurück.
-
-AUTOMATISCHE DATENÜBERSICHT (NUR ERLAUBTE FEATURES):
-${dataOverview}
-
-NUTZERWÜNSCHE (falls vorhanden):
-${userPreferences ? userPreferences : 'Keine speziellen Wünsche übermittelt.'}
-
-AUFGABE: Analysiere die Daten und gib EXAKT die folgenden Empfehlungen zurück im JSON-Format:
-
-{
-  "targetVariable": "[Name der Zielvariable - die Spalte die vorhergesagt werden soll]", // WICHTIG: NUR die Spalte die vorhergesagt werden soll, keine sonstigen Namen sind erlaubt; 
-  "features": ["[Liste der Features/Eingangsvariablen ohne die Zielvariable - NUR aus den verfügbaren Spalten]"],
-  "modelType": "[Classification oder Regression]",
-  "algorithm": "[Bester Algorithmus: RandomForestClassifier, LogisticRegression, SVM, XGBoostClassifier, RandomForestRegressor, LinearRegression, SVR, XGBoostRegressor, MLPClassifier, MLPRegressor]",
-  "hyperparameters": {
-    "[Parameter1]": "[Wert1]",
-    "[Parameter2]": "[Wert2]"
-  },
-  "reasoning": "[Kurze Begründung der Entscheidungen]",
-  "dataSourceName": "[Aussagekräftiger Name für das Dataset]"
-}
-
- WICHTIGE REGELN:
-1. Identifiziere die wahrscheinlichste Zielvariable aus den verfügbaren Spalten
-2. Verwende NUR die verfügbaren Spalten als Features (ausgeschlossene Spalten sind nicht verfügbar)
-3. IMPORTANT: Schließe sinnlose Features wie "ID", "Name" aus; Schließe auch Features aus, die nichts mit der Aufgabe zu tun haben
-4. Bestimme ob es sich um Classification (kategorische Zielvariable) oder Regression (numerische Zielvariable) handelt
-5. Wähle den besten Algorithmus basierend auf den verfügbaren Daten
-6. Gib sinnvolle Hyperparameter passend zu dem Datensatz, dem Algorithmus und der Aufgabe an
-7. Antworte NUR mit dem JSON-Objekt, keine zusätzlichen Erklärungen außerhalb
-
- WICHTIG: Berücksichtige ausdrücklich die NUTZERWÜNSCHE, sofern diese nicht im Widerspruch zur Datenlage stehen (z. B. eine Zielvariable, die nicht existiert, darf ignoriert werden). Priorisiere valide Nutzerangaben wie gewünschte Zielvariable, bevorzugter Modelltyp/Algorithmus oder auszuschließende Features.
-
- WICHTIG: Gib NUR das JSON-Objekt zurück, keine Markdown-Formatierung oder zusätzlichen Text.`;
+  const prompt = formatPrompt(LLM_RECOMMENDATIONS_PROMPT, {
+    dataOverview,
+    userPreferences: userPreferences ? userPreferences : 'Keine speziellen Wünsche übermittelt.'
+  });
 
   try {
     // Verwende den speziell konfigurierten Data Explorer Agent
-    const agentModel = getAgentModel(AGENTS.DATA_EXPLORER);
-    const agentConfig = getAgentConfig(AGENTS.DATA_EXPLORER);
+    const agentModel = getAgentModel(WORKER_AGENTS.DATA_ANALYZER.key);
+    const agentConfig = getAgentConfig(WORKER_AGENTS.DATA_ANALYZER.key);
     
-    logAgentCall(AGENTS.DATA_EXPLORER, agentModel, 'LLM-Empfehlungen für ML-Pipeline');
+    logAgentCall(WORKER_AGENTS.DATA_ANALYZER.key, agentModel, 'LLM-Empfehlungen für ML-Pipeline');
     console.log(`🤖 ${agentConfig.name} startet mit Modell: ${agentModel}`);
     
     const response = await callLLMAPI(prompt, null, agentModel, agentConfig.retries || 3);
     
-    // Extrahiere JSON aus der Antwort - robuster für verschiedene Response-Formate
-    let jsonText = '';
-    if (response && response.result) {
-      jsonText = response.result;
-    } else if (typeof response === 'string') {
-      jsonText = response;
-    } else {
-      throw new Error('Ungültige Response vom LLM');
-    }
+    // Extrahiere und validiere JSON aus der Antwort
+    const recommendations = extractAndValidateJSON(response);
     
-    // Entferne Markdown-Formatierung und führende/nachfolgende Leerzeichen
-    jsonText = jsonText.replace(/```json/g, '').replace(/```/g, '').trim();
-    
-    // Entferne führende Anführungszeichen und Leerzeichen die manchmal in LLM-Antworten vorkommen
-    jsonText = jsonText.replace(/^[\s"]*/, '').replace(/[\s"]*$/, '');
-    
-    // Konvertiere Python None zu JSON null
-    jsonText = jsonText.replace(/:\s*None\b/g, ': null');
-    
-    // Versuche verschiedene JSON-Extraktionsmethoden
-    let jsonMatch = null;
-    
-    // Methode 1: Suche nach JSON-Objekt mit geschweiften Klammern
-    jsonMatch = jsonText.match(/\{[\s\S]*\}/);
-    
-    if (!jsonMatch) {
-      // Methode 2: Suche nach JSON-Array falls das erste fehlschlägt
-      jsonMatch = jsonText.match(/\[[\s\S]*\]/);
-    }
-    
-    if (!jsonMatch) {
-      // Methode 3: Versuche den gesamten Text als JSON zu parsen
-      try {
-        JSON.parse(jsonText);
-        jsonMatch = [jsonText];
-      } catch (parseError) {
-        throw new Error('Konnte JSON nicht aus LLM-Antwort extrahieren');
-      }
-    }
-    
-    const recommendations = JSON.parse(jsonMatch[0]);
-    
-    // Validiere die Empfehlungen
-    if (!recommendations.targetVariable || !recommendations.features || !recommendations.algorithm) {
-      throw new Error('Unvollständige LLM-Empfehlungen');
-    }
-    
-    // Sicherstellen, dass targetVariable nicht in features ist
-    recommendations.features = recommendations.features.filter(f => f !== recommendations.targetVariable);
-    
-    // Zusätzliche Validierung: Features müssen in den verfügbaren Spalten sein
+    // Validiere die Features
     const availableColumns = filterColumns(analysis.columns, selectedFeatures, excludedFeatures);
+    recommendations.features = recommendations.features.filter(f => f !== recommendations.targetVariable);
     recommendations.features = recommendations.features.filter(f => availableColumns.includes(f));
     
     // Sicherstellen, dass mindestens ein Feature vorhanden ist
@@ -155,11 +79,69 @@ AUFGABE: Analysiere die Daten und gib EXAKT die folgenden Empfehlungen zurück i
     
   } catch (error) {
     console.error('Fehler bei LLM-Empfehlungen:', error);
+
+    // Versuche es noch einmal
+    const response = await callLLMAPI(prompt, null, agentModel, agentConfig.retries || 3);
+    const recommendations = extractAndValidateJSON(response);
     
-    // Fallback-Empfehlungen basierend auf einfacher Heuristik
-    console.log('Verwende Fallback-Empfehlungen');
-    return generateFallbackRecommendations(analysis, selectedFeatures, excludedFeatures);
+    if (!error) { 
+      return recommendations;
+    } else {
+      console.log('Verwende Fallback-Empfehlungen');
+      return generateFallbackRecommendations(analysis, selectedFeatures, excludedFeatures);
+    }
   }
+}
+
+function extractAndValidateJSON(response) {
+  // Extrahiere JSON aus der Antwort - robuster für verschiedene Response-Formate
+  let jsonText = '';
+  if (response && response.result) {
+    jsonText = response.result;
+  } else if (typeof response === 'string') {
+    jsonText = response;
+  } else {
+    throw new Error('Ungültige Response vom LLM');
+  }
+  
+  // Entferne Markdown-Formatierung und führende/nachfolgende Leerzeichen
+  jsonText = jsonText.replace(/```json/g, '').replace(/```/g, '').trim();
+  
+  // Entferne führende Anführungszeichen und Leerzeichen die manchmal in LLM-Antworten vorkommen
+  jsonText = jsonText.replace(/^[\s"]*/, '').replace(/[\s"]*$/, '');
+  
+  // Konvertiere Python None zu JSON null
+  jsonText = jsonText.replace(/:\s*None\b/g, ': null');
+  
+  // Versuche verschiedene JSON-Extraktionsmethoden
+  let jsonMatch = null;
+  
+  // Methode 1: Suche nach JSON-Objekt mit geschweiften Klammern
+  jsonMatch = jsonText.match(/\{[\s\S]*\}/);
+  
+  if (!jsonMatch) {
+    // Methode 2: Suche nach JSON-Array falls das erste fehlschlägt
+    jsonMatch = jsonText.match(/\[[\s\S]*\]/);
+  }
+  
+  if (!jsonMatch) {
+    // Methode 3: Versuche den gesamten Text als JSON zu parsen
+    try {
+      JSON.parse(jsonText);
+      jsonMatch = [jsonText];
+    } catch (parseError) {
+      throw new Error('Konnte JSON nicht aus LLM-Antwort extrahieren');
+    }
+  }
+  
+  const recommendations = JSON.parse(jsonMatch[0]);
+  
+  // Validiere die Empfehlungen
+  if (!recommendations.targetVariable || !recommendations.features || !recommendations.algorithm) {
+    throw new Error('Unvollständige LLM-Empfehlungen');
+  }
+  
+  return recommendations;
 }
 
 // Hilfsfunktionen zum Filtern der Daten
@@ -289,68 +271,23 @@ export async function evaluatePerformanceWithLLM(project) {
       });
     }
 
-    const prompt = `Du bist ein erfahrener Machine Learning Experte und Performance-Analyst. Bewerte die Performance-Metriken dieses ML-Modells umfassend und professionell.
-
-PROJEKT-KONTEXT:
-- Projektname: ${context.projectName}
-- Algorithmus: ${context.algorithm}
-- Model-Typ: ${context.modelType}
-- Zielvariable: ${context.targetVariable}
-- Features: ${context.features.join(', ')}
-- Datenquelle: ${context.dataSourceName}
-
-PERFORMANCE-METRIKEN:
-${JSON.stringify(context.performanceMetrics, null, 2)}
-
-URSPRÜNGLICHE KI-EMPFEHLUNGEN:
-${context.recommendations ? JSON.stringify(context.recommendations, null, 2) : 'Keine verfügbar'}
-
-AUFGABE: Führe eine tiefgehende Performance-Analyse durch und erstelle einen professionellen Evaluationsbericht.
-
-Antworte im folgenden JSON-Format:
-{
-  "overallScore": 0.0-10.0,
-  "performanceGrade": "Excellent|Good|Fair|Poor|Critical",
-  "summary": "Kurze, prägnante Zusammenfassung der Model-Performance in 1-2 Sätzen",
-  "detailedAnalysis": {
-    "strengths": ["Stärke 1", "Stärke 2", "Stärke 3"],
-    "weaknesses": ["Schwäche 1", "Schwäche 2"],
-    "keyFindings": ["Wichtiger Befund 1", "Wichtiger Befund 2"]
-  },
-  "metricsInterpretation": ${JSON.stringify(metricsInterpretationTemplate, null, 2)},
-  "improvementSuggestions": [
-    {
-      "category": "Data Quality|Feature Engineering|Algorithm Tuning|Model Architecture",
-      "suggestion": "Konkrete Verbesserungsempfehlung",
-      "expectedImpact": "Low|Medium|High",
-      "implementation": "Wie kann das umgesetzt werden?"
-    }
-  ],
-  "businessImpact": {
-    "readiness": "Production Ready|Needs Improvement|Not Ready",
-    "riskAssessment": "Low|Medium|High",
-    "recommendation": "Empfehlung für den Business-Einsatz"
-  },
-  "nextSteps": [
-    "Nächster Schritt 1",
-    "Nächster Schritt 2"
-  ],
-  "confidenceLevel": 0.0-1.0,
-  "version": "1.0"
-}
-WICHTIG: 
-- Interpretiere ALLE verfügbaren Metriken in metricsInterpretation
-- Verwende die exakten Metrik-Namen und -Werte aus den Performance-Metriken
-- Gib eine fundierte, datengetriebene Analyse ab
-- Nur gültiges JSON zurückgeben, keine zusätzlichen Kommentare oder Texte
-- Antworte NUR mit dem JSON-Objekt, keine zusätzlichen Erklärungen außerhalb
-- Antworten müssen in deutscher Sprache sein`;
+    const prompt = formatPrompt(PERFORMANCE_EVALUATION_PROMPT, {
+      projectName: context.projectName,
+      algorithm: context.algorithm,
+      modelType: context.modelType,
+      targetVariable: context.targetVariable,
+      features: context.features.join(', '),
+      dataSourceName: context.dataSourceName,
+      performanceMetrics: JSON.stringify(context.performanceMetrics, null, 2),
+      recommendations: context.recommendations ? JSON.stringify(context.recommendations, null, 2) : 'Keine verfügbar',
+      metricsInterpretationTemplate: JSON.stringify(metricsInterpretationTemplate, null, 2)
+    });
 
     // Verwende den Performance Analyst Agent für Performance-Evaluation
-    const agentModel = getAgentModel(AGENTS.PERFORMANCE_ANALYST);
-    const agentConfig = getAgentConfig(AGENTS.PERFORMANCE_ANALYST);
+    const agentModel = getAgentModel(WORKER_AGENTS.PERFORMANCE_ANALYZER.key);
+    const agentConfig = getAgentConfig(WORKER_AGENTS.PERFORMANCE_ANALYZER.key);
     
-    logAgentCall(AGENTS.PERFORMANCE_ANALYST, agentModel, 'Performance-Evaluation');
+    logAgentCall(WORKER_AGENTS.PERFORMANCE_ANALYZER.key, agentModel, 'Performance-Evaluation');
     console.log(`🤖 ${agentConfig.name} startet Performance-Analyse mit Modell: ${agentModel}`);
     
     const response = await callLLMAPI(prompt, null, agentModel);

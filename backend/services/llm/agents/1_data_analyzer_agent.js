@@ -5,8 +5,9 @@
  * Identifiziert Muster, Ausreißer, Korrelationen und andere wichtige Datencharakteristika.
  */
 
-import { BaseWorker } from './base_worker.js';
+import { BaseWorker } from './0_base_agent.js';
 import { getCachedDataAnalysis } from '../../data/data_exploration.js';
+import { DATA_ANALYSIS_PROMPT, ENHANCED_DATA_ANALYSIS_PROMPT, formatPrompt } from './prompts.js';
 
 export class DataAnalyzerWorker extends BaseWorker {
   constructor() {
@@ -31,6 +32,7 @@ export class DataAnalyzerWorker extends BaseWorker {
         dataAnalysis = await this.performDataAnalysis(project);
       } else {
         this.log('info', 'Verwende gecachte Datenanalyse');
+        return dataAnalysis;
       }
 
       // Erweitere die Datenanalyse mit zusätzlichen Insights
@@ -46,22 +48,11 @@ export class DataAnalyzerWorker extends BaseWorker {
   }
 
   async performDataAnalysis(project) {
-    const prompt = `Führe eine umfassende Datenanalyse für das Dataset durch:
-
-Dataset-Pfad: ${project.csvFilePath}
-Projekt: ${project.name || 'Unbekannt'}
-Algorithmus: ${project.algorithm || 'Nicht spezifiziert'}
-
-Analysiere folgende Aspekte:
-1. Dataset-Übersicht (Größe, Spalten, Datentypen)
-2. Fehlende Werte und Datenqualität
-3. Statistische Beschreibungen
-4. Korrelationen zwischen Features
-5. Ausreißer-Erkennung
-6. Verteilung der Zielvariable (falls vorhanden)
-7. Empfehlungen für Preprocessing
-
-Gib eine strukturierte Analyse zurück.`;
+    const prompt = formatPrompt(DATA_ANALYSIS_PROMPT, {
+      csvFilePath: project.csvFilePath,
+      projectName: project.name || 'Unbekannt',
+      algorithm: project.algorithm || 'Nicht spezifiziert'
+    });
 
     const response = await this.callLLM(prompt);
     const analysis = typeof response === 'string' ? response : response?.result || '';
@@ -75,24 +66,12 @@ Gib eine strukturierte Analyse zurück.`;
   }
 
   async enhanceDataAnalysis(dataAnalysis, project) {
-    const prompt = `Erweitere die folgende Datenanalyse mit zusätzlichen ML-spezifischen Insights:
-
-Vorhandene Analyse:
-${JSON.stringify(dataAnalysis, null, 2)}
-
-Projekt-Kontext:
-- Name: ${project.name}
-- Algorithmus: ${project.algorithm || 'Nicht spezifiziert'}
-- Features: ${Array.isArray(project.features) ? project.features.length : 0} ausgewählt
-
-Füge folgende Erkenntnisse hinzu:
-1. ML-Algorithmus-Empfehlungen basierend auf Datencharakteristika
-2. Feature-Engineering-Vorschläge
-3. Preprocessing-Empfehlungen
-4. Potentielle Herausforderungen und Lösungsansätze
-5. Erwartete Modell-Performance-Indikatoren
-
-Gib eine erweiterte, strukturierte Analyse zurück.`;
+    const prompt = formatPrompt(ENHANCED_DATA_ANALYSIS_PROMPT, {
+      dataAnalysis: JSON.stringify(dataAnalysis, null, 2),
+      projectName: project.name,
+      algorithm: project.algorithm || 'Nicht spezifiziert',
+      featuresCount: Array.isArray(project.features) ? project.features.length : 0
+    });
 
     const response = await this.callLLM(prompt);
     const enhancedAnalysis = typeof response === 'string' ? response : response?.result || '';

@@ -11,6 +11,8 @@
  * - Wartbare und skalierbare Architektur
  */
 
+import { getSystemInstruction } from './system_instructions.js';
+
 // Standard-Fallback-Modell
 const DEFAULT_MODEL = 'mistral:latest';
 
@@ -23,18 +25,7 @@ export const MASTER_AGENT = {
   name: 'Master-Pipeline-Koordinator',
   model: 'mistral:latest',
   description: 'Koordiniert die ML-Pipeline und verteilt Aufgaben an spezialisierte Agents',
-  systemPrompt: `Du bist der Master-Koordinator für Machine Learning Pipelines. 
-Du kennst alle verfügbaren Worker-Agents und deren Spezialisierungen.
-Deine Aufgabe ist es, die Pipeline-Schritte zu planen und Aufgaben an die richtigen Worker-Agents zu verteilen.
-
-Verfügbare Worker-Agents:
-- DATA_ANALYZER: Analysiert Datasets und erstellt Insights
-- HYPERPARAMETER_OPTIMIZER: Schlägt optimale Hyperparameter vor
-- CODE_GENERATOR: Generiert Python-Code für ML-Training
-- CODE_REVIEWER: Überprüft und optimiert generierten Code
-- PERFORMANCE_ANALYZER: Analysiert Modell-Performance
-
-Du entscheidest basierend auf dem Projekt-Status, welcher Agent als nächstes arbeiten soll.`,
+  systemPrompt: getSystemInstruction('MASTER_AGENT'),
   temperature: 0.1,
   maxTokens: 1024,
   retries: 3,
@@ -52,13 +43,11 @@ export const WORKER_AGENTS = {
   DATA_ANALYZER: {
     key: 'DATA_ANALYZER',
     name: 'Datenanalyse-Agent',
-    model: 'mistral:latest',
+    model: 'llama3.2:latest',
     description: 'Analysiert Datasets und erstellt detaillierte Insights',
-    systemPrompt: `Du bist ein Experte für Datenanalyse und explorative Datenanalyse.
-Deine Aufgabe ist es, Datasets zu analysieren und wichtige Erkenntnisse zu identifizieren.
-Du erkennst Muster, Ausreißer, Korrelationen und andere wichtige Datencharakteristika.`,
+    systemPrompt: getSystemInstruction('DATA_ANALYZER'),
     temperature: 0.2,
-    maxTokens: 3072,
+    maxTokens: 4096,
     retries: 3,
     timeout: 60000,
     category: 'analysis',
@@ -75,9 +64,7 @@ Du erkennst Muster, Ausreißer, Korrelationen und andere wichtige Datencharakter
     name: 'Hyperparameter-Optimierer',
     model: 'mistral:latest',
     description: 'Schlägt optimale Hyperparameter basierend auf Datenanalyse vor',
-    systemPrompt: `Du bist ein Experte für Machine Learning Hyperparameter-Optimierung.
-Du analysierst Datasets und schlägst die besten Hyperparameter für verschiedene ML-Algorithmen vor.
-Du berücksichtigst die Datencharakteristika, Problemtyp und verfügbare Ressourcen.`,
+    systemPrompt: getSystemInstruction('HYPERPARAMETER_OPTIMIZER'),
     temperature: 0.1,
     maxTokens: 2048,
     retries: 3,
@@ -96,9 +83,7 @@ Du berücksichtigst die Datencharakteristika, Problemtyp und verfügbare Ressour
     name: 'Python-Code-Generator',
     model: 'mistral:latest',
     description: 'Generiert optimierten Python-Code für ML-Training',
-    systemPrompt: `Du bist ein Experte für Python-Programmierung und Machine Learning.
-Du generierst sauberen, effizienten und gut dokumentierten Python-Code für ML-Training.
-Du verwendest moderne ML-Bibliotheken wie scikit-learn, pandas, numpy und matplotlib.`,
+    systemPrompt: getSystemInstruction('CODE_GENERATOR'),
     temperature: 0.0,
     maxTokens: 4096,
     retries: 3,
@@ -117,11 +102,9 @@ Du verwendest moderne ML-Bibliotheken wie scikit-learn, pandas, numpy und matplo
     name: 'Code-Review-Agent',
     model: 'mistral:latest',
     description: 'Überprüft und optimiert generierten Python-Code',
-    systemPrompt: `Du bist ein Senior-Entwickler und Code-Reviewer für Python und Machine Learning.
-Du überprüfst Code auf Fehler, Performance-Probleme und Best Practices.
-Du optimierst Code für bessere Lesbarkeit, Effizienz und Wartbarkeit.`,
+    systemPrompt: getSystemInstruction('CODE_REVIEWER'),
     temperature: 0.2,
-    maxTokens: 3072,
+    maxTokens: 4096,
     retries: 2,
     timeout: 60000,
     category: 'review',
@@ -138,11 +121,9 @@ Du optimierst Code für bessere Lesbarkeit, Effizienz und Wartbarkeit.`,
     name: 'Performance-Analyzer',
     model: 'mistral:latest',
     description: 'Analysiert Modell-Performance und gibt Verbesserungsvorschläge',
-    systemPrompt: `Du bist ein Experte für Machine Learning Performance-Analyse.
-Du analysierst Modell-Performance, identifizierst Schwachstellen und schlägst Verbesserungen vor.
-Du verstehst verschiedene Metriken und deren Interpretation.`,
+    systemPrompt: getSystemInstruction('PERFORMANCE_ANALYZER'),
     temperature: 0.3,
-    maxTokens: 3072,
+    maxTokens: 4096,
     retries: 2,
     timeout: 60000,
     category: 'analysis',
@@ -181,22 +162,23 @@ export const PIPELINE_STEPS = [
     description: 'Generiert Python-Code für ML-Training',
     dependsOn: ['HYPERPARAMETER_OPTIMIZER']
   },
-  {
-    step: 4,
-    name: 'Code-Review',
-    agent: 'CODE_REVIEWER',
-    required: false,
-    description: 'Überprüft und optimiert den generierten Code',
-    dependsOn: ['CODE_GENERATOR']
-  },
-  {
-    step: 5,
-    name: 'Performance-Analyse',
-    agent: 'PERFORMANCE_ANALYZER',
-    required: false,
-    description: 'Analysiert Modell-Performance',
-    dependsOn: ['CODE_REVIEWER', 'CODE_GENERATOR']
-  }
+  // {
+  //   step: 4,
+  //   name: 'Code-Review',
+  //   agent: 'CODE_REVIEWER',
+  //   required: false,
+  //   description: 'Überprüft und optimiert den generierten Code',
+  //   dependsOn: ['CODE_GENERATOR']
+  // },
+  // {
+  //   step: 5,
+  //   name: 'Performance-Analyse',
+  //   agent: 'PERFORMANCE_ANALYZER',
+  //   required: false,
+  //   description: 'Analysiert Modell-Performance',
+  //   // dependsOn: ['CODE_REVIEWER', 'CODE_GENERATOR']
+  //   dependsOn: ['CODE_GENERATOR']
+  // }
 ];
 
 /**

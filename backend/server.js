@@ -25,8 +25,8 @@ import {
   updateProjectInsights,
   extractHyperparametersFromCode
 } from './services/database/db.js';
-import { generatePythonScriptWithLLM } from './services/execution/python_generator.js';
-import { evaluatePerformanceWithLLM } from './services/llm/llm_api.js';
+import { evaluatePerformanceWithLLM } from './services/llm/api/llm_api.js';
+import { runNetworkAgentPipeline } from './services/llm/agents/10_master_agent.js';
 
 // Route-Imports
 import { setupAPIEndpoints, setTrainingFunctions, setupPredictionEndpoint } from './services/api/api_endpoints.js';
@@ -194,21 +194,6 @@ async function handleTrainingJobCompleted(job) {
       metrics = { error: 'Metrik-Extraktion fehlgeschlagen' };
     }
     
-    // Model-Datei pfad
-    const modelFileName = `model_${projectId}.pkl`;
-    const modelPath = `models/${modelFileName}`;
-    const fullModelPath = path.join(__dirname, modelPath);
-    
-    // Model-Datei verschieben
-    const tempModelPath = path.join(scriptDir, 'model.pkl');
-    try {
-      await fs.access(tempModelPath);
-      await fs.rename(tempModelPath, fullModelPath);
-      // console.log(`Model-Datei verschoben: ${fullModelPath}`);
-    } catch (modelError) {
-      console.log('Model-Datei nicht gefunden oder Fehler beim Verschieben:', modelError.message);
-    }
-    
     // Hyperparameter aus dem gespeicherten Python-Code extrahieren
     let hyperparameters = {};
     try {
@@ -222,7 +207,10 @@ async function handleTrainingJobCompleted(job) {
       console.error('Fehler bei Hyperparameter-Extraktion:', hyperError.message);
       hyperparameters = project.hyperparameters || {};
     }
-    
+
+    // Model-Datei-Pfad
+    const modelPath = `models/model_${project.id}.pkl`;
+
     // Projekt in DB aktualisieren
     await updateProjectTraining(projectId, {
       status: 'Completed',
@@ -362,34 +350,30 @@ async function trainModelAsync(projectId) {
     const project = await getProject(projectId);
     if (!project) return;
         
-    // Python Script mit LLM generieren
+    // Python Script aus der Datenbank holen
     let pythonCode = '';
     try {
-      const response = await generatePythonScriptWithLLM(project);
-      
-      // Validiere Response-Format
-      if (typeof response === 'string') {
+      if (!project.pythonCode) {
+        // throw new Error('Kein Python-Code in der Datenbank gefunden. Bitte zuerst die Agent-Pipeline ausführen.');
+        // Führe die Agent-Pipeline aus
+        const response = await runNetworkAgentPipeline(project);
         pythonCode = response;
-      } else if (response && response.result) {
-        pythonCode = response.result;
-      } else if (response && response.text) {
-        pythonCode = response.text;
       } else {
-        throw new Error('Ungültiges Response-Format vom Python-Generator');
+        pythonCode = project.pythonCode;
+        console.log(`Python-Code aus Datenbank geladen (${pythonCode.length} Zeichen)`);
       }
       
       // Validiere Python-Code
       if (!pythonCode || typeof pythonCode !== 'string') {
-        throw new Error('Leerer oder ungültiger Python-Code erhalten');
+        throw new Error('Ungültiger Python-Code in der Datenbank');
       }
       
-      // console.log(`Python-Code erfolgreich generiert (${pythonCode.length} Zeichen)`);
       
-    } catch (generationError) {
-      console.error('Fehler bei Python-Code-Generierung:', generationError.message);
+    } catch (error) {
+      console.error('Fehler beim Laden des Python-Codes:', error.message);
       await updateProjectTraining(projectId, {
         status: 'Failed',
-        performanceMetrics: { error: `Python-Code-Generierung fehlgeschlagen: ${generationError.message}` },
+        performanceMetrics: { error: `Python-Code nicht verfügbar: ${error.message}` },
         pythonCode: '',
         originalPythonCode: '',
         modelPath: '',
@@ -428,15 +412,12 @@ async function retrainModelAsync(projectId, customPythonCode) {
   try {
     const project = await getProject(projectId);
     if (!project) return;
-    
-    // console.log(`Re-Training für Projekt ${project.name} mit bearbeitetem Code gestartet`);
-    
+
     // Bearbeiteten Python-Code in der DB aktualisieren
     await updateProjectCode(projectId, customPythonCode);
     
     // Job zur Worker Queue hinzufügen
     const jobId = pythonWorkerPool.addRetrainingJob(projectId, customPythonCode, 1);
-    // console.log(`Re-Training-Job ${jobId} für Projekt ${projectId} zur Queue hinzugefügt`);
     
   } catch (error) {
     console.error(`Fehler beim Re-Training für Projekt ${projectId}:`, error.message);
@@ -459,7 +440,6 @@ async function retrainModelAsync(projectId, customPythonCode) {
 // Automatische Bereinigung alter Predict-Skripte (alle 24 Stunden)
 setInterval(async () => {
   try {
-    // console.log('Starte automatische Bereinigung alter Predict-Skripte...');
     const cleaned = await cleanupOldPredictScripts(scriptDir, 168); // 7 Tage
     if (cleaned > 0) {
       console.log(`Automatische Bereinigung abgeschlossen: ${cleaned} Skripte entfernt`);
@@ -472,7 +452,6 @@ setInterval(async () => {
 // Initiale Bereinigung beim Server-Start (nach 60 Sekunden)
 setTimeout(async () => {
   try {
-    // console.log('Führe initiale Bereinigung alter Predict-Skripte durch...');
     const cleaned = await cleanupOldPredictScripts(scriptDir, 168);
     if (cleaned > 0) {
       console.log(`Initiale Bereinigung abgeschlossen: ${cleaned} Skripte entfernt`);

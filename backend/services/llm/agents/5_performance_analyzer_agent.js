@@ -5,7 +5,8 @@
  * Versteht verschiedene Metriken und deren Interpretation.
  */
 
-import { BaseWorker } from './base_worker.js';
+import { BaseWorker } from './0_base_agent.js';
+import { PERFORMANCE_ANALYSIS_PROMPT, PERFORMANCE_ANALYZER_TEST_PROMPT, formatPrompt } from './prompts.js';
 
 export class PerformanceAnalyzerWorker extends BaseWorker {
   constructor() {
@@ -41,48 +42,14 @@ export class PerformanceAnalyzerWorker extends BaseWorker {
   }
 
   async analyzePerformance(pythonCode, project, dataAnalysis, hyperparameterSuggestions) {
-    const prompt = `Analysiere die Performance des folgenden ML-Codes und gib Verbesserungsvorschläge:
-
-PYTHON-CODE:
-\`\`\`python
-${pythonCode}
-\`\`\`
-
-PROJEKT-KONTEXT:
-- Name: ${project.name}
-- Algorithmus: ${hyperparameterSuggestions?.primary_algorithm || project.algorithm}
-- Dataset: ${project.csvFilePath}
-
-DATENANALYSE:
-${JSON.stringify(dataAnalysis, null, 2)}
-
-HYPERPARAMETER:
-${JSON.stringify(hyperparameterSuggestions, null, 2)}
-
-ANALYSE-BEREICHE:
-1. **Code-Performance**: Identifiziere Performance-Bottlenecks im Code
-2. **Algorithmus-Auswahl**: Bewerte die Wahl des ML-Algorithmus
-3. **Hyperparameter-Optimierung**: Analysiere die Hyperparameter-Auswahl
-4. **Feature-Engineering**: Bewerte Feature-Auswahl und -Preprocessing
-5. **Modell-Evaluation**: Überprüfe Evaluations-Metriken und -Methoden
-6. **Skalierbarkeit**: Bewerte Code für größere Datasets
-7. **Robustheit**: Analysiere Fehlerbehandlung und Edge Cases
-
-VERBESSERUNGSVORSCHLÄGE:
-- Konkrete Code-Optimierungen
-- Alternative Algorithmen
-- Bessere Hyperparameter
-- Feature-Engineering-Verbesserungen
-- Erweiterte Evaluations-Metriken
-- Performance-Monitoring
-
-ANTWORTFORMAT:
-Gib eine strukturierte Analyse zurück mit:
-- Performance-Bewertung (1-10)
-- Identifizierte Probleme
-- Konkrete Verbesserungsvorschläge
-- Erwartete Performance-Steigerung
-- Priorisierte Empfehlungen`;
+    const prompt = formatPrompt(PERFORMANCE_ANALYSIS_PROMPT, {
+      pythonCode,
+      projectName: project.name,
+      algorithm: hyperparameterSuggestions?.primary_algorithm || project.algorithm,
+      csvFilePath: project.csvFilePath,
+      dataAnalysis: JSON.stringify(dataAnalysis, null, 2),
+      hyperparameterSuggestions: JSON.stringify(hyperparameterSuggestions, null, 2)
+    });
 
     const response = await this.callLLM(prompt);
     const analysis = typeof response === 'string' ? response : response?.result || '';
@@ -219,24 +186,9 @@ Gib eine strukturierte Analyse zurück mit:
   }
 
   async test() {
-    const testPrompt = `Du bist der ${this.agentKey}. 
-Teste die Performance-Analyse mit einem einfachen Beispiel:
-
-Code zum Analysieren:
-\`\`\`python
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.model_selection import train_test_split
-import pandas as pd
-
-df = pd.read_csv('data.csv')
-X = df.iloc[:, :-1]
-y = df.iloc[:, -1]
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
-model = RandomForestClassifier(n_estimators=10)
-model.fit(X_train, y_train)
-\`\`\`
-
-Antworte nur mit "OK" wenn du bereit bist, die Performance zu analysieren.`;
+    const testPrompt = formatPrompt(PERFORMANCE_ANALYZER_TEST_PROMPT, {
+      agentName: this.agentKey
+    });
 
     try {
       const response = await this.callLLM(testPrompt, null, 10);

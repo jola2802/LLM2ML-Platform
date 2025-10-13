@@ -1,5 +1,9 @@
-import path from 'path';
-import { logLLMCommunication } from '../monitoring/log.js';
+/**
+ * Diese Datei enthält die Hauptfunktionen für die LLM-API.
+ * Es wird die Ollama API verwendet, um die LLM-API zu implementieren.
+ */
+
+import { logLLMCommunication } from '../../monitoring/log.js';
 import { Ollama } from 'ollama';
 import llmQueue from './llm_queue.js';
 
@@ -130,7 +134,6 @@ export async function testOllamaConnection() {
     };
   }
 }
-
 
 // ===== EINHEITLICHE LLM API =====
 

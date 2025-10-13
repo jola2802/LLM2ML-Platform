@@ -1,18 +1,11 @@
 import { parentPort } from 'worker_threads';
-import { logLLMCommunication } from '../monitoring/log.js';
-import { ChatOllama } from '@langchain/community/chat_models/ollama';
+import { logLLMCommunication } from '../../monitoring/log.js';
+import { ChatOllama } from '@langchain/ollama';
 
 // LLM Provider Enum
 const LLM_PROVIDERS = {
   OLLAMA: 'ollama'
 };
-
-
-// Provider basierend auf Modell-Name bestimmen
-function determineProvider(modelName) {
-  // Für lokale Implementierung immer Ollama verwenden
-  return LLM_PROVIDERS.OLLAMA;
-}
 
 // Worker State
 let isShuttingDown = false;

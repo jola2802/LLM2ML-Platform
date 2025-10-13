@@ -3,7 +3,7 @@
  */
 
 import { EventEmitter } from 'events';
-import { getWorkerConfig } from '../config/worker_scaling_config.js';
+import { getWorkerConfig } from '../llm/api/worker_scaling_config.js';
 
 class ScalingMonitor extends EventEmitter {
   constructor() {

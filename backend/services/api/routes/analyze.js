@@ -7,7 +7,7 @@ import {
   analyzeTextFile, 
   analyzeGenericFile
 } from '../../data/file_analysis.js';
-import { getLLMRecommendations } from '../../llm/llm_api.js';
+import { getLLMRecommendations } from '../../llm/api/llm_api.js';
 
 export function setupAnalyzeRoutes(app, venvDir) {
   // Intelligente LLM-Empfehlungen für manipulierte Daten

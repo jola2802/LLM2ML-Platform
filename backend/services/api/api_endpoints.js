@@ -4,11 +4,7 @@ import { fileURLToPath } from 'url';
 import { predictWithModel } from '../execution/code_exec.js';
 
 // Service-Imports
-import { evaluatePerformanceWithLLM } from '../llm/llm_api.js';
-import { 
-  executePythonScript,
-  generatePredictionScript 
-} from '../execution/code_exec.js';
+import { evaluatePerformanceWithLLM } from '../llm/api/llm_api.js';
 import { getProject, updateProjectCode, updateProjectHyperparameters, updateProjectStatus, updateProjectInsights, updateProjectAlgorithmAndHyperparameters} from '../database/db.js';
 import { clearAnalysisCache, getAnalysisCacheStatus, getCachedDataAnalysis } from '../data/data_exploration.js';
 import { analyzeCsvFile, analyzeJsonFile, analyzeExcelFile, analyzeTextFile, analyzeGenericFile } from '../data/file_analysis.js';
@@ -63,7 +59,7 @@ export function setupAPIEndpoints(app, upload, scriptDir, venvDir) {
       const { iterations = 2, apply = false } = req.body || {};
       const project = await getProject(id);
       if (!project) return res.status(404).json({ error: 'Projekt nicht gefunden' });
-      const { autoTuneModelWithLLM } = await import('../llm/tuning.js');
+      const { autoTuneModelWithLLM } = await import('../llm/agents/tuning.js');
       const proposal = await autoTuneModelWithLLM(project, Math.max(1, Math.min(iterations, 5)));
       
       if (apply) {

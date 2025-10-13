@@ -1,3 +1,37 @@
+# Generiere einen vollständigen Python-Code für Machine Learning Training:
+
+# **Code-Muster:** Muss dem bereitgestellten Muster folgen, einschließlich der Schritte Laden/Splitten, Instanziieren/Trainieren, Vorhersagen, Bewerten und Speichern.
+
+# **Projektname:** GradientBoosting_Demo
+
+# **Daten laden und aufteilen (Schritt 1):**
+# * **Laden:** Funktion 'load_and_split_data' verwenden.
+# * **Dateipfad:** '../../dummy_classification_data.csv'
+# * **Features:** Alle Features
+
+# **Hyperparameter (Schritt 2):**
+# * **Algorithmus:** GradientBoostingClassifier
+# * **Hyperparameter:** {
+#   "n_estimators": 100,
+#   "learning_rate": 0.1,
+#   "random_state": 42
+# }
+# * **Zielspalte:** target
+
+# **Vorhersagen (Schritt 3):**
+# * **Bibliothek:** 'predict' verwenden.
+
+# **Performance-Metriken (Schritt 4):**
+# * **Test-Metriken:** Implementiere **alle Standardmetriken** für den definierten **Problemtyp** (BinaryClassification).
+#     * **Falls Klassifikation:** **'classification_report'** und **'confusion_matrix'** (Visualisiert mit 'seaborn').
+#     * **Falls Regression:** 'mean_squared_error' ('MSE') und 'r2_score'.
+#     * **Zusätzlich:** Füge die Berechnung des **Accuracy Scores** für das **Trainings-Set** hinzu.
+
+# **Speichern (Schritt 5):**
+# * **Bibliothek:** 'joblib.dump' verwenden.
+# * **Dateiname:** '../models/gradient_demo_model.pkl'.
+
+
 # Demo-Code für GradientBoostingClassifier
 
 import pandas as pd
@@ -12,7 +46,7 @@ from sklearn.ensemble import GradientBoostingClassifier
 
 # Funktion zum Laden und Aufteilen der Daten
 def load_and_split_data(file_path, target_column, problem_type='classification'):
-    """Lädt Daten und teilt sie in Trainings- und Testsets auf."""
+    # 'Lädt Daten und teilt sie in Trainings- und Testsets auf.'
     data = pd.read_csv(file_path)
     X = data.drop(columns=[target_column])
     y = data[target_column]
@@ -34,17 +68,17 @@ model_gb.fit(X_train, y_train)
 y_pred_gb = model_gb.predict(X_test)
 
 # 4. Modell bewerten
-print("--- GradientBoostingClassifier Bewertung ---")
+print('--- GradientBoostingClassifier Bewertung ---')
 print(classification_report(y_test, y_pred_gb))
 
-# Konfusionsmatrix visualisieren
-cm = confusion_matrix(y_test, y_pred_gb)
-plt.figure(figsize=(8, 6))
-sns.heatmap(cm, annot=True, fmt='d', cmap='Blues')
-plt.title('Konfusionsmatrix - GradientBoostingClassifier')
-plt.xlabel('Vorhergesagte Klasse')
-plt.ylabel('Tatsächliche Klasse')
-plt.show()
+# # Konfusionsmatrix visualisieren
+# cm = confusion_matrix(y_test, y_pred_gb)
+# plt.figure(figsize=(8, 6))
+# sns.heatmap(cm, annot=True, fmt='d', cmap='Blues')
+# plt.title('Konfusionsmatrix - GradientBoostingClassifier')
+# plt.xlabel('Vorhergesagte Klasse')
+# plt.ylabel('Tatsächliche Klasse')
+# plt.show()
 
 # 5. Modell speichern
-joblib.dump(model_gb, '../models/gradient_boosting_classifier.pkl')
+joblib.dump(model_gb, '../models/gradient_demo_model.pkl')

@@ -7,8 +7,8 @@ import {
   isValidAgent,
   getWorkerAgents,
   getAgentsByCategory
-} from '../../llm/network_agent_config.js';
-import { masterAgent } from '../../llm/master_agent.js';
+} from '../../llm/agents/config_agent_network.js';
+import { masterAgent } from '../../llm/agents/10_master_agent.js';
 
 /**
  * API-Routen für Agent-Konfiguration
@@ -216,7 +216,7 @@ export function setupAgentRoutes(app) {
       const model = getAgentModel(agentKey);
       
       // Teste das zugewiesene Modell mit einem einfachen Prompt
-      const { callLLMAPI } = await import('../../llm/llm.js');
+      const { callLLMAPI } = await import('../../llm/api/llm.js');
       
       const testPrompt = `Du bist der ${config.name}. Antworte nur mit "OK" wenn du diese Nachricht erhältst.`;
       

@@ -1,5 +1,5 @@
 import { logRESTAPIRequest } from '../../monitoring/log.js';
-import { getLLMQueueStatus, cancelLLMRequest } from '../../llm/llm.js';
+import { getLLMQueueStatus, cancelLLMRequest } from '../../llm/api/llm.js';
 
 export function setupQueueRoutes(app) {
   // LLM Queue Status abrufen

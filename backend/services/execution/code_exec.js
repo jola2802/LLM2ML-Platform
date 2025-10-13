@@ -2,7 +2,7 @@ import fs from 'fs/promises';
 import path from 'path';
 import { exec } from 'child_process';
 import { promisify } from 'util';
-import { callLLMAPI } from '../llm/llm.js';
+import { callLLMAPI } from '../llm/api/llm.js';
 
 import fsSync from 'fs';
 import crypto from 'crypto';
@@ -312,9 +312,6 @@ export function extractMetricsFromOutput(output, modelType) {
       primaryName: 'mean_absolute_error',
       aliases: ['mae'],
       regexes: [
-        /(?:Mean Absolute Error|MAE)(?:\s*\(MAE\))?:\s*([\d.]+)/i,
-        /(?:Mean Absolute Error|MAE):\s*([\d.]+)/i,
-        /(?:MAE)(?:\s*\(MAE\))?:\s*([\d.]+)/i,
         /(?:MAE):\s*([\d.]+)/i
       ]
     },
@@ -322,9 +319,6 @@ export function extractMetricsFromOutput(output, modelType) {
       primaryName: 'mean_squared_error',
       aliases: ['mse'],
       regexes: [
-        /(?:Mean Squared Error|MSE)(?:\s*\(MSE\))?:\s*([\d.]+)/i,
-        /(?:Mean Squared Error|MSE):\s*([\d.]+)/i,
-        /(?:MSE)(?:\s*\(MSE\))?:\s*([\d.]+)/i,
         /(?:MSE):\s*([\d.]+)/i
       ]
     },
@@ -332,9 +326,6 @@ export function extractMetricsFromOutput(output, modelType) {
       primaryName: 'root_mean_squared_error',
       aliases: ['rmse'],
       regexes: [
-        /(?:Root Mean Squared Error|RMSE)(?:\s*\(RMSE\))?:\s*([\d.]+)/i,
-        /(?:Root Mean Squared Error|RMSE):\s*([\d.]+)/i,
-        /(?:RMSE)(?:\s*\(RMSE\))?:\s*([\d.]+)/i,
         /(?:RMSE):\s*([\d.]+)/i
       ]
     },
@@ -342,19 +333,13 @@ export function extractMetricsFromOutput(output, modelType) {
       primaryName: 'r_squared',
       aliases: ['r2'],
       regexes: [
-        /(?:R-squared|R2|R²)(?:\s*\(R2\))?:\s*([\d.]+)/i,
-        /(?:R-squared|R2|R²):\s*([\d.]+)/i,
-        /(?:R²)(?:\s*\(R2\))?:\s*([\d.]+)/i,
-        /(?:R²):\s*([\d.]+)/i
+        /(?:R2):\s*([\d.]+)/i
       ]
     },
     { 
       primaryName: 'accuracy',
       aliases: [],
       regexes: [
-        /^Accuracy:\s*([\d.]+)/im,
-        /(?:^|\n)Accuracy:\s*([\d.]+)/i,
-        /(?:Accuracy)(?:\s*\(Accuracy\))?:\s*([\d.]+)/i,
         /(?:Accuracy):\s*([\d.]+)/i
       ]
     },

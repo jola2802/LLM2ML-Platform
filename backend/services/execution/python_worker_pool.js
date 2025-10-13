@@ -3,7 +3,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { EventEmitter } from 'events';
 import { jobQueue, JOB_TYPES, JOB_STATUS } from '../monitoring/job_queue.js';
-import { getWorkerConfig } from '../config/worker_scaling_config.js';
+import { getWorkerConfig } from '../llm/api/worker_scaling_config.js';
 import { scalingMonitor } from '../monitoring/scaling_monitor.js';
 
 const __filename = fileURLToPath(import.meta.url);

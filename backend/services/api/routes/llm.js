@@ -14,7 +14,7 @@ export function setupLLMRoutes(app) {
   app.get('/api/llm/config', async (req, res) => {
     try {
       logRESTAPIRequest('get-llm-config', req.body);
-      const { getLLMConfig } = await import('../../llm/llm.js');
+      const { getLLMConfig } = await import('../../llm/api/llm.js');
       const config = getLLMConfig();
       res.json({ success: true, config });
     } catch (error) {
@@ -26,7 +26,7 @@ export function setupLLMRoutes(app) {
   app.get('/api/llm/ollama/models', async (req, res) => {
     try {
       logRESTAPIRequest('get-ollama-models', req.body);
-      const { getAvailableOllamaModels } = await import('../../llm/llm.js');
+      const { getAvailableOllamaModels } = await import('../../llm/api/llm.js');
       const result = await getAvailableOllamaModels();
       res.json(result);
     } catch (error) {
@@ -37,7 +37,7 @@ export function setupLLMRoutes(app) {
   app.post('/api/llm/ollama/test', async (req, res) => {
     try {
       logRESTAPIRequest('test-ollama-connection', req.body);
-      const { testOllamaConnection } = await import('../../llm/llm.js');
+      const { testOllamaConnection } = await import('../../llm/api/llm.js');
       const result = await testOllamaConnection();
       res.json(result);
     } catch (error) {
@@ -49,7 +49,7 @@ export function setupLLMRoutes(app) {
     try {
       logRESTAPIRequest('update-ollama-config', req.body);
       const { host, defaultModel } = req.body;
-      const { updateOllamaConfig } = await import('../../llm/llm.js');
+      const { updateOllamaConfig } = await import('../../llm/api/llm.js');
       const config = {};
       if (host) config.host = host;
       if (defaultModel) config.defaultModel = defaultModel;
@@ -65,7 +65,7 @@ export function setupLLMRoutes(app) {
   app.get('/api/llm/status', async (req, res) => {
     try {
       logRESTAPIRequest('get-llm-status', req.body);
-      const { getLLMConfig, testOllamaConnection } = await import('../../llm/llm.js');
+      const { getLLMConfig, testOllamaConnection } = await import('../../llm/api/llm.js');
       const config = getLLMConfig();
       const ollamaResult = await testOllamaConnection();
       const ollamaStatus = { connected: ollamaResult.connected || false, available: ollamaResult.success || false, error: ollamaResult.error || null, model: config.ollama.defaultModel };

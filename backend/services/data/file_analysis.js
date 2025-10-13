@@ -1,5 +1,5 @@
 import fs from 'fs/promises';
-import { callLLMAPI } from '../llm/llm.js';
+import { callLLMAPI } from '../llm/api/llm.js';
 import { getCachedDataAnalysis } from './data_exploration.js';
 
 const analysis_prompt = `Du bist ein extrem erfahrener Data Scientist. Analysiere die folgende automatische Datenübersicht und gib eine detaillierte Analyse der Daten zurück.

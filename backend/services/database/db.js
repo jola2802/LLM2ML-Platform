@@ -2,7 +2,7 @@ import sqlite3 from 'sqlite3';
 import { v4 as uuidv4 } from 'uuid';
 import fs from 'fs';
 import path from 'path';
-import { callLLMAPI } from '../llm/llm.js';
+import { callLLMAPI } from '../llm/api/llm.js';
 
 // SQLite Datenbank initialisieren
 const db = new sqlite3.Database('projects.db');
@@ -62,64 +62,14 @@ export function convertHyperparametersToNumbers(hyperparameters) {
 // Hyperparameter aus Python-Code extrahieren
 export function extractHyperparametersFromCode(pythonCode) {
   try {
-    // Suche nach der hyperparameters-Zeile
+    // Suche nach der model_params-Zeile
     const lines = pythonCode.split('\n');
     for (const line of lines) {
-      if (line.includes('hyperparameters = ')) {
-        // Verschiedene Formate unterstützen
-        let match = line.match(/hyperparameters = "(.+)"/);
-        if (match) {
-          const jsonStr = match[1].replace(/\\"/g, '"');
-          const hyperparameters = JSON.parse(jsonStr);
-          return convertHyperparametersToNumbers(hyperparameters);
-        }
-        
-        // Alternative: hyperparameters = {...}
-        match = line.match(/hyperparameters = (\{.*\})/);
+      if (line.includes('model_params = ')) {
+        const match = line.match(/model_params = (\{.*\})/);
         if (match) {
           const hyperparameters = JSON.parse(match[1]);
           return convertHyperparametersToNumbers(hyperparameters);
-        }
-        
-        // Alternative: hyperparameters = {...} (mit Zeilenumbrüchen)
-        const startIndex = line.indexOf('hyperparameters = {');
-        if (startIndex !== -1) {
-          let jsonStr = line.substring(startIndex + 'hyperparameters = '.length);
-          let braceCount = 0;
-          let inString = false;
-          let escapeNext = false;
-          
-          for (let i = 0; i < jsonStr.length; i++) {
-            const char = jsonStr[i];
-            if (escapeNext) {
-              escapeNext = false;
-              continue;
-            }
-            if (char === '\\') {
-              escapeNext = true;
-              continue;
-            }
-            if (char === '"' && !escapeNext) {
-              inString = !inString;
-            }
-            if (!inString) {
-              if (char === '{') braceCount++;
-              if (char === '}') {
-                braceCount--;
-                if (braceCount === 0) {
-                  jsonStr = jsonStr.substring(0, i + 1);
-                  break;
-                }
-              }
-            }
-          }
-          
-          try {
-            const hyperparameters = JSON.parse(jsonStr);
-            return convertHyperparametersToNumbers(hyperparameters);
-          } catch (e) {
-            console.error('Fehler beim Parsen der Hyperparameter:', e);
-          }
         }
       }
     }

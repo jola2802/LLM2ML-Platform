@@ -325,7 +325,7 @@ const ProjectWizard: React.FC<ProjectWizardProps> = ({ onBack, onSubmit }) => {
 
         {csvAnalysis && (
           <>
-            <div className="bg-slate-900/50 p-6 rounded-lg border border-slate-700">
+            {/* <div className="bg-slate-900/50 p-6 rounded-lg border border-slate-700">
               <button
                 onClick={() => setShowColumnManagement(!showColumnManagement)}
                 className="w-full flex items-center justify-between text-left"
@@ -388,7 +388,7 @@ const ProjectWizard: React.FC<ProjectWizardProps> = ({ onBack, onSubmit }) => {
                   )}
                 </div>
               )}
-            </div>
+            </div> */}
 
             <div className="bg-slate-900/50 p-6 rounded-lg border border-slate-700">
               <h4 className="font-semibold text-white mb-4">🎯 Features für ML ausschließen</h4>

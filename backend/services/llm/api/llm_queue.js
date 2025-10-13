@@ -2,8 +2,8 @@ import { Worker } from 'worker_threads';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { EventEmitter } from 'events';
-import { getWorkerConfig } from '../config/worker_scaling_config.js';
-import { scalingMonitor } from '../monitoring/scaling_monitor.js';
+import { getWorkerConfig } from './worker_scaling_config.js';
+import { scalingMonitor } from '../../monitoring/scaling_monitor.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

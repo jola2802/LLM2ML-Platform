@@ -8,8 +8,9 @@
  * - Validierung
  */
 
-import { callLLMAPI } from '../llm.js';
-import { getAgentConfig, getAgentModel, logAgentCall } from '../network_agent_config.js';
+import { callLLMAPI } from '../api/llm.js';
+import { getAgentConfig, getAgentModel, logAgentCall } from './config_agent_network.js';
+import { BASE_WORKER_TEST_PROMPT, formatPrompt } from './prompts.js';
 
 export class BaseWorker {
   constructor(agentKey) {
@@ -30,7 +31,9 @@ export class BaseWorker {
    * Testet die Verbindung des Worker-Agents
    */
   async test() {
-    const testPrompt = `Du bist der ${this.config.name}. Antworte nur mit "OK" wenn du diese Nachricht erhältst.`;
+    const testPrompt = formatPrompt(BASE_WORKER_TEST_PROMPT, {
+      agentName: this.config.name
+    });
     
     try {
       const response = await callLLMAPI(testPrompt, null, this.model, 1);

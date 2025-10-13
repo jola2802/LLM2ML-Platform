@@ -1,0 +1,529 @@
+{
+    "instruction": "Generiere einen vollständigen Python-Code für Machine Learning Training:
+
+        **Code-Muster:** Muss dem bereitgestellten Muster folgen, einschließlich der Schritte Laden/Splitten, Instanziieren/Trainieren, Vorhersagen, Bewerten und Speichern.
+
+        **Projektname:** GradientBoosting_Demo
+
+        **Daten laden und aufteilen (Schritt 1):**
+        * **Laden:** Funktion 'load_and_split_data' verwenden.
+        * **Dateipfad:** '../../dummy_classification_data.csv'
+        * **Features:** Alle Features
+
+        **Hyperparameter (Schritt 2):**
+        * **Algorithmus:** GradientBoostingClassifier
+        * **Hyperparameter:** {
+        'n_estimators': 100,
+        'learning_rate': 0.1,
+        'random_state': 42
+        }
+        * **Zielspalte:** target
+
+        **Vorhersagen (Schritt 3):**
+        * **Bibliothek:** 'predict' verwenden.
+
+        **Performance-Metriken (Schritt 4):**
+        * **Test-Metriken:** Implementiere **alle Standardmetriken** für den definierten **Problemtyp** (BinaryClassification).
+            * **Falls Klassifikation:** **'classification_report'** und **'confusion_matrix'** (Visualisiert mit 'seaborn').
+            * **Falls Regression:** 'mean_squared_error' ('MSE') und 'r2_score'.
+            * **Zusätzlich:** Füge die Berechnung des **Accuracy Scores** für das **Trainings-Set** hinzu.
+
+        **Speichern (Schritt 5):**
+        * **Bibliothek:** 'joblib.dump' verwenden.
+        * **Dateiname:** '../models/gradient_demo_model.pkl'.", 
+    "output": "import pandas as pd
+        import numpy as np
+        from sklearn.model_selection import train_test_split
+        from sklearn.metrics import confusion_matrix, classification_report, mean_squared_error, r2_score
+        import joblib
+        import matplotlib.pyplot as plt
+        import seaborn as sns
+        import torch
+        from sklearn.ensemble import GradientBoostingClassifier
+
+        # Funktion zum Laden und Aufteilen der Daten
+        def load_and_split_data(file_path, target_column, problem_type='classification'):
+            # 'Lädt Daten und teilt sie in Trainings- und Testsets auf.'
+            data = pd.read_csv(file_path)
+            X = data.drop(columns=[target_column])
+            y = data[target_column]
+            
+            # Für Regression muss y in ein Numpy-Array konvertiert werden
+            if problem_type == 'regression':
+                y = y.values
+            
+            return train_test_split(X, y, test_size=0.2, random_state=42)
+
+        # 1. Daten laden und aufteilen
+        X_train, X_test, y_train, y_test = load_and_split_data('../../dummy_classification_data.csv', 'target')
+
+        # 2. Modell instanziieren und trainieren
+        model_gb = GradientBoostingClassifier(n_estimators=100, learning_rate=0.1, random_state=42)
+        model_gb.fit(X_train, y_train)
+
+        # 3. Vorhersagen treffen
+        y_pred_gb = model_gb.predict(X_test)
+
+        # 4. Modell bewerten
+        print('--- GradientBoostingClassifier Bewertung ---')
+        print(classification_report(y_test, y_pred_gb))
+
+        # # Konfusionsmatrix visualisieren
+        # cm = confusion_matrix(y_test, y_pred_gb)
+        # plt.figure(figsize=(8, 6))
+        # sns.heatmap(cm, annot=True, fmt='d', cmap='Blues')
+        # plt.title('Konfusionsmatrix - GradientBoostingClassifier')
+        # plt.xlabel('Vorhergesagte Klasse')
+        # plt.ylabel('Tatsächliche Klasse')
+        # plt.show()
+
+        # 5. Modell speichern
+        joblib.dump(model_gb, '../models/gradient_demo_model.pkl')"
+}
+{
+    "instruction": "
+        Generiere einen vollständigen Python-Code für Machine Learning Training:
+
+        **Code-Muster:** Muss dem bereitgestellten Muster folgen, einschließlich der Schritte Laden/Splitten, Instanziieren/Trainieren, Vorhersagen, Bewerten und Speichern.
+
+        **Projektname:** LogisticRegression_Demo
+
+        **Daten laden und aufteilen (Schritt 1):**
+        * **Laden:** Funktion 'load_and_split_data' verwenden.
+        * **Dateipfad:** '../../dummy_classification_data.csv'
+        * **Features:** Alle Features
+
+        **Hyperparameter (Schritt 2):**
+        * **Algorithmus:** LogisticRegression
+        * **Hyperparameter:** {
+        'max_iter': 1000,
+        'random_state': 42
+        }
+        * **Zielspalte:** target
+
+        **Vorhersagen (Schritt 3):**
+        * **Bibliothek:** 'predict' verwenden.
+
+        **Performance-Metriken (Schritt 4):**
+        * **Test-Metriken:** Implementiere **alle Standardmetriken** für den definierten **Problemtyp** (BinaryClassification).
+            * **Falls Klassifikation:** **'classification_report'** und **'confusion_matrix'** (Visualisiert mit 'seaborn').
+            * **Falls Regression:** 'mean_squared_error' ('MSE') und 'r2_score'.
+            * **Zusätzlich:** Füge die Berechnung des **Accuracy Scores** für das **Trainings-Set** hinzu.
+
+        **Speichern (Schritt 5):**
+        * **Bibliothek:** 'joblib.dump' verwenden.
+        * **Dateiname:** '../../models/logistic_regression.pkl'.",
+    "output": "import pandas as pd
+        import numpy as np
+        from sklearn.model_selection import train_test_split
+        from sklearn.metrics import confusion_matrix, classification_report, mean_squared_error, r2_score
+        import joblib
+        import matplotlib.pyplot as plt
+        import seaborn as sns
+        import torch
+        from sklearn.linear_model import LogisticRegression
+
+        # Funktion zum Laden und Aufteilen der Daten
+        def load_and_split_data(file_path, target_column, problem_type='classification'):
+            # 'Lädt Daten und teilt sie in Trainings- und Testsets auf.'
+            data = pd.read_csv(file_path)
+            X = data.drop(columns=[target_column])
+            y = data[target_column]
+            
+            # Für Regression muss y in ein Numpy-Array konvertiert werden
+            if problem_type == 'regression':
+                y = y.values
+            
+            return train_test_split(X, y, test_size=0.2, random_state=42)
+
+        # 1. Daten laden und aufteilen
+        X_train, X_test, y_train, y_test = load_and_split_data('../../dummy_classification_data.csv', 'target')
+
+        # 2. Modell instanziieren und trainieren
+        model_lr = LogisticRegression(max_iter=1000, random_state=42)
+        model_lr.fit(X_train, y_train)
+
+        # 3. Vorhersagen treffen
+        y_pred_lr = model_lr.predict(X_test)
+
+        # 4. Modell bewerten
+        print('--- LogisticRegression Bewertung ---')
+        print(classification_report(y_test, y_pred_lr))
+
+        # # Konfusionsmatrix visualisieren
+        # cm = confusion_matrix(y_test, y_pred_lr)
+        # plt.figure(figsize=(8, 6))
+        # sns.heatmap(cm, annot=True, fmt='d', cmap='Blues')
+        # plt.title('Konfusionsmatrix - LogisticRegression')
+        # plt.xlabel('Vorhergesagte Klasse')
+        # plt.ylabel('Tatsächliche Klasse')
+        # plt.show()
+
+        # 5. Modell speichern
+        joblib.dump(model_lr, '../../models/logistic_regression.pkl')"
+}
+{
+    "instruction": "Generiere einen vollständigen Python-Code für Machine Learning Training:
+
+    **Code-Muster:** Muss dem bereitgestellten Muster folgen, einschließlich der Schritte Laden/Splitten, Instanziieren/Trainieren, Vorhersagen, Bewerten und Speichern.
+    
+    **Projektname:** PyTorch_NeuralNet_Demo
+    
+    **Daten laden und aufteilen (Schritt 1):**
+    * **Laden:** Funktion 'load_and_split_data' verwenden. **ACHTUNG:** Die geladenen Daten müssen sofort in PyTorch-Tensoren umgewandelt und ein DataLoader erstellt werden.
+    * **Dateipfad:** '../../dummy_classification_data.csv'
+    * **Features:** Alle Features
+    
+    **Hyperparameter (Schritt 2):**
+    * **Algorithmus:** PyTorch Neural Network Classifier
+    * **Hyperparameter:** {
+      'input_size': 'dynamisch (X_train.shape[1])',
+      'num_classes': 2,
+      'num_epochs': 10,
+      'batch_size': 16,
+      'learning_rate': 0.001
+    }
+    * **Zielspalte:** target
+    
+    **Vorhersagen (Schritt 3):**
+    * **Bibliothek:** **PyTorch** Logik (z.B. `torch.max(outputs.data, 1)`) verwenden, Ergebnisse in NumPy konvertieren.
+    
+    **Performance-Metriken (Schritt 4):**
+    * **Test-Metriken:** Implementiere **alle Standardmetriken** für den definierten **Problemtyp** (BinaryClassification).
+        * **Falls Klassifikation:** **'classification_report'** und **'confusion_matrix'** (Visualisiert mit 'seaborn') mit den NumPy-konvertierten Ergebnissen.
+        * **Falls Regression:** 'mean_squared_error' ('MSE') und 'r2_score'.
+        * **Zusätzlich:** Gib den **Loss** während des Trainings aus.
+    
+    **Speichern (Schritt 5):**
+    * **Bibliothek:** **'torch.save'** verwenden (Speichern des `state_dict`).
+    * **Dateiname:** '../models/neural_net_classifier.pth'",
+    "output": "import pandas as pd
+        import numpy as np
+        from sklearn.model_selection import train_test_split
+        from sklearn.metrics import confusion_matrix, classification_report, mean_squared_error, r2_score
+        import joblib
+        import matplotlib.pyplot as plt
+        import seaborn as sns
+        import torch
+        import torch.nn as nn
+        import torch.optim as optim
+        from torch.utils.data import TensorDataset, DataLoader
+
+        # Funktion zum Laden und Aufteilen der Daten
+        def load_and_split_data(file_path, target_column, problem_type='classification'):
+            # 'Lädt Daten und teilt sie in Trainings- und Testsets auf.'
+            data = pd.read_csv(file_path)
+            X = data.drop(columns=[target_column])
+            y = data[target_column]
+            
+            # Für Regression muss y in ein Numpy-Array konvertiert werden
+            if problem_type == 'regression':
+                y = y.values
+            
+            return train_test_split(X, y, test_size=0.2, random_state=42)
+
+        # 1. Daten laden und in Tensoren umwandeln
+        X_train, X_test, y_train, y_test = load_and_split_data('../../dummy_classification_data.csv', 'target')
+        X_train_tensor = torch.Tensor(X_train.values)
+        y_train_tensor = torch.Tensor(y_train.values).long()
+        X_test_tensor = torch.Tensor(X_test.values)
+        y_test_tensor = torch.Tensor(y_test.values).long()
+
+        # Datenlader erstellen
+        train_dataset = TensorDataset(X_train_tensor, y_train_tensor)
+        train_loader = DataLoader(dataset=train_dataset, batch_size=16, shuffle=True)
+
+        # 2. Modell-Architektur definieren und trainieren
+        class NeuralNet(nn.Module):
+            def __init__(self, input_size, num_classes):
+                super(NeuralNet, self).__init__()
+                self.fc1 = nn.Linear(input_size, 64)
+                self.relu = nn.ReLU()
+                self.fc2 = nn.Linear(64, num_classes)
+
+            def forward(self, x):
+                out = self.fc1(x)
+                out = self.relu(out)
+                out = self.fc2(out)
+                return out
+
+        model_nn _clf = NeuralNet(input_size=X_train.shape[1], num_classes=2)
+        criterion = nn.CrossEntropyLoss()
+        optimizer = optim.Adam(model_nn_clf.parameters(), lr=0.001)
+
+        num_epochs = 10
+        for epoch in range(num_epochs):
+            for features, labels in train_loader:
+                outputs = model_nn_clf(features)
+                loss = criterion(outputs, labels)
+                optimizer.zero_grad()
+                loss.backward()
+                optimizer.step()
+
+        # 3. Vorhersagen treffen und bewerten
+        with torch.no_grad():
+            outputs = model_nn_clf(X_test_tensor)
+            _, predicted = torch.max(outputs.data, 1)
+            
+            print('--- NeuralNetworkClassifier Bewertung ---')
+            y_pred_np = predicted.numpy()
+            y_test_np = y_test_tensor.numpy()
+            print(classification_report(y_test_np, y_pred_np))
+
+            # # Konfusionsmatrix visualisieren
+            # cm = confusion_matrix(y_test_np, y_pred_np)
+            # plt.figure(figsize=(8, 6))
+            # sns.heatmap(cm, annot=True, fmt='d', cmap='Blues')
+            # plt.title('Konfusionsmatrix - NeuralNetworkClassifier')
+            # plt.xlabel('Vorhergesagte Klasse')
+            # plt.ylabel('Tatsächliche Klasse')
+            # plt.show()
+
+        # 4. Modell speichern
+        torch.save(model_nn_clf.state_dict(), '../models/neural_net_classifier.pth')"
+}
+{
+    "instruction": "Generiere einen vollständigen Python-Code für Machine Learning Training:
+
+        **Code-Muster:** Muss dem bereitgestellten Muster folgen, einschließlich der Schritte Laden/Splitten, Instanziieren/Trainieren, Vorhersagen, Bewerten und Speichern.
+
+        **Projektname:** RandomForest_Demo
+
+        **Daten laden und aufteilen (Schritt 1):**
+        * **Laden:** Funktion 'load_and_split_data' verwenden.
+        * **Dateipfad:** '../../dummy_classification_data.csv'
+        * **Features:** Alle Features
+
+        **Hyperparameter (Schritt 2):**
+        * **Algorithmus:** RandomForestClassifier
+        * **Hyperparameter:** {
+        'n_estimators': 85,
+        'random_state': 42
+        }
+        * **Zielspalte:** target
+
+        **Vorhersagen (Schritt 3):**
+        * **Bibliothek:** 'predict' verwenden.
+
+        **Performance-Metriken (Schritt 4):**
+        * **Test-Metriken:** Implementiere **alle Standardmetriken** für den definierten **Problemtyp** (BinaryClassification).
+            * **Falls Klassifikation:** **'classification_report'** und **'confusion_matrix'** (Visualisiert mit 'seaborn').
+            * **Falls Regression:** 'mean_squared_error' ('MSE') und 'r2_score'.
+            * **Zusätzlich:** Füge die Berechnung des **Accuracy Scores** für das **Trainings-Set** hinzu.
+
+        **Speichern (Schritt 5):**
+        * **Bibliothek:** 'joblib.dump' verwenden.
+        * **Dateiname:** '../../models/randomforest_demo_model.pkl'",
+    "output": "import pandas as pd
+        import numpy as np
+        from sklearn.model_selection import train_test_split
+        from sklearn.metrics import confusion_matrix, classification_report, mean_squared_error, r2_score
+        import joblib
+        import matplotlib.pyplot as plt
+        import seaborn as sns
+        import torch
+        from sklearn.ensemble import RandomForestClassifier
+
+        # Funktion zum Laden und Aufteilen der Daten
+        def load_and_split_data(file_path, target_column, problem_type='classification'):
+            # 'Lädt Daten und teilt sie in Trainings- und Testsets auf.'
+            data = pd.read_csv(file_path)
+            X = data.drop(columns=[target_column])
+            y = data[target_column]
+            
+            # Für Regression muss y in ein Numpy-Array konvertiert werden
+            if problem_type == 'regression':
+                y = y.values
+            
+            return train_test_split(X, y, test_size=0.2, random_state=42)
+
+        # 1. Daten laden und aufteilen
+        X_train, X_test, y_train, y_test = load_and_split_data('../../dummy_classification_data.csv', 'target')
+
+        # 2. Modell instanziieren und trainieren
+        model_rf = RandomForestClassifier(n_estimators=85, random_state=42)
+        model_rf.fit(X_train, y_train)
+
+        # 3. Vorhersagen treffen
+        y_pred_rf = model_rf.predict(X_test)
+
+        # 4. Modell bewerten
+        print('--- RandomForestClassifier Bewertung ---')
+        print(classification_report(y_test, y_pred_rf))
+
+        # # Konfusionsmatrix visualisieren
+        # cm = confusion_matrix(y_test, y_pred_rf)
+        # plt.figure(figsize=(8, 6))
+        # sns.heatmap(cm, annot=True, fmt='d', cmap='Blues')
+        # plt.title('Konfusionsmatrix - RandomForestClassifier')
+        # plt.xlabel('Vorhergesagte Klasse')
+        # plt.ylabel('Tatsächliche Klasse')
+        # plt.show()
+
+        # 5. Modell speichern
+        joblib.dump(model_rf, '../../models/randomforest_demo_model.pkl')"
+}
+{
+    "instruction": "Generiere einen vollständigen Python-Code für Machine Learning Training:
+
+        **Code-Muster:** Muss dem bereitgestellten Muster folgen, einschließlich der Schritte Laden/Splitten, Instanziieren/Trainieren, Vorhersagen, Bewerten und Speichern.
+
+        **Projektname:** SVM_Demo
+
+        **Daten laden und aufteilen (Schritt 1):**
+        * **Laden:** Funktion 'load_and_split_data' verwenden.
+        * **Dateipfad:** '../../dummy_classification_data.csv'
+        * **Features:** Alle Features
+
+        **Hyperparameter (Schritt 2):**
+        * **Algorithmus:** SVC
+        * **Hyperparameter:** {
+        'kernel': 'linear',
+        'random_state': 42
+        }
+        * **Zielspalte:** target
+
+        **Vorhersagen (Schritt 3):**
+        * **Bibliothek:** 'predict' verwenden.
+
+        **Performance-Metriken (Schritt 4):**
+        * **Test-Metriken:** Implementiere **alle Standardmetriken** für den definierten **Problemtyp** (BinaryClassification).
+            * **Falls Klassifikation:** **'classification_report'** und **'confusion_matrix'** (Visualisiert mit 'seaborn').
+            * **Falls Regression:** 'mean_squared_error' ('MSE') und 'r2_score'.
+            * **Zusätzlich:** Füge die Berechnung des **Accuracy Scores** für das **Trainings-Set** hinzu.
+
+        **Speichern (Schritt 5):**
+        * **Bibliothek:** 'joblib.dump' verwenden.
+        * **Dateiname:** '../../models/svm_demo_model.pkl'",
+    "output": "import pandas as pd
+        import numpy as np
+        from sklearn.model_selection import train_test_split
+        from sklearn.metrics import confusion_matrix, classification_report, mean_squared_error, r2_score
+        import joblib
+        import matplotlib.pyplot as plt
+        import seaborn as sns
+        import torch
+        from sklearn.svm import SVC
+
+        # Funktion zum Laden und Aufteilen der Daten
+        def load_and_split_data(file_path, target_column, problem_type='classification'):
+            # 'Lädt Daten und teilt sie in Trainings- und Testsets auf.'
+            data = pd.read_csv(file_path)
+            X = data.drop(columns=[target_column])
+            y = data[target_column]
+            
+            # Für Regression muss y in ein Numpy-Array konvertiert werden
+            if problem_type == 'regression':
+                y = y.values
+            
+            return train_test_split(X, y, test_size=0.2, random_state=42)
+
+        # 1. Daten laden und aufteilen
+        X_train, X_test, y_train, y_test = load_and_split_data('../../dummy_classification_data.csv', 'target')
+
+        # 2. Modell instanziieren und trainieren
+        model_svm = SVC(kernel='linear', random_state=42)
+        model_svm.fit(X_train, y_train)
+
+        # 3. Vorhersagen treffen
+        y_pred_svm = model_svm.predict(X_test)
+
+        # 4. Modell bewerten
+        print('--- SVM Bewertung ---')
+        print(classification_report(y_test, y_pred_svm))
+
+        # Konfusionsmatrix visualisieren
+        # cm = confusion_matrix(y_test, y_pred_svm)
+        # plt.figure(figsize=(8, 6))
+        # sns.heatmap(cm, annot=True, fmt='d', cmap='Blues')
+        # plt.title('Konfusionsmatrix - SVM')
+        # plt.xlabel('Vorhergesagte Klasse')
+        # plt.ylabel('Tatsächliche Klasse')
+        # plt.show()
+
+        # 5. Modell speichern
+        joblib.dump(model_svm, '../../models/svm_demo_model.pkl')"
+}
+{
+    "instruction": "Generiere einen vollständigen Python-Code für Machine Learning Training:
+
+        **Code-Muster:** Muss dem bereitgestellten Muster folgen, einschließlich der Schritte Laden/Splitten, Instanziieren/Trainieren, Vorhersagen, Bewerten und Speichern.
+
+        **Projektname:** XGBoost_Demo
+
+        **Daten laden und aufteilen (Schritt 1):**
+        * **Laden:** Funktion 'load_and_split_data' verwenden.
+        * **Dateipfad:** '../../dummy_classification_data.csv'
+        * **Features:** Alle Features
+
+        **Hyperparameter (Schritt 2):**
+        * **Algorithmus:** XGBClassifier
+        * **Hyperparameter:** {
+        'objective': 'binary:logistic',
+        'n_estimators': 100,
+        'use_label_encoder': false,
+        'eval_metric': 'logloss',
+        'random_state': 42
+        }
+        * **Zielspalte:** target
+
+        **Vorhersagen (Schritt 3):**
+        * **Bibliothek:** 'predict' verwenden.
+
+        **Performance-Metriken (Schritt 4):**
+        * **Test-Metriken:** Implementiere **alle Standardmetriken** für den definierten **Problemtyp** (BinaryClassification).
+            * **Falls Klassifikation:** **'classification_report'** und **'confusion_matrix'** (Visualisiert mit 'seaborn').
+            * **Falls Regression:** 'mean_squared_error' ('MSE') und 'r2_score'.
+            * **Zusätzlich:** Füge die Berechnung des **Accuracy Scores** für das **Trainings-Set** hinzu.
+
+        **Speichern (Schritt 5):**
+        * **Bibliothek:** 'joblib.dump' verwenden.
+        * **Dateiname:** '../../models/xgboost_demo_model.pkl'",
+    "output": "import pandas as pd
+        import numpy as np
+        from sklearn.model_selection import train_test_split
+        from sklearn.metrics import confusion_matrix, classification_report, mean_squared_error, r2_score
+        import joblib
+        import matplotlib.pyplot as plt
+        import seaborn as sns
+        import torch
+        from xgboost import XGBClassifier
+
+        # Funktion zum Laden und Aufteilen der Daten
+        def load_and_split_data(file_path, target_column, problem_type='classification'):
+            # 'Lädt Daten und teilt sie in Trainings- und Testsets auf.'
+            data = pd.read_csv(file_path)
+            X = data.drop(columns=[target_column])
+            y = data[target_column]
+            
+            # Für Regression muss y in ein Numpy-Array konvertiert werden
+            if problem_type == 'regression':
+                y = y.values
+            
+            return train_test_split(X, y, test_size=0.2, random_state=42)
+        # 1. Daten laden und aufteilen
+        X_train, X_test, y_train, y_test = load_and_split_data('../../dummy_classification_data.csv', 'target')
+
+        # 2. Modell instanziieren und trainieren
+        model_xgb_clf = XGBClassifier(objective='binary:logistic', n_estimators=100, use_label_encoder=False, eval_metric='logloss', random_state=42)
+        model_xgb_clf.fit(X_train, y_train)
+
+        # 3. Vorhersagen treffen
+        y_pred_xgb_clf = model_xgb_clf.predict(X_test)
+
+        # 4. Modell bewerten
+        print('--- XGBClassifier Bewertung ---')
+        print(classification_report(y_test, y_pred_xgb_clf))
+
+        # # Konfusionsmatrix visualisieren
+        # cm = confusion_matrix(y_test, y_pred_xgb_clf)
+        # plt.figure(figsize=(8, 6))
+        # sns.heatmap(cm, annot=True, fmt='d', cmap='Blues')
+        # plt.title('Konfusionsmatrix - XGBClassifier')
+        # plt.xlabel('Vorhergesagte Klasse')
+        # plt.ylabel('Tatsächliche Klasse')
+        # plt.show()
+
+        # 5. Modell speichern
+        joblib.dump(model_xgb_clf, '../../models/xgboost_demo_model.pkl')"
+}

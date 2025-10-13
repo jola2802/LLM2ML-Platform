@@ -1,0 +1,3737 @@
+{
+  "timestamp": "2025-10-13T13:56:22.709Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:56:22.721Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:17.431Z",
+  "type": "retrain-project",
+  "data": "bb31077a-2cde-4cd6-8caa-cffce100e7ee"
+},
+{
+  "timestamp": "2025-10-13T13:58:17.487Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:17.502Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:17.518Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:17.534Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:17.549Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:17.564Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:17.578Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:17.593Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:17.607Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:17.621Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:17.637Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:17.653Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:17.667Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:17.681Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:17.696Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:17.710Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:17.723Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:17.737Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:17.751Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:17.765Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:17.779Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:17.791Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:17.806Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:17.820Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:17.833Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:17.847Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:17.861Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:17.875Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:17.888Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:17.902Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:17.916Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:17.929Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:17.943Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:17.956Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:17.970Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:17.985Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:18.000Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:18.014Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:18.028Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:18.041Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:18.054Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:18.067Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:18.079Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:18.092Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:18.105Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:18.117Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:18.130Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:18.144Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:18.157Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:18.169Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:18.181Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:18.194Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:18.207Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:18.220Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:18.233Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:18.245Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:18.258Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:18.271Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:18.284Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:18.295Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:18.307Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:18.320Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:18.333Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:18.345Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:18.359Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:18.372Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:18.385Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:18.399Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:18.412Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:18.427Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:18.441Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:18.454Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:18.468Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:18.481Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:18.494Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:18.507Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:18.520Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:18.533Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:18.550Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:18.567Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:18.581Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:18.596Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:18.612Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:18.623Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:18.637Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:18.652Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:18.666Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:18.681Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:18.694Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:18.707Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:18.722Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:18.735Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:18.749Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:18.764Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:18.779Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:18.794Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:18.808Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:18.822Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:18.836Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:18.852Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:18.868Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:18.883Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:18.899Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:18.913Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:18.926Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:18.942Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:18.955Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:18.969Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:18.982Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:18.994Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:19.006Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:19.020Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:19.035Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:19.048Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:19.061Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:19.073Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:19.086Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:19.099Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:19.113Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:19.126Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:19.139Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:19.152Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:19.166Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:19.177Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:19.190Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:19.202Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:19.215Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:19.228Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:19.244Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:19.257Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:19.269Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:19.283Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:19.297Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:19.311Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:19.325Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:19.339Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:19.352Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:19.366Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:19.380Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:19.394Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:19.407Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:19.419Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:19.434Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:19.447Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:19.463Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:19.476Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:19.489Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:19.503Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:19.515Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:19.529Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:19.541Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:19.554Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:19.567Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:19.580Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:19.591Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:19.602Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:19.615Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:19.626Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:19.638Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:19.651Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:19.663Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:19.675Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:19.688Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:19.700Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:19.713Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:19.726Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:19.740Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:19.754Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:19.768Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:19.781Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:19.795Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:19.810Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:19.825Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:19.838Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:19.852Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:19.866Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:19.879Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:19.893Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:19.908Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:19.921Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:19.934Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T13:58:19.949Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:01:49.947Z",
+  "type": "get-llm-status",
+  "data": {}
+},
+{
+  "timestamp": "2025-10-13T14:01:49.956Z",
+  "type": "get-all-projects",
+  "data": {}
+},
+{
+  "timestamp": "2025-10-13T14:01:49.975Z",
+  "type": "get-all-projects",
+  "data": {}
+},
+{
+  "timestamp": "2025-10-13T14:01:58.455Z",
+  "type": "upload",
+  "data": {
+    "fieldname": "file",
+    "originalname": "iris_dataset_short.csv",
+    "encoding": "7bit",
+    "mimetype": "text/csv",
+    "destination": "C:\\Users\\jonas\\Desktop\\Text2ML\\ML-Platform\\LLM2ML-Platform\\backend\\uploads",
+    "filename": "iris_dataset_short-1760364118452-195.csv",
+    "path": "C:\\Users\\jonas\\Desktop\\Text2ML\\ML-Platform\\LLM2ML-Platform\\backend\\uploads\\iris_dataset_short-1760364118452-195.csv",
+    "size": 1980
+  }
+},
+{
+  "timestamp": "2025-10-13T14:02:03.001Z",
+  "type": "analyze-data",
+  "data": {
+    "filePath": "C:\\Users\\jonas\\Desktop\\Text2ML\\ML-Platform\\LLM2ML-Platform\\backend\\uploads\\iris_dataset_short-1760364118452-195.csv",
+    "excludedColumns": [],
+    "excludedFeatures": [],
+    "userPreferences": ""
+  }
+},
+{
+  "timestamp": "2025-10-13T14:02:41.141Z",
+  "type": "smart-create-project",
+  "data": {
+    "name": "iris_dataset_short-1760364118452-195 - ML Model",
+    "csvFilePath": "C:\\Users\\jonas\\Desktop\\Text2ML\\ML-Platform\\LLM2ML-Platform\\backend\\uploads\\iris_dataset_short-1760364118452-195.csv",
+    "recommendations": {
+      "targetVariable": "species",
+      "features": [
+        "sepal_length",
+        "sepal_width",
+        "petal_length",
+        "petal_width"
+      ],
+      "modelType": "Classification",
+      "algorithm": "RandomForestClassifier",
+      "hyperparameters": {
+        "n_estimators": 100,
+        "random_state": 42
+      },
+      "reasoning": "Automatische Fallback-Empfehlung basierend auf gefilterten Daten",
+      "dataSourceName": "Dataset",
+      "excludedColumns": [],
+      "excludedFeatures": []
+    }
+  }
+},
+{
+  "timestamp": "2025-10-13T14:02:44.161Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:02:49.328Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:02:55.337Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:03:01.336Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:03:07.330Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:03:13.329Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:03:19.328Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:03:25.351Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:03:31.333Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:03:37.323Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:03:43.335Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:03:49.333Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:03:55.329Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:04:01.330Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:04:07.333Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:04:13.325Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:04:19.332Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:07:19.184Z",
+  "type": "delete-project",
+  "data": "1eda80a2-12d1-4dab-9f67-3133d5c0e9e5"
+},
+{
+  "timestamp": "2025-10-13T14:07:22.581Z",
+  "type": "upload",
+  "data": {
+    "fieldname": "file",
+    "originalname": "iris_dataset_short.csv",
+    "encoding": "7bit",
+    "mimetype": "text/csv",
+    "destination": "C:\\Users\\jonas\\Desktop\\Text2ML\\ML-Platform\\LLM2ML-Platform\\backend\\uploads",
+    "filename": "iris_dataset_short-1760364442578-960.csv",
+    "path": "C:\\Users\\jonas\\Desktop\\Text2ML\\ML-Platform\\LLM2ML-Platform\\backend\\uploads\\iris_dataset_short-1760364442578-960.csv",
+    "size": 1980
+  }
+},
+{
+  "timestamp": "2025-10-13T14:07:24.988Z",
+  "type": "analyze-data",
+  "data": {
+    "filePath": "C:\\Users\\jonas\\Desktop\\Text2ML\\ML-Platform\\LLM2ML-Platform\\backend\\uploads\\iris_dataset_short-1760364442578-960.csv",
+    "excludedColumns": [],
+    "excludedFeatures": [],
+    "userPreferences": ""
+  }
+},
+{
+  "timestamp": "2025-10-13T14:07:46.649Z",
+  "type": "smart-create-project",
+  "data": {
+    "name": "iris_dataset_short-1760364442578-960 - ML Model",
+    "csvFilePath": "C:\\Users\\jonas\\Desktop\\Text2ML\\ML-Platform\\LLM2ML-Platform\\backend\\uploads\\iris_dataset_short-1760364442578-960.csv",
+    "recommendations": {
+      "targetVariable": "species",
+      "features": [
+        "sepal_length",
+        "sepal_width",
+        "petal_length",
+        "petal_width"
+      ],
+      "modelType": "Classification",
+      "algorithm": "RandomForestClassifier",
+      "hyperparameters": {
+        "n_estimators": 100,
+        "random_state": 42
+      },
+      "reasoning": "Automatische Fallback-Empfehlung basierend auf gefilterten Daten",
+      "dataSourceName": "Dataset",
+      "excludedColumns": [],
+      "excludedFeatures": []
+    }
+  }
+},
+{
+  "timestamp": "2025-10-13T14:07:49.673Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:07:54.694Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:07:59.716Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:08:04.730Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:08:09.751Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:08:14.775Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:08:19.796Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:08:24.818Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:08:29.835Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:08:34.848Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:08:39.862Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:08:44.885Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:08:49.906Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:08:54.925Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:08:59.948Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:09:04.968Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:09:09.983Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:09:15.008Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:09:20.034Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:09:25.054Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:09:30.080Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:09:35.094Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:09:40.122Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:09:45.152Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:09:50.171Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:12:13.932Z",
+  "type": "delete-project",
+  "data": "e45a8ea8-4250-4ff8-8a1f-8050f5cafd1e"
+},
+{
+  "timestamp": "2025-10-13T14:12:18.837Z",
+  "type": "upload",
+  "data": {
+    "fieldname": "file",
+    "originalname": "iris_dataset_short.csv",
+    "encoding": "7bit",
+    "mimetype": "text/csv",
+    "destination": "C:\\Users\\jonas\\Desktop\\Text2ML\\ML-Platform\\LLM2ML-Platform\\backend\\uploads",
+    "filename": "iris_dataset_short-1760364738834-67.csv",
+    "path": "C:\\Users\\jonas\\Desktop\\Text2ML\\ML-Platform\\LLM2ML-Platform\\backend\\uploads\\iris_dataset_short-1760364738834-67.csv",
+    "size": 1980
+  }
+},
+{
+  "timestamp": "2025-10-13T14:12:21.521Z",
+  "type": "analyze-data",
+  "data": {
+    "filePath": "C:\\Users\\jonas\\Desktop\\Text2ML\\ML-Platform\\LLM2ML-Platform\\backend\\uploads\\iris_dataset_short-1760364738834-67.csv",
+    "excludedColumns": [],
+    "excludedFeatures": [],
+    "userPreferences": ""
+  }
+},
+{
+  "timestamp": "2025-10-13T14:12:55.603Z",
+  "type": "analyze-data",
+  "data": {
+    "filePath": "C:\\Users\\jonas\\Desktop\\Text2ML\\ML-Platform\\LLM2ML-Platform\\backend\\uploads\\iris_dataset_short-1760364738834-67.csv",
+    "excludedColumns": [],
+    "excludedFeatures": [],
+    "userPreferences": ""
+  }
+},
+{
+  "timestamp": "2025-10-13T14:13:09.399Z",
+  "type": "smart-create-project",
+  "data": {
+    "name": "iris_dataset_short-1760364738834-67 - ML Model",
+    "csvFilePath": "C:\\Users\\jonas\\Desktop\\Text2ML\\ML-Platform\\LLM2ML-Platform\\backend\\uploads\\iris_dataset_short-1760364738834-67.csv",
+    "recommendations": {
+      "targetVariable": "species",
+      "features": [
+        "sepal_length",
+        "sepal_width",
+        "petal_length",
+        "petal_width"
+      ],
+      "modelType": "Classification",
+      "algorithm": "RandomForestClassifier",
+      "hyperparameters": {
+        "@params": {
+          "max_depth": 100,
+          "n_estimators": 500
+        }
+      },
+      "reasoning": "Die Zielvariable 'species' ist die wahrscheinlichste Zielvariable, da sie eine kategorische Variable ist und es sich um eine Klassifikation handelt. Der beste Algorithmus basierend auf den verfügbaren Daten ist der RandomForestClassifier. Die Hyperparameter wurden so ausgewählt, dass die maximale Tiefe des Baumes 100 beträgt und die Anzahl der Knoten in jedem Baum 500 beträgt.",
+      "dataSourceName": "Iris-Set",
+      "excludedColumns": [],
+      "excludedFeatures": []
+    }
+  }
+},
+{
+  "timestamp": "2025-10-13T14:13:12.418Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:13:17.436Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:13:22.463Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:13:27.502Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:13:32.524Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:13:37.538Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:13:42.554Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:13:47.574Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:13:52.591Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:13:57.609Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:14:02.633Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:14:07.648Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:14:12.672Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:14:17.694Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:14:22.714Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:14:27.732Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:14:32.753Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:14:37.769Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:14:42.783Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:14:47.807Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:14:52.823Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:14:57.842Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:15:02.864Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:15:07.886Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:15:12.913Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:15:17.928Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:15:22.950Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:15:27.970Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:18:07.463Z",
+  "type": "delete-project",
+  "data": "e6f34d74-04fc-4eb8-a3d4-582b72bb0cd5"
+},
+{
+  "timestamp": "2025-10-13T14:18:12.050Z",
+  "type": "upload",
+  "data": {
+    "fieldname": "file",
+    "originalname": "iris_dataset_short.csv",
+    "encoding": "7bit",
+    "mimetype": "text/csv",
+    "destination": "C:\\Users\\jonas\\Desktop\\Text2ML\\ML-Platform\\LLM2ML-Platform\\backend\\uploads",
+    "filename": "iris_dataset_short-1760365092046-936.csv",
+    "path": "C:\\Users\\jonas\\Desktop\\Text2ML\\ML-Platform\\LLM2ML-Platform\\backend\\uploads\\iris_dataset_short-1760365092046-936.csv",
+    "size": 1980
+  }
+},
+{
+  "timestamp": "2025-10-13T14:18:14.360Z",
+  "type": "analyze-data",
+  "data": {
+    "filePath": "C:\\Users\\jonas\\Desktop\\Text2ML\\ML-Platform\\LLM2ML-Platform\\backend\\uploads\\iris_dataset_short-1760365092046-936.csv",
+    "excludedColumns": [],
+    "excludedFeatures": [],
+    "userPreferences": ""
+  }
+},
+{
+  "timestamp": "2025-10-13T14:19:47.845Z",
+  "type": "analyze-data",
+  "data": {
+    "filePath": "C:\\Users\\jonas\\Desktop\\Text2ML\\ML-Platform\\LLM2ML-Platform\\backend\\uploads\\iris_dataset_short-1760365092046-936.csv",
+    "excludedColumns": [],
+    "excludedFeatures": [],
+    "userPreferences": ""
+  }
+},
+{
+  "timestamp": "2025-10-13T14:20:21.807Z",
+  "type": "smart-create-project",
+  "data": {
+    "name": "iris_dataset_short-1760365092046-936 - ML Model",
+    "csvFilePath": "C:\\Users\\jonas\\Desktop\\Text2ML\\ML-Platform\\LLM2ML-Platform\\backend\\uploads\\iris_dataset_short-1760365092046-936.csv",
+    "recommendations": {
+      "targetVariable": "species",
+      "features": [
+        "petal_length",
+        "petal_width",
+        "sepal_length",
+        "sepal_width"
+      ],
+      "modelType": "Classification",
+      "algorithm": "XGBoostClassifier",
+      "hyperparameters": {
+        "max_depth": 3,
+        "learning_rate": 0.1
+      },
+      "reasoning": "Die Zielvariable 'species' ist die wahrscheinlichste, da sie eine Kategorische Variable ist und es sich um einen klassifizierenden Datensatz handelt.",
+      "dataSourceName": "Iris-Dataset",
+      "excludedColumns": [],
+      "excludedFeatures": []
+    }
+  }
+},
+{
+  "timestamp": "2025-10-13T14:20:24.821Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:20:29.834Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:20:34.856Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:20:39.877Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:20:44.897Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:20:49.912Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:20:54.932Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:20:59.960Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:21:04.981Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:21:10.000Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:21:15.015Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:21:20.042Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:21:25.063Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:21:30.075Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:21:35.088Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:21:40.108Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:21:45.124Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:21:49.947Z",
+  "type": "get-llm-status",
+  "data": {}
+},
+{
+  "timestamp": "2025-10-13T14:21:50.148Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:21:55.169Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:22:00.181Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:22:05.207Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:22:10.227Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:22:15.240Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:22:20.255Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:22:25.280Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:22:30.301Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:23:29.984Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:33:51.966Z",
+  "type": "delete-project",
+  "data": "1058e41f-312a-4f22-911d-09a4262bfaad"
+},
+{
+  "timestamp": "2025-10-13T14:33:55.330Z",
+  "type": "upload",
+  "data": {
+    "fieldname": "file",
+    "originalname": "iris_dataset_short.csv",
+    "encoding": "7bit",
+    "mimetype": "text/csv",
+    "destination": "C:\\Users\\jonas\\Desktop\\Text2ML\\ML-Platform\\LLM2ML-Platform\\backend\\uploads",
+    "filename": "iris_dataset_short-1760366035327-326.csv",
+    "path": "C:\\Users\\jonas\\Desktop\\Text2ML\\ML-Platform\\LLM2ML-Platform\\backend\\uploads\\iris_dataset_short-1760366035327-326.csv",
+    "size": 1980
+  }
+},
+{
+  "timestamp": "2025-10-13T14:33:58.710Z",
+  "type": "analyze-data",
+  "data": {
+    "filePath": "C:\\Users\\jonas\\Desktop\\Text2ML\\ML-Platform\\LLM2ML-Platform\\backend\\uploads\\iris_dataset_short-1760366035327-326.csv",
+    "excludedColumns": [],
+    "excludedFeatures": [],
+    "userPreferences": ""
+  }
+},
+{
+  "timestamp": "2025-10-13T14:34:50.417Z",
+  "type": "smart-create-project",
+  "data": {
+    "name": "iris_dataset_short-1760366035327-326 - ML Model",
+    "csvFilePath": "C:\\Users\\jonas\\Desktop\\Text2ML\\ML-Platform\\LLM2ML-Platform\\backend\\uploads\\iris_dataset_short-1760366035327-326.csv",
+    "recommendations": {
+      "algorithm": "RandomForestClassifier",
+      "targetVariable": "species",
+      "modelType": "Classification",
+      "excludedColumns": [],
+      "excludedFeatures": [],
+      "features": []
+    }
+  }
+},
+{
+  "timestamp": "2025-10-13T14:34:53.447Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:34:58.466Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:35:03.490Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:35:08.519Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:35:13.549Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:35:18.568Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:35:23.584Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:35:28.612Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:35:33.635Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:35:38.651Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:35:43.672Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:35:48.693Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:35:53.713Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:35:58.734Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:36:03.750Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:36:08.765Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:36:11.371Z",
+  "type": "get-llm-status",
+  "data": {}
+},
+{
+  "timestamp": "2025-10-13T14:36:11.376Z",
+  "type": "get-all-projects",
+  "data": {}
+},
+{
+  "timestamp": "2025-10-13T14:36:11.385Z",
+  "type": "get-all-projects",
+  "data": {}
+},
+{
+  "timestamp": "2025-10-13T14:36:14.241Z",
+  "type": "get-llm-config",
+  "data": {}
+},
+{
+  "timestamp": "2025-10-13T14:36:22.370Z",
+  "type": "get-llm-status",
+  "data": {}
+},
+{
+  "timestamp": "2025-10-13T14:36:22.378Z",
+  "type": "get-ollama-models",
+  "data": {}
+},
+{
+  "timestamp": "2025-10-13T14:36:22.555Z",
+  "type": "get-llm-status",
+  "data": {}
+},
+{
+  "timestamp": "2025-10-13T14:36:22.560Z",
+  "type": "get-all-projects",
+  "data": {}
+},
+{
+  "timestamp": "2025-10-13T14:36:22.571Z",
+  "type": "get-all-projects",
+  "data": {}
+},
+{
+  "timestamp": "2025-10-13T14:37:39.657Z",
+  "type": "get-llm-status",
+  "data": {}
+},
+{
+  "timestamp": "2025-10-13T14:37:39.663Z",
+  "type": "get-all-projects",
+  "data": {}
+},
+{
+  "timestamp": "2025-10-13T14:37:39.674Z",
+  "type": "get-all-projects",
+  "data": {}
+},
+{
+  "timestamp": "2025-10-13T14:37:41.191Z",
+  "type": "delete-project",
+  "data": "284eb002-eff5-474e-b891-6a3af45a4d08"
+},
+{
+  "timestamp": "2025-10-13T14:37:46.095Z",
+  "type": "upload",
+  "data": {
+    "fieldname": "file",
+    "originalname": "iris_dataset_short.csv",
+    "encoding": "7bit",
+    "mimetype": "text/csv",
+    "destination": "C:\\Users\\jonas\\Desktop\\Text2ML\\ML-Platform\\LLM2ML-Platform\\backend\\uploads",
+    "filename": "iris_dataset_short-1760366266093-606.csv",
+    "path": "C:\\Users\\jonas\\Desktop\\Text2ML\\ML-Platform\\LLM2ML-Platform\\backend\\uploads\\iris_dataset_short-1760366266093-606.csv",
+    "size": 1980
+  }
+},
+{
+  "timestamp": "2025-10-13T14:37:48.917Z",
+  "type": "analyze-data",
+  "data": {
+    "filePath": "C:\\Users\\jonas\\Desktop\\Text2ML\\ML-Platform\\LLM2ML-Platform\\backend\\uploads\\iris_dataset_short-1760366266093-606.csv",
+    "excludedColumns": [],
+    "excludedFeatures": [],
+    "userPreferences": ""
+  }
+},
+{
+  "timestamp": "2025-10-13T14:39:47.256Z",
+  "type": "smart-create-project",
+  "data": {
+    "name": "iris_dataset_short-1760366266093-606 - ML Model",
+    "csvFilePath": "C:\\Users\\jonas\\Desktop\\Text2ML\\ML-Platform\\LLM2ML-Platform\\backend\\uploads\\iris_dataset_short-1760366266093-606.csv",
+    "recommendations": {
+      "targetVariable": "species",
+      "features": [
+        "petal_width",
+        "sepal_length",
+        "sepal_width",
+        "petal_length"
+      ],
+      "modelType": "Classification",
+      "algorithm": "RandomForestClassifier",
+      "hyperparameters": {
+        "@params/RandomForestClassifier/n_estimators": 100,
+        "@params/RandomForestClassifier/criterion": "gini"
+      },
+      "reasoning": "Die Zielvariable 'species' ist die wahrscheinlichste, da sie eine kategorische Variable ist und sich auf alle verfügbaren Features bezieht. Der RandomForestClassifier ist der beste Algorithmus für diese Aufgabe, da er eine gute Kombination aus Präzision und Effizienz bietet.",
+      "dataSourceName": "Iris-Dataset",
+      "excludedColumns": [],
+      "excludedFeatures": []
+    }
+  }
+},
+{
+  "timestamp": "2025-10-13T14:39:50.276Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:39:55.295Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:40:00.319Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:40:05.342Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:40:10.360Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:40:15.384Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:40:20.404Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:40:25.421Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:40:30.436Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:40:35.454Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:40:40.468Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:40:45.489Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:40:50.507Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:40:55.529Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:41:00.551Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:41:05.572Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:41:10.593Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:41:15.693Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:41:20.731Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:41:25.761Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:41:30.777Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:41:33.645Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:41:33.655Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:41:33.669Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:41:35.796Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:41:38.693Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:41:39.661Z",
+  "type": "get-all-projects",
+  "data": {}
+},
+{
+  "timestamp": "2025-10-13T14:41:40.818Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:41:45.836Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:43:12.610Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:43:23.411Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:43:30.418Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:43:35.441Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:43:40.477Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:43:45.493Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:43:50.518Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:43:55.536Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:44:00.558Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T14:44:05.580Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:05:33.101Z",
+  "type": "delete-project",
+  "data": "1bbcd4f5-e2d8-4867-a897-c37a86bf1e03"
+},
+{
+  "timestamp": "2025-10-13T15:05:33.632Z",
+  "type": "get-llm-status",
+  "data": {}
+},
+{
+  "timestamp": "2025-10-13T15:05:33.637Z",
+  "type": "get-all-projects",
+  "data": {}
+},
+{
+  "timestamp": "2025-10-13T15:05:33.646Z",
+  "type": "get-all-projects",
+  "data": {}
+},
+{
+  "timestamp": "2025-10-13T15:05:36.846Z",
+  "type": "upload",
+  "data": {
+    "fieldname": "file",
+    "originalname": "iris_dataset_short.csv",
+    "encoding": "7bit",
+    "mimetype": "text/csv",
+    "destination": "C:\\Users\\jonas\\Desktop\\Text2ML\\ML-Platform\\LLM2ML-Platform\\backend\\uploads",
+    "filename": "iris_dataset_short-1760367936843-973.csv",
+    "path": "C:\\Users\\jonas\\Desktop\\Text2ML\\ML-Platform\\LLM2ML-Platform\\backend\\uploads\\iris_dataset_short-1760367936843-973.csv",
+    "size": 1980
+  }
+},
+{
+  "timestamp": "2025-10-13T15:05:39.317Z",
+  "type": "analyze-data",
+  "data": {
+    "filePath": "C:\\Users\\jonas\\Desktop\\Text2ML\\ML-Platform\\LLM2ML-Platform\\backend\\uploads\\iris_dataset_short-1760367936843-973.csv",
+    "excludedColumns": [],
+    "excludedFeatures": [],
+    "userPreferences": ""
+  }
+},
+{
+  "timestamp": "2025-10-13T15:06:15.553Z",
+  "type": "smart-create-project",
+  "data": {
+    "name": "iris_dataset_short-1760367936843-973 - ML Model",
+    "csvFilePath": "C:\\Users\\jonas\\Desktop\\Text2ML\\ML-Platform\\LLM2ML-Platform\\backend\\uploads\\iris_dataset_short-1760367936843-973.csv",
+    "recommendations": {
+      "targetVariable": "species",
+      "features": [
+        "petal_length",
+        "petal_width",
+        "sepal_length",
+        "sepal_width"
+      ],
+      "modelType": "Classification",
+      "algorithm": "RandomForestClassifier",
+      "hyperparameters": {
+        "@param: 'n_estimators'": 100,
+        "@param: 'max_depth'": 5
+      },
+      "reasoning": "Die Zielvariable 'species' ist die wahrscheinlichste Zielvariable, da sie in den meisten Datensätzen eine klare Kategorisierung ermöglicht.",
+      "dataSourceName": "Iris-Dataset",
+      "excludedColumns": [],
+      "excludedFeatures": []
+    }
+  }
+},
+{
+  "timestamp": "2025-10-13T15:06:19.338Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:06:25.334Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:06:31.338Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:06:37.334Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:06:43.336Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:06:49.332Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:06:55.328Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:07:01.331Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:07:07.328Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:07:13.332Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:07:19.334Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:07:25.335Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:07:30.346Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:07:35.364Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:07:40.391Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:07:45.411Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:07:50.429Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:07:55.455Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:08:00.474Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:08:05.499Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:08:12.293Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:08:17.446Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:08:22.469Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:08:27.482Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:08:32.509Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:08:37.525Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:08:42.555Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:08:47.577Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:08:58.585Z",
+  "type": "delete-project",
+  "data": "13d75706-5a81-43a5-b28f-8ebb1f2be3f6"
+},
+{
+  "timestamp": "2025-10-13T15:08:59.210Z",
+  "type": "get-llm-status",
+  "data": {}
+},
+{
+  "timestamp": "2025-10-13T15:08:59.216Z",
+  "type": "get-all-projects",
+  "data": {}
+},
+{
+  "timestamp": "2025-10-13T15:08:59.227Z",
+  "type": "get-all-projects",
+  "data": {}
+},
+{
+  "timestamp": "2025-10-13T15:09:06.325Z",
+  "type": "upload",
+  "data": {
+    "fieldname": "file",
+    "originalname": "iris_dataset_short.csv",
+    "encoding": "7bit",
+    "mimetype": "text/csv",
+    "destination": "C:\\Users\\jonas\\Desktop\\Text2ML\\ML-Platform\\LLM2ML-Platform\\backend\\uploads",
+    "filename": "iris_dataset_short-1760368146321-330.csv",
+    "path": "C:\\Users\\jonas\\Desktop\\Text2ML\\ML-Platform\\LLM2ML-Platform\\backend\\uploads\\iris_dataset_short-1760368146321-330.csv",
+    "size": 1980
+  }
+},
+{
+  "timestamp": "2025-10-13T15:09:10.487Z",
+  "type": "analyze-data",
+  "data": {
+    "filePath": "C:\\Users\\jonas\\Desktop\\Text2ML\\ML-Platform\\LLM2ML-Platform\\backend\\uploads\\iris_dataset_short-1760368146321-330.csv",
+    "excludedColumns": [],
+    "excludedFeatures": [],
+    "userPreferences": ""
+  }
+},
+{
+  "timestamp": "2025-10-13T15:09:41.754Z",
+  "type": "smart-create-project",
+  "data": {
+    "name": "iris_dataset_short-1760368146321-330 - ML Model",
+    "csvFilePath": "C:\\Users\\jonas\\Desktop\\Text2ML\\ML-Platform\\LLM2ML-Platform\\backend\\uploads\\iris_dataset_short-1760368146321-330.csv",
+    "recommendations": {
+      "algorithm": "RandomForestClassifier",
+      "targetVariable": "species",
+      "modelType": "Classification",
+      "excludedColumns": [],
+      "excludedFeatures": [],
+      "features": []
+    }
+  }
+},
+{
+  "timestamp": "2025-10-13T15:09:44.776Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:09:49.792Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:09:54.817Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:09:59.833Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:10:04.862Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:10:09.878Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:10:14.901Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:10:19.921Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:10:24.943Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:10:29.955Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:10:34.969Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:10:39.986Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:10:45.003Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:10:50.016Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:10:55.035Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:11:00.049Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:11:05.069Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:11:10.082Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:11:15.099Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:11:20.122Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:11:25.144Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:11:30.159Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:11:35.176Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:11:40.190Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:11:45.219Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:11:50.241Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:11:55.261Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:12:14.134Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:12:14.148Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:12:14.166Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:12:19.163Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:12:24.168Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:12:29.159Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:12:34.174Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:12:39.165Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:12:44.165Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:12:49.165Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:12:54.160Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:12:59.171Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:13:04.160Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:13:09.160Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:13:14.172Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:13:19.171Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:13:24.158Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:13:29.170Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:13:34.166Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:13:39.161Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:13:44.168Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:13:49.172Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:13:54.169Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:13:59.181Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:14:02.606Z",
+  "type": "get-all-projects",
+  "data": {}
+},
+{
+  "timestamp": "2025-10-13T15:14:04.467Z",
+  "type": "delete-project",
+  "data": "1eb5574d-e4a9-4aae-a0eb-79bb61e1b1f4"
+},
+{
+  "timestamp": "2025-10-13T15:14:10.355Z",
+  "type": "upload",
+  "data": {
+    "fieldname": "file",
+    "originalname": "iris_dataset_short.csv",
+    "encoding": "7bit",
+    "mimetype": "text/csv",
+    "destination": "C:\\Users\\jonas\\Desktop\\Text2ML\\ML-Platform\\LLM2ML-Platform\\backend\\uploads",
+    "filename": "iris_dataset_short-1760368450354-116.csv",
+    "path": "C:\\Users\\jonas\\Desktop\\Text2ML\\ML-Platform\\LLM2ML-Platform\\backend\\uploads\\iris_dataset_short-1760368450354-116.csv",
+    "size": 1980
+  }
+},
+{
+  "timestamp": "2025-10-13T15:14:13.382Z",
+  "type": "analyze-data",
+  "data": {
+    "filePath": "C:\\Users\\jonas\\Desktop\\Text2ML\\ML-Platform\\LLM2ML-Platform\\backend\\uploads\\iris_dataset_short-1760368450354-116.csv",
+    "excludedColumns": [],
+    "excludedFeatures": [],
+    "userPreferences": ""
+  }
+},
+{
+  "timestamp": "2025-10-13T15:14:32.888Z",
+  "type": "smart-create-project",
+  "data": {
+    "name": "iris_dataset_short-1760368450354-116 - ML Model",
+    "csvFilePath": "C:\\Users\\jonas\\Desktop\\Text2ML\\ML-Platform\\LLM2ML-Platform\\backend\\uploads\\iris_dataset_short-1760368450354-116.csv",
+    "recommendations": {
+      "targetVariable": "species",
+      "features": [
+        "sepal_length",
+        "sepal_width",
+        "petal_length",
+        "petal_width"
+      ],
+      "modelType": "Classification",
+      "algorithm": "RandomForestClassifier",
+      "hyperparameters": {
+        "@params/random_forest": {
+          "@parameter/cuda_device": "0"
+        }
+      },
+      "reasoning": "Basierend auf der Datenanalyse wird angenommen, dass die Zielvariable 'species' eine kategorische Variable ist. Die verfügbaren Features wie sepal_length, sepal_width, petal_length und petal_width sind wichtige Merkmale, um den Auszug der Art zu vorhersagen.",
+      "dataSourceName": "Iris-Dataset",
+      "excludedColumns": [],
+      "excludedFeatures": []
+    }
+  }
+},
+{
+  "timestamp": "2025-10-13T15:14:35.917Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:14:40.939Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:14:45.957Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:14:50.978Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:14:55.994Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:15:01.011Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:15:06.027Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:15:11.043Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:15:16.067Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:15:21.084Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:15:26.104Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:15:31.122Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:15:36.143Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:15:41.159Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:15:46.173Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:15:51.187Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:15:56.200Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:16:01.219Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:16:06.236Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:16:11.255Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:16:16.282Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:16:21.315Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:16:42.430Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:16:54.645Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:16:54.655Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:16:54.667Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:16:55.890Z",
+  "type": "get-all-projects",
+  "data": {}
+},
+{
+  "timestamp": "2025-10-13T15:16:57.170Z",
+  "type": "get-llm-status",
+  "data": {}
+},
+{
+  "timestamp": "2025-10-13T15:16:57.174Z",
+  "type": "get-all-projects",
+  "data": {}
+},
+{
+  "timestamp": "2025-10-13T15:16:57.185Z",
+  "type": "get-all-projects",
+  "data": {}
+},
+{
+  "timestamp": "2025-10-13T15:17:01.211Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:17:01.221Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:17:01.231Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:17:01.840Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:17:02.725Z",
+  "type": "data-statistics",
+  "data": "e717c243-e9dd-464a-bc21-56d8d5ff7892"
+},
+{
+  "timestamp": "2025-10-13T15:17:04.219Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:17:06.231Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:17:08.289Z",
+  "type": "get-llm-status",
+  "data": {}
+},
+{
+  "timestamp": "2025-10-13T15:17:08.293Z",
+  "type": "get-all-projects",
+  "data": {}
+},
+{
+  "timestamp": "2025-10-13T15:17:08.305Z",
+  "type": "get-all-projects",
+  "data": {}
+},
+{
+  "timestamp": "2025-10-13T15:18:45.923Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:18:45.933Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:18:45.946Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:18:50.950Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:18:55.948Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:19:00.954Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:19:05.950Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:19:10.959Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:19:15.959Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:19:20.951Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:19:25.947Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:19:30.952Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:19:35.960Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:19:40.956Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:19:45.951Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:19:50.960Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:19:55.954Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:20:00.951Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:20:05.947Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:20:07.773Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:20:10.170Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:20:10.960Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:20:14.645Z",
+  "type": "get-all-projects",
+  "data": {}
+},
+{
+  "timestamp": "2025-10-13T15:20:16.525Z",
+  "type": "get-llm-status",
+  "data": {}
+},
+{
+  "timestamp": "2025-10-13T15:20:16.529Z",
+  "type": "get-all-projects",
+  "data": {}
+},
+{
+  "timestamp": "2025-10-13T15:20:16.542Z",
+  "type": "get-all-projects",
+  "data": {}
+},
+{
+  "timestamp": "2025-10-13T15:20:21.262Z",
+  "type": "get-llm-status",
+  "data": {}
+},
+{
+  "timestamp": "2025-10-13T15:20:21.274Z",
+  "type": "get-all-projects",
+  "data": {}
+},
+{
+  "timestamp": "2025-10-13T15:20:21.290Z",
+  "type": "get-all-projects",
+  "data": {}
+},
+{
+  "timestamp": "2025-10-13T15:20:23.384Z",
+  "type": "get-llm-status",
+  "data": {}
+},
+{
+  "timestamp": "2025-10-13T15:20:23.387Z",
+  "type": "get-all-projects",
+  "data": {}
+},
+{
+  "timestamp": "2025-10-13T15:20:23.397Z",
+  "type": "get-all-projects",
+  "data": {}
+},
+{
+  "timestamp": "2025-10-13T15:20:23.828Z",
+  "type": "get-llm-status",
+  "data": {}
+},
+{
+  "timestamp": "2025-10-13T15:20:23.831Z",
+  "type": "get-all-projects",
+  "data": {}
+},
+{
+  "timestamp": "2025-10-13T15:20:23.842Z",
+  "type": "get-all-projects",
+  "data": {}
+},
+{
+  "timestamp": "2025-10-13T15:20:24.152Z",
+  "type": "get-llm-status",
+  "data": {}
+},
+{
+  "timestamp": "2025-10-13T15:20:24.156Z",
+  "type": "get-all-projects",
+  "data": {}
+},
+{
+  "timestamp": "2025-10-13T15:20:24.165Z",
+  "type": "get-all-projects",
+  "data": {}
+},
+{
+  "timestamp": "2025-10-13T15:20:24.444Z",
+  "type": "get-llm-status",
+  "data": {}
+},
+{
+  "timestamp": "2025-10-13T15:20:24.446Z",
+  "type": "get-all-projects",
+  "data": {}
+},
+{
+  "timestamp": "2025-10-13T15:20:24.455Z",
+  "type": "get-all-projects",
+  "data": {}
+},
+{
+  "timestamp": "2025-10-13T15:20:26.311Z",
+  "type": "delete-project",
+  "data": "e717c243-e9dd-464a-bc21-56d8d5ff7892"
+},
+{
+  "timestamp": "2025-10-13T15:20:31.227Z",
+  "type": "upload",
+  "data": {
+    "fieldname": "file",
+    "originalname": "iris_dataset_short.csv",
+    "encoding": "7bit",
+    "mimetype": "text/csv",
+    "destination": "C:\\Users\\jonas\\Desktop\\Text2ML\\ML-Platform\\LLM2ML-Platform\\backend\\uploads",
+    "filename": "iris_dataset_short-1760368831224-863.csv",
+    "path": "C:\\Users\\jonas\\Desktop\\Text2ML\\ML-Platform\\LLM2ML-Platform\\backend\\uploads\\iris_dataset_short-1760368831224-863.csv",
+    "size": 1980
+  }
+},
+{
+  "timestamp": "2025-10-13T15:20:35.132Z",
+  "type": "analyze-data",
+  "data": {
+    "filePath": "C:\\Users\\jonas\\Desktop\\Text2ML\\ML-Platform\\LLM2ML-Platform\\backend\\uploads\\iris_dataset_short-1760368831224-863.csv",
+    "excludedColumns": [],
+    "excludedFeatures": [],
+    "userPreferences": ""
+  }
+},
+{
+  "timestamp": "2025-10-13T15:21:37.541Z",
+  "type": "smart-create-project",
+  "data": {
+    "name": "iris_dataset_short-1760368831224-863 - ML Model",
+    "csvFilePath": "C:\\Users\\jonas\\Desktop\\Text2ML\\ML-Platform\\LLM2ML-Platform\\backend\\uploads\\iris_dataset_short-1760368831224-863.csv",
+    "recommendations": {
+      "targetVariable": "species",
+      "features": [
+        "petal_length",
+        "petal_width",
+        "sepal_length",
+        "sepal_width"
+      ],
+      "modelType": "Classification",
+      "algorithm": "RandomForestClassifier",
+      "hyperparameters": {
+        "@param:bootstrap": true,
+        "@param:n_jobs": -1
+      },
+      "reasoning": "Die Zielvariable 'species' ist die wahrscheinlichste Zielvariable aus den verfügbaren Spalten, da sie eine kategorische Variable darstellt. Die Verwendung von RandomForestClassifier als Algorithmus basiert auf der Fähigkeit dieses Modells, komplexe Beziehungen zwischen den Features zu erkennen und zu modellieren.",
+      "dataSourceName": "Iris-DataSet",
+      "excludedColumns": [],
+      "excludedFeatures": []
+    }
+  }
+},
+{
+  "timestamp": "2025-10-13T15:21:40.558Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:21:45.571Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:21:50.591Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:21:55.612Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:22:00.633Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:22:05.654Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:22:10.675Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:22:15.691Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:22:20.712Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:22:25.734Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:22:30.760Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:22:35.779Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:22:40.801Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:22:45.823Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:22:50.837Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:22:55.854Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:23:00.871Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:23:05.887Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:23:12.433Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:23:17.448Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:23:22.471Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:23:42.449Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:23:54.204Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:23:54.229Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:23:54.251Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:23:55.126Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:23:59.262Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:24:04.253Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:24:09.255Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:24:11.081Z",
+  "type": "data-statistics",
+  "data": "50de3be2-5cda-4e77-bfbf-b2cd0f5d0186"
+},
+{
+  "timestamp": "2025-10-13T15:24:11.966Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:24:14.256Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:24:19.266Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:24:24.253Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:24:29.246Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:24:34.250Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:24:39.260Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:24:44.260Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:24:49.262Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:24:54.254Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:25:03.554Z",
+  "type": "predict",
+  "data": {
+    "features": {
+      "petal_length": "5",
+      "petal_width": "5",
+      "sepal_length": "5",
+      "sepal_width": "5"
+    }
+  }
+},
+{
+  "timestamp": "2025-10-13T15:25:10.824Z",
+  "type": "predict",
+  "data": {
+    "features": {
+      "petal_length": "3",
+      "petal_width": "3",
+      "sepal_length": "3",
+      "sepal_width": "3"
+    }
+  }
+},
+{
+  "timestamp": "2025-10-13T15:25:15.614Z",
+  "type": "predict",
+  "data": {
+    "features": {
+      "petal_length": "1",
+      "petal_width": "1",
+      "sepal_length": "1",
+      "sepal_width": "1"
+    }
+  }
+},
+{
+  "timestamp": "2025-10-13T15:25:21.400Z",
+  "type": "predict",
+  "data": {
+    "features": {
+      "petal_length": "12",
+      "petal_width": "2",
+      "sepal_length": "2",
+      "sepal_width": "2"
+    }
+  }
+},
+{
+  "timestamp": "2025-10-13T15:25:25.134Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:26:22.062Z",
+  "type": "get-llm-status",
+  "data": {}
+},
+{
+  "timestamp": "2025-10-13T15:26:22.068Z",
+  "type": "get-all-projects",
+  "data": {}
+},
+{
+  "timestamp": "2025-10-13T15:26:22.083Z",
+  "type": "get-all-projects",
+  "data": {}
+},
+{
+  "timestamp": "2025-10-13T15:26:23.052Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:26:23.066Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:26:27.323Z",
+  "type": "get-llm-status",
+  "data": {}
+},
+{
+  "timestamp": "2025-10-13T15:26:27.331Z",
+  "type": "get-all-projects",
+  "data": {}
+},
+{
+  "timestamp": "2025-10-13T15:26:27.346Z",
+  "type": "get-all-projects",
+  "data": {}
+},
+{
+  "timestamp": "2025-10-13T15:26:27.835Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:26:27.845Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:26:41.130Z",
+  "type": "get-llm-status",
+  "data": {}
+},
+{
+  "timestamp": "2025-10-13T15:26:41.137Z",
+  "type": "get-all-projects",
+  "data": {}
+},
+{
+  "timestamp": "2025-10-13T15:26:41.156Z",
+  "type": "get-all-projects",
+  "data": {}
+},
+{
+  "timestamp": "2025-10-13T15:26:42.144Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:26:42.160Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:27:13.049Z",
+  "type": "get-all-projects",
+  "data": {}
+},
+{
+  "timestamp": "2025-10-13T15:27:18.918Z",
+  "type": "upload",
+  "data": {
+    "fieldname": "file",
+    "originalname": "iris_dataset_short.csv",
+    "encoding": "7bit",
+    "mimetype": "text/csv",
+    "destination": "C:\\Users\\jonas\\Desktop\\Text2ML\\ML-Platform\\LLM2ML-Platform\\backend\\uploads",
+    "filename": "iris_dataset_short-1760369238917-837.csv",
+    "path": "C:\\Users\\jonas\\Desktop\\Text2ML\\ML-Platform\\LLM2ML-Platform\\backend\\uploads\\iris_dataset_short-1760369238917-837.csv",
+    "size": 1980
+  }
+},
+{
+  "timestamp": "2025-10-13T15:27:25.628Z",
+  "type": "analyze-data",
+  "data": {
+    "filePath": "C:\\Users\\jonas\\Desktop\\Text2ML\\ML-Platform\\LLM2ML-Platform\\backend\\uploads\\iris_dataset_short-1760369238917-837.csv",
+    "excludedColumns": [],
+    "excludedFeatures": [],
+    "userPreferences": ""
+  }
+},
+{
+  "timestamp": "2025-10-13T15:28:30.593Z",
+  "type": "smart-create-project",
+  "data": {
+    "name": "iris_dataset_short-176036",
+    "csvFilePath": "C:\\Users\\jonas\\Desktop\\Text2ML\\ML-Platform\\LLM2ML-Platform\\backend\\uploads\\iris_dataset_short-1760369238917-837.csv",
+    "recommendations": {
+      "targetVariable": "species",
+      "features": [
+        "sepal_length",
+        "sepal_width",
+        "petal_length",
+        "petal_width"
+      ],
+      "modelType": "Classification",
+      "algorithm": "RandomForestClassifier",
+      "hyperparameters": {
+        "max_depth": 10,
+        "n_estimators": 100
+      },
+      "reasoning": "Die Zielvariable 'species' ist die wahrscheinlichste Zielvariable, da sie eine kategoriale Variable ist. Der beste Algorithmus für diese Aufgabe ist RandomForestClassifier, der aufgrund seiner Fähigkeit, komplexe Muster in den Daten zu erkennen, am besten geeignet ist.",
+      "dataSourceName": "Iris-Set",
+      "excludedColumns": [],
+      "excludedFeatures": []
+    }
+  }
+},
+{
+  "timestamp": "2025-10-13T15:28:33.614Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:28:38.637Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:28:43.658Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:28:48.684Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:28:53.720Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:28:58.744Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:29:03.765Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:29:08.803Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:29:13.836Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:29:18.867Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:29:23.893Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:29:28.931Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:29:33.962Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:29:38.984Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:29:44.008Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:29:49.026Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:29:54.051Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:29:59.081Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:30:04.109Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:30:09.142Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:30:14.165Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:30:19.195Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:30:24.233Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:30:36.743Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:30:45.541Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:30:45.555Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:30:45.569Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:30:46.906Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:30:50.280Z",
+  "type": "data-statistics",
+  "data": "ee8de815-95a1-4b67-b2ec-19129eefe599"
+},
+{
+  "timestamp": "2025-10-13T15:30:50.574Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:30:55.577Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:31:00.576Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:31:01.576Z",
+  "type": "predict",
+  "data": {
+    "features": {
+      "sepal_length": "6",
+      "sepal_width": "6",
+      "petal_length": "6",
+      "petal_width": "6"
+    }
+  }
+},
+{
+  "timestamp": "2025-10-13T15:31:05.571Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:31:10.578Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:31:15.579Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:31:20.579Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},
+{
+  "timestamp": "2025-10-13T15:31:25.575Z",
+  "type": "get-project",
+  "data": "[IncomingMessage Object]"
+},

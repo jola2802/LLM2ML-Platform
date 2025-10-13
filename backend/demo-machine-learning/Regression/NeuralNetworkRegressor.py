@@ -1,3 +1,38 @@
+# Generiere einen vollständigen Python-Code für Machine Learning Training:
+
+# **Code-Muster:** Muss dem bereitgestellten Muster folgen, einschließlich der Schritte Laden/Splitten, Instanziieren/Trainieren, Vorhersagen, Bewerten und Speichern.
+
+# **Projektname:** PyTorch_NeuralNet_Regressor_Demo
+
+# **Daten laden und aufteilen (Schritt 1):**
+# * **Laden:** Funktion 'load_and_split_data' verwenden. **ACHTUNG:** Der Parameter `problem_type` muss auf `'regression'` gesetzt werden. Die geladenen Daten müssen sofort in PyTorch-Tensoren umgewandelt und ein DataLoader erstellt werden.
+# * **Dateipfad:** 'dummy_regression_data.csv'
+# * **Features:** Alle Features
+
+# **Hyperparameter (Schritt 2):**
+# * **Algorithmus:** PyTorch Neural Network Regressor
+# * **Hyperparameter:** {
+#   "input_size": "dynamisch (X_train.shape[1])",
+#   "output_size": 1,
+#   "num_epochs": 10,
+#   "batch_size": 16,
+#   "learning_rate": 0.001
+# }
+# * **Zielspalte:** target
+
+# **Vorhersagen (Schritt 3):**
+# * **Bibliothek:** **PyTorch** Logik (`model_nn_reg(X_test_tensor_reg)`) verwenden, Ergebnisse in NumPy konvertieren.
+
+# **Performance-Metriken (Schritt 4):**
+# * **Test-Metriken:** Implementiere **alle Standardmetriken** für den definierten **Problemtyp** (Regression).
+#     * **Falls Klassifikation:** 'classification_report' und 'confusion_matrix' (Visualisiert mit 'seaborn').
+#     * **Falls Regression:** **'mean_squared_error'** ('MSE') und **'r2_score'**.
+#     * **Zusätzlich:** Gib den **Loss** während des Trainings aus und visualisiere die Vorhersagen gegen die tatsächlichen Werte (Streudiagramm).
+
+# **Speichern (Schritt 5):**
+# * **Bibliothek:** **'torch.save'** verwenden (Speichern des `state_dict`).
+# * **Dateiname:** 'neural_net_regressor.pth'.
+
 # Demo-Code für NeuralNetworkRegressor
 
 import pandas as pd
