@@ -1429,7 +1429,7 @@ const ProjectView: React.FC<ProjectViewProps> = ({ project, onBack, onProjectUpd
             {activeTab === 'performance' && renderPerformanceTab()}
             {activeTab === 'data' && renderDataTab()}
             {activeTab === 'code' && renderCodeTab()}
-            {activeTab === 'agents' && renderAgentsTab()}
+            {/* {activeTab === 'agents' && renderAgentsTab()} */}
             {activeTab === 'api' && renderApiTab()}
             {activeTab === 'export' && renderExportTab()}
           </ErrorBoundary>
