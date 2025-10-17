@@ -98,9 +98,9 @@ const SimpleAgentHistoryComponent: React.FC<{ projectId: string }> = ({ projectI
             <p className="text-xs text-slate-400 truncate">{activity.operation}</p>
           </div>
           <span className="text-xs text-slate-500">
-            {new Date(activity.startTime).toLocaleTimeString('de-DE', { 
-              hour: '2-digit', 
-              minute: '2-digit' 
+            {new Date(activity.startTime).toLocaleTimeString('de-DE', {
+              hour: '2-digit',
+              minute: '2-digit'
             })}
           </span>
         </div>
@@ -115,14 +115,14 @@ const ProjectView: React.FC<ProjectViewProps> = ({ project, onBack, onProjectUpd
   const [predictionResult, setPredictionResult] = useState<string | null>(null);
   const [isPredicting, setIsPredicting] = useState(false);
   const [predictionError, setPredictionError] = useState<string | null>(null);
-  
+
   // Code Editor States
   const [pythonCode, setPythonCode] = useState(project.pythonCode || '');
   const [isCodeModified, setIsCodeModified] = useState(false);
   const [isSavingCode, setIsSavingCode] = useState(false);
   const [isRetraining, setIsRetraining] = useState(false);
   const [codeMessage, setCodeMessage] = useState<string | null>(null);
-  
+
   // Hyperparameter States
   const [currentHyperparameters, setCurrentHyperparameters] = useState<{ [key: string]: any }>(
     project.hyperparameters || {}
@@ -154,7 +154,7 @@ const ProjectView: React.FC<ProjectViewProps> = ({ project, onBack, onProjectUpd
   const handleInsightsUpdate = useCallback((insights: PerformanceInsightsType) => {
     const updatedProject = { ...currentProject, performanceInsights: insights };
     setCurrentProject(updatedProject);
-    
+
     if (onProjectUpdate) {
       onProjectUpdate(updatedProject);
     }
@@ -163,7 +163,7 @@ const ProjectView: React.FC<ProjectViewProps> = ({ project, onBack, onProjectUpd
   const loadDataStatistics = useCallback(async () => {
     setIsLoadingData(true);
     setDataError(null);
-    
+
     try {
       const statistics = await apiService.getDataStatistics(project.id);
       setDataStatistics(statistics);
@@ -209,7 +209,7 @@ const ProjectView: React.FC<ProjectViewProps> = ({ project, onBack, onProjectUpd
         try {
           const latest = await apiService.getProject(project.id);
           setCurrentProject(latest as any);
-        } catch (e) {}
+        } catch (e) { }
       }
     };
     refreshOnTab();
@@ -347,7 +347,7 @@ const ProjectView: React.FC<ProjectViewProps> = ({ project, onBack, onProjectUpd
       default: return 'text-slate-400';
     }
   }, []);
-  
+
   const handleInputChange = (feature: string, value: string) => {
     setPredictionInput(prev => ({ ...prev, [feature]: value }));
   };
@@ -364,7 +364,7 @@ const ProjectView: React.FC<ProjectViewProps> = ({ project, onBack, onProjectUpd
         const numberValue = parseFloat(value);
         processedInput[key] = isNaN(numberValue) ? value : numberValue.toString();
       });
-      
+
       const response = await apiService.predict(project.id, processedInput);
       setPredictionResult(response.prediction);
     } catch (error) {
@@ -382,22 +382,22 @@ const ProjectView: React.FC<ProjectViewProps> = ({ project, onBack, onProjectUpd
 
   const handleSaveCode = async () => {
     if (!isCodeModified) return;
-    
+
     setIsSavingCode(true);
     setCodeMessage(null);
     try {
       // Speichere Code und Hyperparameter
       await apiService.updateProjectCodeAndHyperparameters(project.id, pythonCode, currentHyperparameters);
-      
+
       // Update project in parent component mit Hyperparametern
       if (onProjectUpdate) {
-        onProjectUpdate({ 
-          ...project, 
+        onProjectUpdate({
+          ...project,
           pythonCode,
-          hyperparameters: currentHyperparameters 
+          hyperparameters: currentHyperparameters
         });
       }
-      
+
       setIsCodeModified(false);
       setCodeMessage('✅ Code und Hyperparameter erfolgreich gespeichert');
     } catch (error) {
@@ -413,7 +413,7 @@ const ProjectView: React.FC<ProjectViewProps> = ({ project, onBack, onProjectUpd
     try {
       await apiService.retrainProject(project.id);
       setCodeMessage('🚀 Re-Training gestartet! Verfolgen Sie den Fortschritt im Dashboard.');
-      
+
       // Update project status in parent component
       if (onProjectUpdate) {
         onProjectUpdate({ ...project, status: ProjectStatus['Re-Training'] });
@@ -444,9 +444,9 @@ const ProjectView: React.FC<ProjectViewProps> = ({ project, onBack, onProjectUpd
         convertedHyperparameters[key] = value;
       }
     }
-    
+
     setCurrentHyperparameters(convertedHyperparameters);
-    
+
     // Automatisch den Python-Code mit den neuen Hyperparametern aktualisieren
     const updatedCode = updateHyperparametersInCode(pythonCode, convertedHyperparameters);
     setPythonCode(updatedCode);
@@ -456,7 +456,7 @@ const ProjectView: React.FC<ProjectViewProps> = ({ project, onBack, onProjectUpd
   const updateHyperparametersInCode = (code: string, hyperparameters: { [key: string]: any }): string => {
     // JSON-String für Hyperparameter erstellen (mit korrekten Datentypen)
     const hyperparametersJson = JSON.stringify(hyperparameters);
-    
+
     // Suche nach verschiedenen hyperparameters-Formaten und ersetze sie
     const lines = code.split('\n');
     let found = false;
@@ -473,7 +473,7 @@ const ProjectView: React.FC<ProjectViewProps> = ({ project, onBack, onProjectUpd
       }
       return line;
     });
-    
+
     // Falls keine hyperparameters-Zeile gefunden wurde, füge sie hinzu
     if (!found) {
       // Suche nach der main()-Funktion und füge hyperparameters hinzu
@@ -484,7 +484,7 @@ const ProjectView: React.FC<ProjectViewProps> = ({ project, onBack, onProjectUpd
           break;
         }
       }
-      
+
       // Falls main() nicht gefunden wurde, suche nach anderen Stellen
       if (!found) {
         // Suche nach der target_variable oder features Definition
@@ -497,7 +497,7 @@ const ProjectView: React.FC<ProjectViewProps> = ({ project, onBack, onProjectUpd
         }
       }
     }
-    
+
     return updatedLines.join('\n');
   };
 
@@ -507,10 +507,10 @@ const ProjectView: React.FC<ProjectViewProps> = ({ project, onBack, onProjectUpd
 
   const performanceData = useMemo(() => {
     if (!project.performanceMetrics) return [];
-    
+
     // Debug: Zeige alle verfügbaren Metriken in der Konsole
     console.log('Available Performance Metrics:', project.performanceMetrics);
-    
+
     return Object.entries(project.performanceMetrics).map(([name, value]) => {
       const formattedValue = typeof value === 'number' ? value.toFixed(4) : 'NaN';
       // Verbesserte Namensformatierung für bessere Lesbarkeit
@@ -521,7 +521,7 @@ const ProjectView: React.FC<ProjectViewProps> = ({ project, onBack, onProjectUpd
         .replace(/Mse/g, 'MSE')
         .replace(/Rmse/g, 'RMSE')
         .replace(/R2/g, 'R²');
-      
+
       return {
         name: displayName,
         value: parseFloat(formattedValue),
@@ -555,22 +555,22 @@ const ProjectView: React.FC<ProjectViewProps> = ({ project, onBack, onProjectUpd
           >
             {isPredicting ? <Spinner /> : 'Run Prediction'}
           </button>
-           {project.status !== ProjectStatus.Completed && 
+          {project.status !== ProjectStatus.Completed &&
             <p className="text-center text-yellow-400 text-sm mt-2">Predictions are disabled for projects not in 'Completed' status.</p>}
         </div>
       </div>
       <div className="bg-slate-800 p-6 rounded-lg flex flex-col items-center justify-center">
         <h3 className="text-xl font-semibold text-white mb-4">Prediction Result</h3>
         <div className="flex-grow flex items-center justify-center w-full">
-            {isPredicting && <Spinner size="lg"/>}
-            {predictionError && <p className="text-red-400 text-center">{predictionError}</p>}
-            {predictionResult && (
-                <div className="text-center">
-                    <p className="text-sm text-slate-400 mb-2">Predicted {project.targetVariable.replace(/_/g, ' ')}:</p>
-                    <p className="text-4xl font-bold text-blue-400 break-all">{predictionResult}</p>
-                </div>
-            )}
-            {!isPredicting && !predictionError && !predictionResult && <p className="text-slate-500">Result will appear here</p>}
+          {isPredicting && <Spinner size="lg" />}
+          {predictionError && <p className="text-red-400 text-center">{predictionError}</p>}
+          {predictionResult && (
+            <div className="text-center">
+              <p className="text-sm text-slate-400 mb-2">Predicted {project.targetVariable.replace(/_/g, ' ')}:</p>
+              <p className="text-4xl font-bold text-blue-400 break-all">{predictionResult}</p>
+            </div>
+          )}
+          {!isPredicting && !predictionError && !predictionResult && <p className="text-slate-500">Result will appear here</p>}
         </div>
       </div>
     </div>
@@ -669,24 +669,24 @@ const ProjectView: React.FC<ProjectViewProps> = ({ project, onBack, onProjectUpd
               <div className="bg-slate-800/50 rounded-lg p-6 text-center">
                 <h4 className="text-slate-400 text-sm font-medium mb-2">Gesamt-Score</h4>
                 <div className="text-4xl font-bold text-white mb-2">
-                  {currentProject.performanceInsights?.overallScore ? 
-                    Number(currentProject.performanceInsights.overallScore).toFixed(1) : 
+                  {currentProject.performanceInsights?.overallScore ?
+                    Number(currentProject.performanceInsights.overallScore).toFixed(1) :
                     'N/A'
                   }/10
                 </div>
                 <div className="w-full bg-slate-700 rounded-full h-2">
                   <div
                     className="bg-gradient-to-r from-blue-500 to-purple-500 h-2 rounded-full transition-all duration-500"
-                    style={{ 
-                      width: `${currentProject.performanceInsights?.overallScore ? 
-                        (Number(currentProject.performanceInsights.overallScore) / 10) * 100 : 
+                    style={{
+                      width: `${currentProject.performanceInsights?.overallScore ?
+                        (Number(currentProject.performanceInsights.overallScore) / 10) * 100 :
                         0
-                      }%` 
+                        }%`
                     }}
                   ></div>
                 </div>
               </div>
-              
+
               <div className="bg-slate-800/50 rounded-lg p-6 text-center">
                 <h4 className="text-slate-400 text-sm font-medium mb-2">Performance-Grade</h4>
                 <div className={`inline-flex items-center px-4 py-2 rounded-lg border text-lg font-semibold ${getGradeColor(currentProject.performanceInsights?.performanceGrade || 'Unknown')}`}>
@@ -819,7 +819,7 @@ const ProjectView: React.FC<ProjectViewProps> = ({ project, onBack, onProjectUpd
             {/* Evaluation Metadata */}
             <div className="bg-gray-800/30 rounded-lg p-4 text-center">
               <p className="text-gray-400 text-sm">
-                Evaluiert am {new Date(currentProject.performanceInsights.evaluatedAt).toLocaleString('de-DE')} 
+                Evaluiert am {new Date(currentProject.performanceInsights.evaluatedAt).toLocaleString('de-DE')}
                 von {currentProject.performanceInsights.evaluatedBy} (v{currentProject.performanceInsights.version})
               </p>
             </div>
@@ -842,12 +842,12 @@ const ProjectView: React.FC<ProjectViewProps> = ({ project, onBack, onProjectUpd
                     contentStyle={{ backgroundColor: '#1f2937', border: '1px solid #374151' }}
                     labelStyle={{ color: '#d1d5db' }}
                   />
-                  <Legend wrapperStyle={{ color: '#d1d5db' }}/>
+                  <Legend wrapperStyle={{ color: '#d1d5db' }} />
                   <Bar dataKey="value" fill="#60a5fa" />
                 </BarChart>
               </ResponsiveContainer>
             </div>
-            
+
             {/* Alle Performance-Metriken als Karten anzeigen */}
             <div className="mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {performanceData.map((metric) => (
@@ -952,7 +952,7 @@ const ProjectView: React.FC<ProjectViewProps> = ({ project, onBack, onProjectUpd
               {showHyperparameterEditor ? '🔽 Ausblenden' : '⚙️ Anzeigen'}
             </button>
           </div>
-          
+
           {showHyperparameterEditor && (
             <HyperparameterEditor
               algorithm={project.algorithm}
@@ -986,7 +986,7 @@ const ProjectView: React.FC<ProjectViewProps> = ({ project, onBack, onProjectUpd
             )}
           </div>
         </div>
-        
+
         <textarea
           value={pythonCode}
           onChange={(e) => handleCodeChange(e.target.value)}
@@ -1012,26 +1012,26 @@ const ProjectView: React.FC<ProjectViewProps> = ({ project, onBack, onProjectUpd
     const sampleBody = project.features.reduce((acc, f) => ({ ...acc, [f]: "sample_value" }), {});
     const curlCommand = `curl -X POST 'http://localhost:3001/api/predict/${project.id}' \\
     -H 'Content-Type: application/json' \\
-    -d '${JSON.stringify({ inputs: sampleBody }, null, 2)}'`; 
+    -d '${JSON.stringify({ inputs: sampleBody }, null, 2)}'`;
 
     return (
-        <div className="space-y-6">
-            <div>
-                <h3 className="text-lg font-medium text-white">API Endpoint</h3>
-                <div className="mt-2 p-3 bg-gray-900 rounded-md font-mono text-sm text-blue-300">
-                    POST http://localhost:3001/api/predict/{project.id}
-                </div>
-            </div>
-             <div>
-                <h3 className="text-lg font-medium text-white">Example cURL Request</h3>
-                <pre className="mt-2 p-4 bg-gray-900 rounded-md text-sm text-gray-300 overflow-x-auto">
-                    <code>{curlCommand}</code>
-                </pre>
-            </div>
+      <div className="space-y-6">
+        <div>
+          <h3 className="text-lg font-medium text-white">API Endpoint</h3>
+          <div className="mt-2 p-3 bg-gray-900 rounded-md font-mono text-sm text-blue-300">
+            POST http://localhost:3001/api/predict/{project.id}
+          </div>
         </div>
+        <div>
+          <h3 className="text-lg font-medium text-white">Example cURL Request</h3>
+          <pre className="mt-2 p-4 bg-gray-900 rounded-md text-sm text-gray-300 overflow-x-auto">
+            <code>{curlCommand}</code>
+          </pre>
+        </div>
+      </div>
     );
   };
-  
+
   const handleDownloadModel = async () => {
     try {
       await apiService.downloadModel(project.id, project.name);
@@ -1043,91 +1043,54 @@ const ProjectView: React.FC<ProjectViewProps> = ({ project, onBack, onProjectUpd
 
   const renderExportTab = () => (
     <div className="space-y-6">
-        <div>
-            <h3 className="text-lg font-medium text-white mb-4">Trainiertes Modell herunterladen</h3>
-            {project.status === ProjectStatus.Completed && project.modelArtifact ? (
-                <button
-                    onClick={handleDownloadModel}
-                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 focus:ring-green-500 transition-colors"
-                >
-                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                    </svg>
-                    Modell herunterladen (.pkl)
-                </button>
-            ) : (
-                <div className="text-gray-500 text-center py-4 bg-gray-800 rounded-lg">
-                    {project.status === ProjectStatus.Training ? 
-                        'Das Modell wird noch trainiert...' : 
-                        project.status === ProjectStatus['Re-Training'] ?
-                        'Das Modell wird re-trainiert...' :
-                        'Kein trainiertes Modell verfügbar'
-                    }
-                </div>
-            )}
-        </div>
-        
-        {/* Projekt-Informationen */}
-        {project.recommendations && (
-          <div className="bg-gradient-to-r from-purple-900/30 to-blue-900/30 border border-purple-500/50 rounded-lg p-4">
-            <h4 className="text-purple-400 font-medium mb-3">🤖 Ursprüngliche KI-Empfehlungen</h4>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-              <div>
-                <p className="text-gray-300"><strong>Algorithmus:</strong> {project.recommendations.algorithm}</p>
-                <p className="text-gray-300"><strong>Model-Typ:</strong> {project.recommendations.modelType}</p>
-              </div>
-              <div>
-                <p className="text-gray-300"><strong>Features:</strong> {project.recommendations.features?.length || 0}</p>
-                <p className="text-gray-300"><strong>Zielvariable:</strong> {project.recommendations.targetVariable}</p>
-              </div>
-            </div>
-            <details className="mt-3">
-              <summary className="cursor-pointer text-purple-200 hover:text-purple-100 text-sm">KI-Begründung anzeigen</summary>
-              <p className="mt-2 text-purple-100 text-xs bg-purple-950/30 rounded p-2">
-                {project.recommendations.reasoning || 'Keine Begründung verfügbar'}
-              </p>
-            </details>
+      <div>
+        <h3 className="text-lg font-medium text-white mb-4">Trainiertes Modell herunterladen</h3>
+        {project.status === ProjectStatus.Completed && project.modelArtifact ? (
+          <button
+            onClick={handleDownloadModel}
+            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 focus:ring-green-500 transition-colors"
+          >
+            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            Modell herunterladen (.pkl)
+          </button>
+        ) : (
+          <div className="text-gray-500 text-center py-4 bg-gray-800 rounded-lg">
+            {project.status === ProjectStatus.Training ?
+              'Das Modell wird noch trainiert...' :
+              project.status === ProjectStatus['Re-Training'] ?
+                'Das Modell wird re-trainiert...' :
+                'Kein trainiertes Modell verfügbar'
+            }
           </div>
         )}
+      </div>
+
+      {/* Projekt-Informationen */}
+      {project.recommendations && (
+        <div className="bg-gradient-to-r from-purple-900/30 to-blue-900/30 border border-purple-500/50 rounded-lg p-4">
+          <h4 className="text-purple-400 font-medium mb-3">🤖 Ursprüngliche KI-Empfehlungen</h4>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+            <div>
+              <p className="text-gray-300"><strong>Algorithmus:</strong> {project.recommendations.algorithm}</p>
+              <p className="text-gray-300"><strong>Model-Typ:</strong> {project.recommendations.modelType}</p>
+            </div>
+            <div>
+              <p className="text-gray-300"><strong>Features:</strong> {project.recommendations.features?.length || 0}</p>
+              <p className="text-gray-300"><strong>Zielvariable:</strong> {project.recommendations.targetVariable}</p>
+            </div>
+          </div>
+          <details className="mt-3">
+            <summary className="cursor-pointer text-purple-200 hover:text-purple-100 text-sm">KI-Begründung anzeigen</summary>
+            <p className="mt-2 text-purple-100 text-xs bg-purple-950/30 rounded p-2">
+              {project.recommendations.reasoning || 'Keine Begründung verfügbar'}
+            </p>
+          </details>
+        </div>
+      )}
     </div>
   );
-
-  // const renderAgentsTab = () => (
-  //   <div className="space-y-6">
-  //     {/* Aktueller Agent */}
-  //     <div className="bg-slate-800/50 rounded-lg border border-slate-600/50 p-6">
-  //       <h3 className="text-lg font-semibold text-white mb-4 flex items-center">
-  //         <span className="mr-2">🤖</span>Agent-Status
-  //       </h3>
-  //       <AgentStatusIndicator 
-  //         projectId={project.id} 
-  //         showDetails={true}
-  //         className="bg-slate-700/50 rounded-lg p-4"
-  //       />
-  //     </div>
-
-  //     {/* Vereinfachte Agent-Historie */}
-  //     <div className="bg-slate-800/50 rounded-lg border border-slate-600/50 p-6">
-  //       <h4 className="text-white font-medium mb-4 flex items-center">
-  //         <span className="mr-2">📋</span>Agent-Aktivitäten
-  //       </h4>
-  //       <p className="text-slate-400 text-sm mb-4">
-  //         Zeigt welche Agents bereits am Projekt gearbeitet haben und welcher gerade aktiv ist.
-  //       </p>
-  //       <SimpleAgentHistoryComponent projectId={project.id} />
-  //     </div>
-
-  //     {/* Hilfe-Text */}
-  //     <div className="bg-blue-900/20 border border-blue-500/50 rounded-lg p-4">
-  //       <h4 className="text-blue-400 font-medium mb-2">💡 Agent-System</h4>
-  //       <ul className="text-blue-200 text-sm space-y-1">
-  //         <li>• <strong>Aktiver Agent:</strong> Der Agent, der gerade am Projekt arbeitet</li>
-  //         <li>• <strong>Status:</strong> Zeigt an, ob ein Agent gerade eine Aufgabe bearbeitet</li>
-  //         <li>• <strong>Historie:</strong> Überblick über alle Agents, die am Projekt beteiligt waren</li>
-  //       </ul>
-  //     </div>
-  //   </div>
-  // );
 
   const renderDataTab = () => {
     return (
@@ -1184,7 +1147,7 @@ const ProjectView: React.FC<ProjectViewProps> = ({ project, onBack, onProjectUpd
               <h4 className="text-white font-medium mb-4 flex items-center">
                 <span className="mr-2">📋</span>Grundlegende Dateiinformationen
               </h4>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div className="bg-gray-700/50 rounded-lg p-4 text-center">
                   <h5 className="text-gray-400 text-sm font-medium mb-1">Dateiname</h5>
@@ -1201,7 +1164,7 @@ const ProjectView: React.FC<ProjectViewProps> = ({ project, onBack, onProjectUpd
                 <div className="bg-gray-700/50 rounded-lg p-4 text-center">
                   <h5 className="text-gray-400 text-sm font-medium mb-1">Datentypen</h5>
                   <p className="text-purple-400 font-semibold">
-                    {Object.values(dataStatistics.basicInfo.dataTypes).filter(t => t === 'numeric').length}N / 
+                    {Object.values(dataStatistics.basicInfo.dataTypes).filter(t => t === 'numeric').length}N /
                     {Object.values(dataStatistics.basicInfo.dataTypes).filter(t => t === 'categorical').length}C
                   </p>
                 </div>
@@ -1213,7 +1176,7 @@ const ProjectView: React.FC<ProjectViewProps> = ({ project, onBack, onProjectUpd
               <h4 className="text-white font-medium mb-4 flex items-center">
                 <span className="mr-2">🔢</span>Spalten-Analyse
               </h4>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {dataStatistics.columnAnalysis.map((column: any, index: number) => (
                   <div key={column.name} className="bg-gray-700/50 rounded-lg p-4">
@@ -1253,7 +1216,7 @@ const ProjectView: React.FC<ProjectViewProps> = ({ project, onBack, onProjectUpd
               <h4 className="text-white font-medium mb-4 flex items-center">
                 <span className="mr-2">⚙️</span>ML-Konfiguration
               </h4>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <h5 className="text-gray-400 text-sm font-medium mb-3">Algorithmus-Details</h5>
@@ -1272,7 +1235,7 @@ const ProjectView: React.FC<ProjectViewProps> = ({ project, onBack, onProjectUpd
                     </div>
                   </div>
                 </div>
-                
+
                 <div>
                   <h5 className="text-gray-400 text-sm font-medium mb-3">Feature-Auswahl</h5>
                   <div className="space-y-3">
@@ -1302,7 +1265,7 @@ const ProjectView: React.FC<ProjectViewProps> = ({ project, onBack, onProjectUpd
               <h4 className="text-white font-medium mb-4 flex items-center">
                 <span className="mr-2">👀</span>Datenvorschau (erste {dataStatistics.sampleData.rows.length} Zeilen)
               </h4>
-              
+
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
@@ -1349,20 +1312,20 @@ const ProjectView: React.FC<ProjectViewProps> = ({ project, onBack, onProjectUpd
     );
   };
 
-  const tabs: {id: Tab, name: string, badge?: string}[] = [
-      { id: 'predict', name: 'Predict' },
-      { id: 'performance', name: 'Performance' },
-      { id: 'data', name: 'Data Insights' },
-      { id: 'code', name: 'Code Editor' },
-      // { id: 'agents', name: 'Agents' },
-      { id: 'api', name: 'API Info' },
-      { id: 'export', name: 'Export' }
+  const tabs: { id: Tab, name: string, badge?: string }[] = [
+    { id: 'predict', name: 'Predict' },
+    { id: 'performance', name: 'Performance' },
+    { id: 'data', name: 'Data Insights' },
+    { id: 'code', name: 'Code Editor' },
+    // { id: 'agents', name: 'Agents' },
+    { id: 'api', name: 'API Info' },
+    { id: 'export', name: 'Export' }
   ];
 
   const getTabClasses = (tab: Tab) => {
     const baseClasses = 'px-4 py-2 text-sm font-medium rounded-md transition-colors';
-    return activeTab === tab 
-      ? `${baseClasses} bg-blue-600 text-white` 
+    return activeTab === tab
+      ? `${baseClasses} bg-blue-600 text-white`
       : `${baseClasses} text-slate-400 hover:text-white hover:bg-slate-800`;
   };
 
@@ -1382,11 +1345,10 @@ const ProjectView: React.FC<ProjectViewProps> = ({ project, onBack, onProjectUpd
               <h2 className="text-3xl font-bold tracking-tight text-white">{project.name}</h2>
               <p className="text-gray-400 mt-1">Model Type: {project.modelType}</p>
               <div className="flex items-center mt-2 space-x-4">
-                <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                  project.status === ProjectStatus.Completed ? 'bg-emerald-900/50 text-emerald-400 border border-emerald-500/50' :
-                  project.status === ProjectStatus.Training || project.status === ProjectStatus['Re-Training'] ? 'bg-blue-900/50 text-blue-400 border border-blue-500/50' :
-                  'bg-red-900/50 text-red-400 border border-red-500/50'
-                }`}>
+                <span className={`px-3 py-1 rounded-full text-xs font-medium ${project.status === ProjectStatus.Completed ? 'bg-emerald-900/50 text-emerald-400 border border-emerald-500/50' :
+                    project.status === ProjectStatus.Training || project.status === ProjectStatus['Re-Training'] ? 'bg-blue-900/50 text-blue-400 border border-blue-500/50' :
+                      'bg-red-900/50 text-red-400 border border-red-500/50'
+                  }`}>
                   {project.status}
                 </span>
                 {project.algorithm && (
@@ -1403,11 +1365,10 @@ const ProjectView: React.FC<ProjectViewProps> = ({ project, onBack, onProjectUpd
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`${
-                  activeTab === tab.id
+                className={`${activeTab === tab.id
                     ? 'border-blue-500 text-blue-400'
                     : 'border-transparent text-gray-400 hover:text-gray-200 hover:border-gray-500'
-                } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors`}
+                  } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors`}
               >
                 {tab.name}
                 {tab.id === 'code' && isCodeModified && (
@@ -1418,7 +1379,7 @@ const ProjectView: React.FC<ProjectViewProps> = ({ project, onBack, onProjectUpd
             ))}
           </nav>
         </div>
-        
+
         <div className="mt-8">
           <ErrorBoundary fallback={
             <div className="bg-red-900/30 border border-red-500/50 rounded-lg p-6 text-center">

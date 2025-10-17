@@ -1,3 +1,4 @@
+export const codeTemplate = `
 # ==============================================================================
 # 🎯 Projekt-Einstellungen
 # ==============================================================================
@@ -169,7 +170,7 @@ def evaluate_model(model, X_train, y_train, X_test, y_test, problem_type: str, l
     y_pred_test = model.predict(X_test)
     y_pred_train = model.predict(X_train)
 
-    print(f'\n--- {model.__class__.__name__} Bewertung (Test-Set) ---')
+    print(f'--- {model.__class__.__name__} Bewertung (Test-Set) ---')
     
     # Für Klassifikation: Labels zurückkonvertieren für bessere Lesbarkeit
     if problem_type == 'classification' and label_encoder is not None:
@@ -189,7 +190,7 @@ def evaluate_model(model, X_train, y_train, X_test, y_test, problem_type: str, l
         print(f"Recall: {recall:.4f}")
         print(f"F1 Score: {f1:.4f}")
         
-        print("\n--- Klassifikationsbericht (Test-Set) ---")
+        print("--- Klassifikationsbericht (Test-Set) ---")
         print(classification_report(y_test, y_pred_test))
         
         # Konfusionsmatrix visualisieren
@@ -230,7 +231,7 @@ def evaluate_model(model, X_train, y_train, X_test, y_test, problem_type: str, l
 
 def save_model(model, save_path: str, model_lib: str, label_encoder=None):
     """Speichert das trainierte Modell und optional den Label-Encoder (Schritt 5)."""
-    # print(f"\nSpeichere Modell unter: {save_path}")
+    # print(f"Speichere Modell unter: {save_path}")
     
     if model_lib in ['sklearn', 'xgboost']:
         joblib.dump(model, save_path)
@@ -310,7 +311,7 @@ if __name__ == "__main__":
         
     elif model_lib == 'pytorch':
         # PyTorch (Komplexer, erfordert eigene Architektur und Loop)
-        print("\n--- Starte PyTorch-Training ---")
+        print("--- Starte PyTorch-Training ---")
         
         if 'torch' not in globals():
              print("FEHLER: PyTorch-Modul nicht importiert. Prüfen Sie die Installation.")
@@ -383,7 +384,7 @@ if __name__ == "__main__":
                 recall = recall_score(y_test_np, y_pred_np, average='macro')
                 f1 = f1_score(y_test_np, y_pred_np, average='macro')
 
-                print('\n--- Neural Network Klassifikation Bewertung ---')
+                print('--- Neural Network Klassifikation Bewertung ---')
                 print(classification_report(y_test_np, y_pred_np))
 
                 print(f"Accuracy: {accuracy:.4f}")
@@ -406,7 +407,7 @@ if __name__ == "__main__":
                 mse = mean_squared_error(y_test_np, y_pred_np)
                 r2 = r2_score(y_test_np, y_pred_np)
                 
-                print('\n--- Neural Network Regression Bewertung ---')
+                print('--- Neural Network Regression Bewertung ---')
                 print(f"MSE: {mse:.4f}")
                 print(f"R2: {r2:.4f}")
 
@@ -427,4 +428,5 @@ if __name__ == "__main__":
     else:
         print("FEHLER: Unbekannter model_lib. Bitte auf 'sklearn', 'xgboost' oder 'pytorch' setzen.")
 
-    print(f"\n--- ML-Projekt: {project_name} ABGESCHLOSSEN ---")
+    print(f"--- ML-Projekt: {project_name} ABGESCHLOSSEN ---")
+    `.trim();

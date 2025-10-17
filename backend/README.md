@@ -190,7 +190,7 @@ curl -X POST http://localhost:3000/api/explore-data \
 - `data_exploration.js`: Automatische Datenexploration und LLM-Zusammenfassung
 
 ### Python Code Generation
-- `python_generator.js`: LLM-basierte Python-Script-Generierung
+- `algorithms.js`: Auflistung aller Algorithmen
 - `code_exec.js`: Python-Script-Ausführung und Vorhersagen
 
 ### Datenbank

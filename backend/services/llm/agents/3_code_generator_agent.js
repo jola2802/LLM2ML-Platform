@@ -7,7 +7,8 @@
 
 import { BaseWorker } from './0_base_agent.js';
 import { CODE_GENERATION_PROMPT, CODE_GENERATOR_TEST_PROMPT, formatPrompt } from './prompts.js';
-import { ALGORITHMS } from '../../execution/python_generator.js';
+import { ALGORITHMS } from '../../execution/algorithms.js';
+import { codeTemplate } from '../../execution/template_code.js';
 
 export class CodeGeneratorWorker extends BaseWorker {
   constructor() {
@@ -16,12 +17,12 @@ export class CodeGeneratorWorker extends BaseWorker {
 
   async execute(pipelineState) {
     this.log('info', 'Starte Code-Generierung');
-    
+
     const { project, results } = pipelineState;
 
     // Füge die richtige Model-Library hinzu
     project.llmRecommendations.hyperparameters.library = ALGORITHMS[project.llmRecommendations.algorithm].library;
-    
+
     // Prüfe, ob Hyperparameter verfügbar sind
     if (!results.HYPERPARAMETER_OPTIMIZER) {
       throw new Error('Hyperparameter-Vorschläge erforderlich für Code-Generierung');
@@ -32,7 +33,7 @@ export class CodeGeneratorWorker extends BaseWorker {
         project,
         results.HYPERPARAMETER_OPTIMIZER
       );
-      
+
       this.log('success', 'Code-Generierung erfolgreich abgeschlossen');
       return pythonCode;
 
@@ -44,14 +45,8 @@ export class CodeGeneratorWorker extends BaseWorker {
 
   // Use template_code.py to generate the code; therefore adapt the header in the template file
   async generatePythonCode(project, hyperparameterSuggestions) {
-    // Get code from template_code.py
-    const fs = await import('fs');
-    const path = await import('path');
-    const { fileURLToPath } = await import('url');
-    const __filename = fileURLToPath(import.meta.url);
-    const __dirname = path.dirname(__filename);
-    const templatePath = path.join(__dirname, '../../python/template_code.py');
-    const code = await fs.promises.readFile(templatePath, 'utf8');
+    // Get code from template_code.js
+    const code = codeTemplate;
 
     // Validate the hyperparameters based on the algorithm
     // const validatedHyperparameters = this.validateHyperparameters(hyperparameterSuggestions, project.llmRecommendations.algorithm);
@@ -73,20 +68,20 @@ export class CodeGeneratorWorker extends BaseWorker {
     // Format hyperparameters as a proper string representation
     const hyperParams = project.llmRecommendations.hyperparameters.params || hyperparameterSuggestions.hyperparameters;
     // Extract inner params if nested under algorithm name
-    const params = hyperParams[Object.keys(hyperParams)[0]] && 
-                  typeof hyperParams[Object.keys(hyperParams)[0]] === 'object' ? 
-                  hyperParams[Object.keys(hyperParams)[0]] : 
-                  hyperParams;
+    const params = hyperParams[Object.keys(hyperParams)[0]] &&
+      typeof hyperParams[Object.keys(hyperParams)[0]] === 'object' ?
+      hyperParams[Object.keys(hyperParams)[0]] :
+      hyperParams;
     const formattedParams = JSON.stringify(params, null, 4);
-    
+
     adaptedCode = adaptedCode.replace('MODEL_PARAMS', formattedParams);
-    adaptedCode = adaptedCode.replace('MODEL_SAVE_PATH', "model_"+project.id+".pkl");
+    adaptedCode = adaptedCode.replace('MODEL_SAVE_PATH', "model_" + project.id + ".pkl");
     return adaptedCode;
   }
 
   validateHyperparameters(hyperparameterSuggestions, algorithm) {
     // TODO: Implement this
-    
+
   }
 
   async test() {

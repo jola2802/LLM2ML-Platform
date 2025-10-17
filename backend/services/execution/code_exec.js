@@ -3,6 +3,8 @@ import path from 'path';
 import { exec } from 'child_process';
 import { promisify } from 'util';
 import { callLLMAPI } from '../llm/api/llm.js';
+import { codeTemplate } from './template_code.js';
+import { predictionScript } from './template_predict.js';
 
 import fsSync from 'fs';
 import crypto from 'crypto';
@@ -23,7 +25,7 @@ function generateProjectHash(project) {
     features: project.features,
     targetVariable: project.targetVariable
   };
-  
+
   const dataString = JSON.stringify(relevantData, Object.keys(relevantData).sort());
   return crypto.createHash('sha256').update(dataString).digest('hex');
 }
@@ -37,9 +39,9 @@ function handleError(error, context, attempt = null) {
     timestamp: new Date().toISOString(),
     stack: error.stack
   };
-  
+
   console.error(`[${context}] Fehler${attempt ? ` (Versuch ${attempt})` : ''}:`, errorInfo);
-  
+
   // Log spezifische Fehlertypen
   if (error.message.includes('ENOENT')) {
     console.error(`[${context}] Datei nicht gefunden`);
@@ -50,7 +52,7 @@ function handleError(error, context, attempt = null) {
   } else if (error.message.includes('timeout')) {
     console.error(`[${context}] Timeout`);
   }
-  
+
   return errorInfo;
 }
 
@@ -112,9 +114,9 @@ ${pythonCode}
 KORRIGIERTER CODE (gib nur den korrigierten Code zurück, ohne Erklärungen):`;
 
     console.log(`LLM-Korrektur - Versuch ${attempt}:`, errorMessage.substring(0, 100) + '...');
-    
+
     const response = await callLLMAPI(prompt, null, 'mistral:latest');
-    
+
     // Stelle sicher, dass wir den Python-Code als String zurückgeben
     let correctedCode;
     if (response && response.result) {
@@ -124,9 +126,9 @@ KORRIGIERTER CODE (gib nur den korrigierten Code zurück, ohne Erklärungen):`;
     } else {
       throw new Error('LLM gab keinen gültigen Python-Code zurück');
     }
-    
+
     correctedCode = correctedCode.trim();
-    
+
     // Prüfe ob der korrigierte Code tatsächlich anders ist
     if (correctedCode && correctedCode !== pythonCode) {
       console.log(`LLM-Korrektur erfolgreich (Versuch ${attempt})`);
@@ -172,12 +174,12 @@ function applyDeterministicFixes(pythonCode, errorText) {
 export async function executePythonScript(scriptPath, scriptDir, venvDir, maxRetries = 3) {
   let currentCode = await fs.readFile(scriptPath, 'utf8');
   let attempt = 0;
-  
+
   while (attempt < maxRetries) {
     try {
       attempt++;
       console.log(`Python Script Ausführung - Versuch ${attempt}/${maxRetries}`);
-      
+
       // Code validieren und korrigieren
       try {
         const validatedCode = await validatePythonCode(currentCode);
@@ -200,21 +202,21 @@ export async function executePythonScript(scriptPath, scriptDir, venvDir, maxRet
       } else {
         throw new Error('Unsupported operating system');
       }
-      
+
       // console.log(`Operating System: ${process.platform}, venvPath: ${venvPath}`);
-      
+
       const { stdout, stderr } = await execAsync(`${venvPath} "${scriptPath}"`, {
         cwd: scriptDir,
         timeout: 600000 // 10 Minuten Timeout
       });
-      
+
       // Kombiniere stdout und stderr für die vollständige Ausgabe
       const fullOutput = (stdout || '') + (stderr || '');
-      
+
       // Prüfe auf echte Fehler (nicht nur Warnungen)
       const hasRealError = stderr && stderr.trim() && (
-        stderr.includes('Error:') || 
-        stderr.includes('Exception:') || 
+        stderr.includes('Error:') ||
+        stderr.includes('Exception:') ||
         stderr.includes('Traceback') ||
         stderr.includes('SyntaxError') ||
         stderr.includes('ImportError') ||
@@ -224,7 +226,7 @@ export async function executePythonScript(scriptPath, scriptDir, venvDir, maxRet
         stderr.includes('exit(1)') ||
         stderr.includes('sys.exit(1)')
       );
-      
+
       // Prüfe ob es echte Fehler gibt (nicht nur Warnungen)
       if (hasRealError) {
         console.log(`Echter Fehler bei Ausführung (Versuch ${attempt}):`, stderr);
@@ -241,7 +243,7 @@ export async function executePythonScript(scriptPath, scriptDir, venvDir, maxRet
           // Versuche Code mit LLM zu korrigieren
           console.log(`Versuche Code-Korrektur mit LLM (Versuch ${attempt})...`);
           const correctedCode = await fixPythonCodeWithLLM(currentCode, stderr, attempt);
-          
+
           if (correctedCode && correctedCode !== currentCode) {
             await fs.writeFile(scriptPath, correctedCode);
             currentCode = correctedCode;
@@ -257,15 +259,15 @@ export async function executePythonScript(scriptPath, scriptDir, venvDir, maxRet
           return { stdout: fullOutput, stderr };
         }
       }
-      
+
       // Erfolgreiche Ausführung - verwende die kombinierte Ausgabe
       // console.log(`Python Script erfolgreich ausgeführt (Versuch ${attempt})`);
       // console.log(`Vollständige Ausgabe:`, fullOutput.substring(0, 200) + '...');
       return { stdout: fullOutput, stderr: '' };
-      
+
     } catch (error) {
       handleError(error, 'Python-Ausführung', attempt);
-      
+
       // Versuche deterministische Korrekturen auch bei geworfenen Fehlern
       const deterministicallyFixed = applyDeterministicFixes(currentCode, error.message || '');
       if (deterministicallyFixed && deterministicallyFixed !== currentCode && attempt < maxRetries) {
@@ -279,7 +281,7 @@ export async function executePythonScript(scriptPath, scriptDir, venvDir, maxRet
         // Versuche Code mit LLM zu korrigieren
         console.log(`Versuche Code-Korrektur mit LLM (Versuch ${attempt})...`);
         const correctedCode = await fixPythonCodeWithLLM(currentCode, error.message, attempt);
-        
+
         if (correctedCode && correctedCode !== currentCode) {
           await fs.writeFile(scriptPath, correctedCode);
           currentCode = correctedCode;
@@ -296,7 +298,7 @@ export async function executePythonScript(scriptPath, scriptDir, venvDir, maxRet
       }
     }
   }
-  
+
   // Fallback: Gib den letzten bekannten Fehler zurück
   throw new Error(`Python execution failed after ${maxRetries} attempts`);
 }
@@ -305,45 +307,45 @@ export async function executePythonScript(scriptPath, scriptDir, venvDir, maxRet
 export function extractMetricsFromOutput(output, modelType) {
   const metrics = {};
   const foundMetrics = new Set(); // Track bereits gefundene Metriken
-  
+
   // Erweiterte Metriken-Extraktionsmuster mit Priorität für ausgeschriebene Namen
   const metricPatterns = [
-    { 
+    {
       primaryName: 'mean_absolute_error',
       aliases: ['mae'],
       regexes: [
         /(?:MAE):\s*([\d.]+)/i
       ]
     },
-    { 
+    {
       primaryName: 'mean_squared_error',
       aliases: ['mse'],
       regexes: [
         /(?:MSE):\s*([\d.]+)/i
       ]
     },
-    { 
+    {
       primaryName: 'root_mean_squared_error',
       aliases: ['rmse'],
       regexes: [
         /(?:RMSE):\s*([\d.]+)/i
       ]
     },
-    { 
+    {
       primaryName: 'r_squared',
       aliases: ['r2'],
       regexes: [
         /(?:R2):\s*([\d.]+)/i
       ]
     },
-    { 
+    {
       primaryName: 'accuracy',
       aliases: [],
       regexes: [
         /(?:Accuracy):\s*([\d.]+)/i
       ]
     },
-    { 
+    {
       primaryName: 'precision',
       aliases: [],
       regexes: [
@@ -351,7 +353,7 @@ export function extractMetricsFromOutput(output, modelType) {
         /(?:Precision):\s*([\d.]+)/i
       ]
     },
-    { 
+    {
       primaryName: 'recall',
       aliases: [],
       regexes: [
@@ -359,7 +361,7 @@ export function extractMetricsFromOutput(output, modelType) {
         /(?:Recall):\s*([\d.]+)/i
       ]
     },
-    { 
+    {
       primaryName: 'f1_score',
       aliases: ['f1'],
       regexes: [
@@ -374,32 +376,32 @@ export function extractMetricsFromOutput(output, modelType) {
     // Prüfe ob diese Metrik bereits gefunden wurde
     const allNames = [metricGroup.primaryName, ...metricGroup.aliases];
     const alreadyFound = allNames.some(name => foundMetrics.has(name));
-    
+
     if (alreadyFound) {
       return; // Überspringe diese Metrik-Gruppe
     }
-    
+
     for (const regex of metricGroup.regexes) {
       const match = output.match(regex);
       if (match) {
         const value = parseFloat(match[1]);
-        
+
         // Validiere den Wert
         if (isNaN(value)) {
           continue; // Überspringe ungültige Werte
         }
-        
+
         // Speichere nur den primären Namen (ausgeschrieben)
         metrics[metricGroup.primaryName] = value;
-        
+
         // Markiere alle Aliase als gefunden
         allNames.forEach(name => foundMetrics.add(name));
-        
+
         break; // Stoppe nach dem ersten erfolgreichen Match
       }
     }
   });
-  
+
   return metrics;
 }
 
@@ -434,74 +436,12 @@ export async function generatePredictionScript(project, inputFeatures, scriptDir
   }
   const modelPath = path.join(scriptDir, project.modelPath);
 
-  const predictionScript = `
-import pandas as pd
-import numpy as np
-import joblib
-import json
+  let updatedPredictionScript = predictionScript.replace('PROJECT_ID', project.id);
+  updatedPredictionScript = updatedPredictionScript.replace('MODEL_PATH', modelPath);
+  updatedPredictionScript = updatedPredictionScript.replace('INPUT_FEATURES', JSON.stringify(inputFeatures));
+  updatedPredictionScript = updatedPredictionScript.replace('PROBLEM_TYPE', project.modelType.toLowerCase());
 
-# Input-Features verarbeiten
-input_data = ${JSON.stringify(inputFeatures)}
-print(f"Input-Features: {input_data}")
-
-# DataFrame erstellen - konsistent mit Training
-input_df = pd.DataFrame([input_data])
-print(f"Input DataFrame Shape: {input_df.shape}")
-
-# Direkt numpy array verwenden (konsistent mit Training)
-input_array = input_df.values
-print(f"Input Array Shape: {input_array.shape}")
-
-# Model laden
-try:
-    model = joblib.load(r"${modelPath}")
-    print("Model erfolgreich geladen")
-    
-    # Prüfe ob es eine Pipeline ist oder ein direktes Modell
-    if hasattr(model, 'named_steps'):
-        print("Pipeline-Modell erkannt")
-        # Für Pipeline: Input muss durch die Pipeline gehen
-        prediction = model.predict(input_array)[0]
-    else:
-        print("Direktes Modell erkannt")
-        # Für direktes Modell: Input muss skaliert werden falls nötig
-        try:
-            # Versuche Scaler zu laden
-            scaler = joblib.load('scaler.pkl')
-            input_scaled = scaler.transform(input_array)
-            prediction = model.predict(input_scaled)[0]
-        except Exception as scaler_error:
-            print(f"Scaler nicht gefunden oder Fehler: {scaler_error}")
-            # Fallback: Direkte Prediction ohne Skalierung
-            # Aber zuerst Feature-Namen entfernen falls vorhanden
-            if hasattr(input_array, 'columns'):
-                input_array = input_array.values
-            prediction = model.predict(input_array)[0]
-    
-    print(f"Raw Prediction: {prediction}")
-    
-    # Falls Label-Encoder existiert (für Klassifikation)
-    try:
-        target_encoder_path = 'target_encoder_${project.id}.pkl'
-        target_encoder = joblib.load(target_encoder_path)
-        prediction = target_encoder.inverse_transform([int(prediction)])[0]
-        print(f"Decoded Prediction mit projekt-spezifischem Encoder: {prediction}")
-    except FileNotFoundError:
-        print("Kein projekt-spezifischer Target-Encoder gefunden")
-        pass
-    except Exception as te_error:
-        print(f"Fehler beim Dekodieren mit Target-Encoder: {te_error}")
-        pass
-    
-    # Ergebnis ausgeben (wird vom Node.js-Server geparst)
-    print(f"PREDICTION_RESULT: {prediction}")
-    
-except Exception as e:
-    print(f"Prediction error: {e}")
-    exit(1)
-`.trim();
-
-  return { predictionScript };
+  return { predictionScript: updatedPredictionScript };
 }
 
 export async function predictWithModel(project, inputFeatures, scriptDir, venvDir) {
@@ -510,21 +450,21 @@ export async function predictWithModel(project, inputFeatures, scriptDir, venvDi
   try {
     const scriptPath = path.join(scriptDir, `predict_${project.id}.py`);
     const metadataPath = path.join(scriptDir, `predict_${project.id}_metadata.json`);
-    
+
     let shouldRegenerateScript = true;
-    
+
     // Prüfe ob bereits ein Predict-Skript existiert
     try {
       await fs.access(scriptPath);
       await fs.access(metadataPath);
-      
+
       // Lade Metadata um zu prüfen, ob das Skript noch aktuell ist
       const metadataContent = await fs.readFile(metadataPath, 'utf-8');
       const metadata = JSON.parse(metadataContent);
-      
+
       // Prüfe ob das Projekt seit der letzten Skript-Generierung verändert wurde
       const currentProjectHash = generateProjectHash(project);
-      
+
       if (metadata.projectHash === currentProjectHash && metadata.version === '1.0') {
         // console.log(`Verwende bereits existierendes Predict-Skript für Projekt ${project.id}`);
         shouldRegenerateScript = false;
@@ -534,14 +474,14 @@ export async function predictWithModel(project, inputFeatures, scriptDir, venvDi
     } catch (accessError) {
       // console.log(`Predict-Skript für Projekt ${project.id} existiert nicht - erstelle neues`);
     }
-    
+
     // Generiere neues Skript nur wenn nötig
     if (shouldRegenerateScript) {
       const { predictionScript } = await generatePredictionScript(project, convertInputFeatures(inputFeatures), scriptDir);
-      
+
       // Speichere das neue Skript
       await fs.writeFile(scriptPath, predictionScript);
-      
+
       // Speichere Metadata für zukünftige Wiederverwendung
       const metadata = {
         projectId: project.id,
@@ -550,7 +490,7 @@ export async function predictWithModel(project, inputFeatures, scriptDir, venvDi
         createdAt: new Date().toISOString(),
         lastUsed: new Date().toISOString()
       };
-      
+
       await fs.writeFile(metadataPath, JSON.stringify(metadata, null, 2));
       // console.log(`Neues Predict-Skript für Projekt ${project.id} erstellt und gespeichert`);
     } else {
@@ -564,7 +504,7 @@ export async function predictWithModel(project, inputFeatures, scriptDir, venvDi
         console.log(`Warnung: Konnte Metadata nicht aktualisieren: ${updateError.message}`);
       }
     }
-    
+
     // Führe das Predict-Skript aus
     const { stdout, stderr } = await executePythonScript(scriptPath, scriptDir, venvDir);
 
@@ -574,35 +514,35 @@ export async function predictWithModel(project, inputFeatures, scriptDir, venvDi
     }
 
     const prediction = predictionMatch[1].trim();
-    
+
     // Predict-Skript wird NICHT gelöscht - bleibt für Wiederverwendung erhalten
     // console.log(`Prediction erfolgreich mit ${shouldRegenerateScript ? 'neuem' : 'wiederverwendetem'} Skript`);
-    
+
     return prediction;
   } catch (error) {
     console.error('Prediction error:', error);
-    
+
     // Bei Fehler das potentiell defekte Skript löschen, damit es beim nächsten Mal neu generiert wird
     try {
       const scriptPath = path.join(scriptDir, `predict_${project.id}.py`);
       const metadataPath = path.join(scriptDir, `predict_${project.id}_metadata.json`);
       const targetEncoderPath = path.join(scriptDir, `target_encoder_${project.id}.pkl`);
-      
+
       await fs.unlink(scriptPath);
       await fs.unlink(metadataPath);
-      
+
       // Auch projekt-spezifischen Target-Encoder löschen
       try {
         await fs.unlink(targetEncoderPath);
       } catch (encoderError) {
         // Target-Encoder existiert möglicherweise nicht
       }
-      
+
       console.log(`Defekte Predict-Dateien für Projekt ${project.id} gelöscht - werden beim nächsten Mal neu generiert`);
     } catch (deleteError) {
       console.log(`Predict-Dateien konnten nach Fehler nicht gelöscht werden: ${deleteError.message}`);
     }
-    
+
     throw error;
   }
 }
@@ -611,18 +551,18 @@ export async function predictWithModel(project, inputFeatures, scriptDir, venvDi
 export async function cleanupOldPredictScripts(scriptDir, maxAgeHours = 168) { // 7 Tage Standard
   try {
     const files = await fs.readdir(scriptDir);
-    const predictFiles = files.filter(file => 
+    const predictFiles = files.filter(file =>
       file.startsWith('predict_') && (file.endsWith('.py') || file.endsWith('_metadata.json'))
     );
-    
+
     // Auch projekt-spezifische Target-Encoder berücksichtigen
-    const targetEncoderFiles = files.filter(file => 
+    const targetEncoderFiles = files.filter(file =>
       file.startsWith('target_encoder_') && file.endsWith('.pkl')
     );
-    
+
     let cleaned = 0;
     const cutoffTime = new Date(Date.now() - maxAgeHours * 60 * 60 * 1000);
-    
+
     for (const file of predictFiles) {
       try {
         // Prüfe nur Metadata-Dateien für Zeitstempel
@@ -630,23 +570,23 @@ export async function cleanupOldPredictScripts(scriptDir, maxAgeHours = 168) { /
           const metadataPath = path.join(scriptDir, file);
           const metadataContent = await fs.readFile(metadataPath, 'utf-8');
           const metadata = JSON.parse(metadataContent);
-          
+
           const lastUsed = new Date(metadata.lastUsed || metadata.createdAt);
-          
+
           if (lastUsed < cutoffTime) {
             // Lösche sowohl Metadata als auch das entsprechende Python-Skript und Target-Encoder
             const projectId = metadata.projectId;
             const scriptPath = path.join(scriptDir, `predict_${projectId}.py`);
             const targetEncoderPath = path.join(scriptDir, `target_encoder_${projectId}.pkl`);
-            
+
             await fs.unlink(metadataPath);
-            
+
             try {
               await fs.unlink(scriptPath);
             } catch (scriptError) {
               // Python-Datei existiert möglicherweise nicht
             }
-            
+
             // Projekt-spezifischen Target-Encoder auch löschen
             try {
               await fs.unlink(targetEncoderPath);
@@ -654,7 +594,7 @@ export async function cleanupOldPredictScripts(scriptDir, maxAgeHours = 168) { /
             } catch (encoderError) {
               // Target-Encoder existiert möglicherweise nicht
             }
-            
+
             cleaned++;
             console.log(`Altes Predict-Skript für Projekt ${projectId} bereinigt (zuletzt verwendet: ${lastUsed.toISOString()})`);
           }
@@ -663,11 +603,11 @@ export async function cleanupOldPredictScripts(scriptDir, maxAgeHours = 168) { /
         console.log(`Fehler beim Bereinigen der Datei ${file}:`, fileError.message);
       }
     }
-    
+
     if (cleaned > 0) {
       console.log(`${cleaned} alte Predict-Skripte erfolgreich bereinigt`);
     }
-    
+
     return cleaned;
   } catch (error) {
     console.error('Fehler bei der Bereinigung alter Predict-Skripte:', error.message);
