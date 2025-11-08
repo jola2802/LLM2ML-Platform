@@ -1,15 +1,15 @@
 import path from 'path';
 import { logRESTAPIRequest } from '../../monitoring/log.js';
-import { 
-  analyzeCsvFile, 
-  analyzeJsonFile, 
-  analyzeExcelFile, 
-  analyzeTextFile, 
+import {
+  analyzeCsvFile,
+  analyzeJsonFile,
+  analyzeExcelFile,
+  analyzeTextFile,
   analyzeGenericFile
 } from '../../data/file_analysis.js';
-import { getLLMRecommendations } from '../../llm/api/llm_api.js';
+import { masClient } from '../../clients/mas_client.js';
 
-export function setupAnalyzeRoutes(app, venvDir) {
+export function setupAnalyzeRoutes(app) {
   // Intelligente LLM-Empfehlungen für manipulierte Daten
   app.post('/api/analyze-data', async (req, res) => {
     try {
@@ -46,14 +46,14 @@ export function setupAnalyzeRoutes(app, venvDir) {
 
       if (excludedColumns && excludedColumns.length > 0) {
         manipulatedAnalysis.columns = analysis.columns.filter(col => !excludedColumns.includes(col));
-        manipulatedAnalysis.sampleData = analysis.sampleData.map(row => 
+        manipulatedAnalysis.sampleData = analysis.sampleData.map(row =>
           row.filter((_, index) => !excludedColumns.includes(analysis.columns[index]))
         );
       }
 
       if (selectedColumns && selectedColumns.length > 0) {
         manipulatedAnalysis.columns = selectedColumns;
-        manipulatedAnalysis.sampleData = analysis.sampleData.map(row => 
+        manipulatedAnalysis.sampleData = analysis.sampleData.map(row =>
           selectedColumns.map(col => row[analysis.columns.indexOf(col)])
         );
       }
@@ -63,11 +63,10 @@ export function setupAnalyzeRoutes(app, venvDir) {
       }
 
       // LLM-basierte Empfehlungen für manipulierte Daten
-      const recommendations =  await getLLMRecommendations(
-        manipulatedAnalysis, 
-        filePath, 
-        venvDir, 
-        selectedColumns, 
+      const recommendations = await masClient.getLLMRecommendations(
+        manipulatedAnalysis,
+        filePath,
+        selectedColumns,
         excludedFeatures,
         userPreferences
       );
@@ -83,7 +82,7 @@ export function setupAnalyzeRoutes(app, venvDir) {
         recommendations: recommendations,
         availableFeatures: recommendations.features
       });
-      
+
     } catch (error) {
       console.error('Fehler bei der Datenanalyse:', error);
       res.status(500).json({ error: 'Fehler bei der Datenanalyse: ' + error.message });

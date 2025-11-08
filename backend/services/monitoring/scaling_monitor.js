@@ -3,7 +3,7 @@
  */
 
 import { EventEmitter } from 'events';
-import { getWorkerConfig } from '../llm/api/worker_scaling_config.js';
+import { getWorkerConfig } from '../../../config/worker_scaling_config.js';
 
 class ScalingMonitor extends EventEmitter {
   constructor() {
@@ -31,10 +31,10 @@ class ScalingMonitor extends EventEmitter {
         totalScaleDowns: 0
       }
     };
-    
+
     // Event-Listener für Skalierungs-Events
     this.setupEventListeners();
-    
+
     // Regelmäßige Metriken-Aufräumung
     this.startCleanupTimer();
   }
@@ -46,7 +46,7 @@ class ScalingMonitor extends EventEmitter {
     this.on('python:scaleDown', (data) => this.recordScalingEvent('python', 'down', data));
     this.on('llm:scaleUp', (data) => this.recordScalingEvent('llm', 'up', data));
     this.on('llm:scaleDown', (data) => this.recordScalingEvent('llm', 'down', data));
-    
+
     this.on('python:metrics', (data) => this.updateMetrics('python', data));
     this.on('llm:metrics', (data) => this.updateMetrics('llm', data));
   }
@@ -59,10 +59,10 @@ class ScalingMonitor extends EventEmitter {
       direction,
       ...data
     };
-    
+
     // Event zur Historie hinzufügen
     this.metrics[type].scalingEvents.push(event);
-    
+
     // Statistiken aktualisieren
     if (direction === 'up') {
       this.metrics[type].totalScaleUps++;
@@ -71,12 +71,12 @@ class ScalingMonitor extends EventEmitter {
       this.metrics[type].totalScaleDowns++;
       this.metrics[type].lastScaleDown = timestamp;
     }
-    
+
     // Logging (wenn aktiviert)
     if (this.config.global.enableScalingLogs) {
       console.log(`[SCALING] ${type.toUpperCase()} ${direction}: ${data.reason || 'Automatisch'} (Worker: ${data.workerCount})`);
     }
-    
+
     // Event-Historie begrenzen (letzte 50 Events)
     if (this.metrics[type].scalingEvents.length > 50) {
       this.metrics[type].scalingEvents = this.metrics[type].scalingEvents.slice(-50);
@@ -107,8 +107,8 @@ class ScalingMonitor extends EventEmitter {
   // Skalierungs-Historie für bestimmten Zeitraum abrufen
   getScalingHistory(type, hours = 24) {
     const cutoffTime = new Date(Date.now() - hours * 60 * 60 * 1000);
-    
-    return this.metrics[type].scalingEvents.filter(event => 
+
+    return this.metrics[type].scalingEvents.filter(event =>
       new Date(event.timestamp) > cutoffTime
     );
   }
@@ -119,34 +119,34 @@ class ScalingMonitor extends EventEmitter {
     if (events.length < 2) {
       return { efficiency: 1, analysis: 'Nicht genügend Daten' };
     }
-    
+
     const recentEvents = events.slice(-10); // Letzte 10 Events
     let oscillations = 0;
-    
+
     // Oszillationen zählen (Up -> Down -> Up innerhalb kurzer Zeit)
     for (let i = 0; i < recentEvents.length - 2; i++) {
       const current = recentEvents[i];
       const next = recentEvents[i + 1];
       const afterNext = recentEvents[i + 2];
-      
-      if (current.direction !== next.direction && 
-          current.direction === afterNext.direction) {
+
+      if (current.direction !== next.direction &&
+        current.direction === afterNext.direction) {
         const timeDiff = new Date(afterNext.timestamp) - new Date(current.timestamp);
         if (timeDiff < 5 * 60 * 1000) { // Innerhalb von 5 Minuten
           oscillations++;
         }
       }
     }
-    
+
     const efficiency = Math.max(0, 1 - (oscillations / recentEvents.length));
     let analysis = 'Stabile Skalierung';
-    
+
     if (efficiency < 0.7) {
       analysis = 'Häufige Oszillationen - Schwellenwerte überprüfen';
     } else if (efficiency < 0.9) {
       analysis = 'Gelegentliche Oszillationen - Performance beobachten';
     }
-    
+
     return { efficiency, analysis, oscillations };
   }
 
@@ -156,10 +156,10 @@ class ScalingMonitor extends EventEmitter {
     if (metrics.activeWorkers === 0) {
       return { utilization: 0, recommendation: 'Keine Worker aktiv' };
     }
-    
+
     const utilization = metrics.busyWorkers / metrics.activeWorkers;
     let recommendation = 'Optimale Auslastung';
-    
+
     if (utilization > 0.8 && metrics.queueLength > 0) {
       recommendation = 'Skalierung nach oben empfohlen';
     } else if (utilization < 0.3 && metrics.queueLength === 0) {
@@ -167,7 +167,7 @@ class ScalingMonitor extends EventEmitter {
     } else if (utilization > 0.9) {
       recommendation = 'Hohe Auslastung - mehr Worker benötigt';
     }
-    
+
     return { utilization, recommendation };
   }
 
@@ -175,7 +175,7 @@ class ScalingMonitor extends EventEmitter {
   startCleanupTimer() {
     setInterval(() => {
       const cutoffTime = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000); // 7 Tage
-      
+
       // Alte Events entfernen
       ['python', 'llm'].forEach(type => {
         this.metrics[type].scalingEvents = this.metrics[type].scalingEvents.filter(
@@ -206,7 +206,7 @@ class ScalingMonitor extends EventEmitter {
         systemStability: this.getSystemStability()
       }
     };
-    
+
     return report;
   }
 
@@ -215,7 +215,7 @@ class ScalingMonitor extends EventEmitter {
     const pythonEfficiency = this.getScalingEfficiency('python').efficiency;
     const llmEfficiency = this.getScalingEfficiency('llm').efficiency;
     const avgEfficiency = (pythonEfficiency + llmEfficiency) / 2;
-    
+
     if (avgEfficiency > 0.9) return 'Excellent';
     if (avgEfficiency > 0.8) return 'Good';
     if (avgEfficiency > 0.7) return 'Fair';

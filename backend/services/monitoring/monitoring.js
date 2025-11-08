@@ -1,5 +1,5 @@
 import { getProject } from '../database/db.js';
-import { getCachedDataAnalysis } from '../data/data_exploration.js';
+import { pythonClient } from '../clients/python_client.js';
 
 // In-Memory Monitoring Storage (pro Projekt)
 // Struktur: { [projectId]: { baseline, live, alerts } }
@@ -77,7 +77,7 @@ export async function initializeMonitoringBaseline(projectId) {
   if (!project.csvFilePath) throw new Error('Kein Trainingsdatensatzpfad vorhanden');
 
   // Hole kompakte Analyse für Feature-Baseline
-  const analysis = await getCachedDataAnalysis(project.csvFilePath, false);
+  const analysis = await pythonClient.analyzeData(project.csvFilePath, false);
   const pareto = analysis?.exploration?.pareto_analysis || analysis?.pareto_analysis;
 
   const baseline = {
@@ -99,7 +99,7 @@ export async function initializeMonitoringBaseline(projectId) {
 
 export async function logPredictionEvent(projectId, payload) {
   const state = getOrInitProjectState(projectId);
-  await initializeMonitoringBaseline(projectId).catch(() => {});
+  await initializeMonitoringBaseline(projectId).catch(() => { });
 
   const { features = {}, prediction = null, truth = null, timestamp = new Date().toISOString() } = payload || {};
   state.live.count += 1;

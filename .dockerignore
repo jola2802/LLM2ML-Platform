@@ -1,25 +1,80 @@
-node_modules
-npm-debug.log
+# Git
 .git
 .gitignore
-README.md
-.env
-.nyc_output
-coverage
+.gitattributes
+
+# Node
+node_modules
+npm-debug.log
+yarn-error.log
+package-lock.json
+.npm
+
+# Python
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+*.egg
+*.egg-info
+dist
+build
+venv
+env
+.venv
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# OS
 .DS_Store
-*.log
+Thumbs.db
+
+# Logs
 logs
-uploads
-models
-scripts
-*.pkl
-target_encoder.pkl
-model.pkl
+*.log
+
+# Development
+.env.local
+.env.development
+.env.test
+
+# Frontend build artifacts (werden im Container gebaut)
 frontend/dist
 frontend/node_modules
+
+# Backend development files
 backend/node_modules
-backend/logs
-backend/uploads
-backend/models
-backend/scripts 
+backend/services/python/venv
+backend/demo-machine-learning
 backend/projects.db
+backend/uploads/*
+backend/models/*
+backend/scripts/*
+
+# Services (werden separat gebaut)
+services/python-service/node_modules
+services/mas-service/node_modules
+
+# Docker
+docker-compose.override.yml
+.dockerignore
+
+# Documentation
+*.md
+!README.md
+docs/
+
+# Ollama data
+ollama_data/
+
+# Temporary files
+*.tmp
+*.temp
+.cache

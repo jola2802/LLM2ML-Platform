@@ -1,12 +1,11 @@
 import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { predictWithModel } from '../execution/code_exec.js';
+import { pythonClient } from '../clients/python_client.js';
 
 // Service-Imports
-import { evaluatePerformanceWithLLM } from '../llm/api/llm_api.js';
-import { getProject, updateProjectCode, updateProjectHyperparameters, updateProjectStatus, updateProjectInsights, updateProjectAlgorithmAndHyperparameters} from '../database/db.js';
-import { clearAnalysisCache, getAnalysisCacheStatus, getCachedDataAnalysis } from '../data/data_exploration.js';
+import { masClient } from '../clients/mas_client.js';
+import { getProject, updateProjectCode, updateProjectHyperparameters, updateProjectStatus, updateProjectInsights, updateProjectAlgorithmAndHyperparameters } from '../database/db.js';
 import { analyzeCsvFile, analyzeJsonFile, analyzeExcelFile, analyzeTextFile, analyzeGenericFile } from '../data/file_analysis.js';
 import { logRESTAPIRequest } from '../monitoring/log.js';
 import { logPredictionEvent } from '../monitoring/monitoring.js';
@@ -27,26 +26,26 @@ export function setupAPIEndpoints(app, upload, scriptDir, venvDir) {
     try {
       logRESTAPIRequest('retrain-project', req.params.id);
       const { id } = req.params;
-      
+
       const project = await getProject(id);
       if (!project) {
         return res.status(404).json({ error: 'Project not found' });
       }
-      
+
       if (!project.pythonCode) {
         return res.status(400).json({ error: 'Kein Python-Code zum Re-Training verfügbar' });
       }
-      
+
       // Status auf Re-Training setzen
       await updateProjectStatus(id, 'Re-Training');
-      
+
       res.json({ message: 'Re-Training gestartet', id });
-      
+
       // Asynchron das Re-Training mit dem bearbeiteten Code starten
       if (retrainModelAsync) {
         retrainModelAsync(id, project.pythonCode);
       }
-      
+
     } catch (err) {
       res.status(500).json({ error: err.message });
     }
@@ -59,9 +58,10 @@ export function setupAPIEndpoints(app, upload, scriptDir, venvDir) {
       const { iterations = 2, apply = false } = req.body || {};
       const project = await getProject(id);
       if (!project) return res.status(404).json({ error: 'Projekt nicht gefunden' });
-      const { autoTuneModelWithLLM } = await import('../llm/agents/tuning.js');
-      const proposal = await autoTuneModelWithLLM(project, Math.max(1, Math.min(iterations, 5)));
-      
+      // Auto-Tuning über MAS-Service
+      const { masClient } = await import('../clients/mas_client.js');
+      const proposal = await masClient.autoTuneModel(project, Math.max(1, Math.min(iterations, 5)));
+
       if (apply) {
         // Update DB mit vorgeschlagenem Algorithmus/Hyperparametern
         await updateProjectAlgorithmAndHyperparameters(id, proposal.algorithm, proposal.hyperparameters);
@@ -72,7 +72,7 @@ export function setupAPIEndpoints(app, upload, scriptDir, venvDir) {
           trainModelAsync(id);
         }
       }
-      
+
       res.json({ success: true, proposal, applied: apply });
     } catch (error) {
       res.status(500).json({ success: false, error: error.message });
@@ -85,28 +85,28 @@ export function setupAPIEndpoints(app, upload, scriptDir, venvDir) {
       logRESTAPIRequest('evaluate-performance', req.params.id);
       const { id } = req.params;
       const project = await getProject(id);
-      
+
       if (!project) {
         return res.status(404).json({ error: 'Projekt nicht gefunden' });
       }
-      
+
       if (!project.performanceMetrics) {
         return res.status(400).json({ error: 'Keine Performance-Metriken verfügbar für Evaluation' });
       }
-      
+
       console.log(`Starte intelligente Performance-Evaluation für Projekt: ${project.name}`);
-      
+
       // LLM-basierte Performance-Evaluation durchführen
-      const performanceInsights = await evaluatePerformanceWithLLM(project);
-      
+      const performanceInsights = await masClient.evaluatePerformance(project);
+
       // Performance-Insights in DB speichern
       await updateProjectInsights(id, performanceInsights);
-      
+
       res.json({
         message: 'Performance-Evaluation erfolgreich abgeschlossen',
         insights: performanceInsights
       });
-      
+
     } catch (error) {
       console.error('Fehler bei Performance-Evaluation:', error);
       res.status(500).json({ error: 'Performance-Evaluation fehlgeschlagen: ' + error.message });
@@ -119,7 +119,7 @@ export function setupAPIEndpoints(app, upload, scriptDir, venvDir) {
       logRESTAPIRequest('data-statistics', req.params.id);
       const { id } = req.params;
       const project = await getProject(id);
-      
+
       if (!project) {
         return res.status(404).json({ error: 'Projekt nicht gefunden' });
       }
@@ -128,11 +128,11 @@ export function setupAPIEndpoints(app, upload, scriptDir, venvDir) {
       if (!project.csvFilePath) {
         return res.status(400).json({ error: 'Keine Datei für dieses Projekt verfügbar' });
       }
-      
+
       // Datei analysieren für detaillierte Statistiken (ohne zusätzliche LLM-Kosten)
       const fileExtension = path.extname(project.csvFilePath).toLowerCase();
       let analysis;
-      
+
       if (fileExtension === '.csv') {
         analysis = await analyzeCsvFile(project.csvFilePath, false);
       } else if (fileExtension === '.json') {
@@ -179,7 +179,7 @@ export function setupAPIEndpoints(app, upload, scriptDir, venvDir) {
       };
 
       res.json(statistics);
-      
+
     } catch (error) {
       console.error('Fehler bei Datenstatistiken:', error);
       res.status(500).json({ error: 'Datenstatistiken-Abruf fehlgeschlagen: ' + error.message });
@@ -192,15 +192,15 @@ export function setupAPIEndpoints(app, upload, scriptDir, venvDir) {
       logRESTAPIRequest('stats', req.params.id);
       const projectId = req.params.id;
       const project = await getProject(projectId);
-      
+
       if (!project) {
         return res.status(404).json({ error: 'Projekt nicht gefunden' });
       }
-      
+
       if (!project.csvFilePath) {
         return res.status(400).json({ error: 'Keine Datei für dieses Projekt verfügbar' });
       }
-      
+
       const fileExtension = path.extname(project.csvFilePath).toLowerCase();
 
 
@@ -215,13 +215,13 @@ export function setupAPIEndpoints(app, upload, scriptDir, venvDir) {
       } else {
         analysis = await analyzeGenericFile(project.csvFilePath, fileExtension, false);
       }
-      
+
       res.json({
         projectId: projectId,
         fileName: project.name,
         stats: analysis
       });
-      
+
     } catch (error) {
       console.error('Fehler beim Abrufen der Datenstatistiken:', error);
       res.status(500).json({ error: 'Fehler beim Abrufen der Datenstatistiken: ' + error.message });
@@ -243,7 +243,7 @@ export function setupAPIEndpoints(app, upload, scriptDir, venvDir) {
   app.get('/api/cache/status', async (req, res) => {
     try {
       logRESTAPIRequest('get-cache-status', req.body);
-      res.json({ 
+      res.json({
         message: 'File-Cache wurde entfernt',
         cachedFiles: [],
         cacheSize: 0
@@ -254,23 +254,33 @@ export function setupAPIEndpoints(app, upload, scriptDir, venvDir) {
     }
   });
 
-  // Datenexploration-Cache leeren
+  // Datenexploration-Cache leeren (über Python-Service)
   app.post('/api/analysis-cache/clear', async (req, res) => {
     try {
       logRESTAPIRequest('clear-analysis-cache', req.body);
-      await clearAnalysisCache();
-      res.json({ message: 'Datenanalyse-Cache erfolgreich geleert' });
+      // Cache wird über Python-Service verwaltet
+      const response = await fetch(`${process.env.PYTHON_SERVICE_URL || 'http://localhost:3003'}/api/data/cache/clear`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      const result = await response.json();
+      res.json({ message: 'Datenanalyse-Cache erfolgreich geleert', ...result });
     } catch (error) {
       console.error('Fehler beim Löschen des Datenanalyse-Caches:', error);
       res.status(500).json({ error: 'Fehler beim Löschen des Datenanalyse-Caches: ' + error.message });
     }
   });
 
-  // Datenexploration-Cache-Status abrufen
+  // Datenexploration-Cache-Status abrufen (über Python-Service)
   app.get('/api/analysis-cache/status', async (req, res) => {
     try {
       logRESTAPIRequest('get-analysis-cache-status', req.body);
-      const status = await getAnalysisCacheStatus();
+      // Cache wird über Python-Service verwaltet
+      const response = await fetch(`${process.env.PYTHON_SERVICE_URL || 'http://localhost:3003'}/api/data/cache/status`, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      const status = await response.json();
       res.json(status);
     } catch (error) {
       console.error('Fehler beim Abrufen des Datenanalyse-Cache-Status:', error);
@@ -283,18 +293,18 @@ export function setupAPIEndpoints(app, upload, scriptDir, venvDir) {
     try {
       logRESTAPIRequest('explore-data', req.body);
       const { filePath } = req.body;
-      
+
       if (!filePath) {
         return res.status(400).json({ error: 'filePath ist erforderlich' });
       }
-      
+
       if (!fs.access(filePath).then(() => true).catch(() => false)) {
         return res.status(404).json({ error: 'Datei nicht gefunden' });
       }
-      
-      const analysis = await getCachedDataAnalysis(filePath, false);
+
+      const analysis = await pythonClient.analyzeData(filePath, false);
       res.json(analysis);
-      
+
     } catch (error) {
       console.error('Fehler bei der Datenexploration:', error);
       res.status(500).json({ error: 'Fehler bei der Datenexploration: ' + error.message });
@@ -319,12 +329,13 @@ export function setupPredictionEndpoint(app, scriptDir, venvDir) {
       if (!project) {
         return res.status(404).json({ error: 'Project not found' });
       }
-      
-      const prediction = await predictWithModel(project, inputs, scriptDir, venvDir);
+
+      const result = await pythonClient.executePrediction(project, inputs);
+      const prediction = result.prediction;
 
       // Monitoring-Event loggen (ohne truth)
-      try { await logPredictionEvent(id, { features: inputs, prediction }); } catch {}
-      
+      try { await logPredictionEvent(id, { features: inputs, prediction }); } catch { }
+
       res.json({ prediction });
     } catch (error) {
       console.error('Prediction error:', error);

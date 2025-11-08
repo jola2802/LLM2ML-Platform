@@ -16,58 +16,48 @@ ENV NODE_ENV=production
 # Build frontend
 RUN npm run build
 
-# Backend stage - verwende debian für bessere Python-Kompatibilität
+# Backend stage - Python wird NICHT mehr benötigt (läuft im python-service)
 FROM node:18-slim AS backend
 
-# Install system dependencies für Python und Build-Tools
+# Nur curl für Health-Check installieren (kein Python mehr!)
 RUN apt-get update && apt-get install -y \
-    python3 \
-    python3-pip \
-    python3-venv \
-    python3-dev \
-    build-essential \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
-# Erstelle Python Virtual Environment
-RUN python3 -m venv /opt/venv
-ENV PATH="/opt/venv/bin:$PATH"
-
-# Kopiere Python requirements zuerst für besseres Caching
-COPY requirements.txt ./
-RUN pip install -r requirements.txt
-
-# Backend dependencies
+# Backend dependencies installieren
 COPY backend/package*.json ./backend/
 WORKDIR /app/backend
 RUN npm ci --only=production
 
-# Kopiere Backend-Code
+# Kopiere Backend-Code (direkt nach /app/backend, nicht /app/backend/backend)
+WORKDIR /app/backend
 COPY backend/ ./
 
-# Kopiere Frontend Build
-COPY --from=frontend-builder /app/frontend/dist ../frontend/dist
+# Kopiere Config-Dateien nach /app/config/
+WORKDIR /app
+COPY config/ ./config/
+
+# Frontend Build kopieren
+RUN mkdir -p /app/frontend
+COPY --from=frontend-builder /app/frontend/dist /app/frontend/dist
 
 # Erstelle benötigte Verzeichnisse
 RUN mkdir -p uploads models scripts logs
-
-# Backend static file serving konfigurieren
-WORKDIR /app
 
 # Umgebungsvariablen setzen
 ENV NODE_ENV=production
 ENV PORT=3000
 
-# Port freigeben (Frontend-Port für die gesamte Anwendung)
+# Port freigeben
 EXPOSE $PORT
 
 # Arbeitsverzeichnis für Start
 WORKDIR /app/backend
 
-# Healthcheck hinzufügen
+# Healthcheck
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
   CMD curl -f http://localhost:$PORT/ || exit 1
 
-CMD ["npm", "start"] 
+CMD ["npm", "start"]

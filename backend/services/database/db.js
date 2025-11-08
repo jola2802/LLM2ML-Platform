@@ -2,7 +2,7 @@ import sqlite3 from 'sqlite3';
 import { v4 as uuidv4 } from 'uuid';
 import fs from 'fs';
 import path from 'path';
-import { callLLMAPI } from '../llm/api/llm.js';
+import { masClient } from '../clients/mas_client.js';
 
 // SQLite Datenbank initialisieren
 const db = new sqlite3.Database('projects.db');
@@ -47,7 +47,7 @@ export function convertHyperparametersToNumbers(hyperparameters) {
   if (!hyperparameters || typeof hyperparameters !== 'object') {
     return hyperparameters;
   }
-  
+
   const converted = {};
   for (const [key, value] of Object.entries(hyperparameters)) {
     if (typeof value === 'string' && !isNaN(Number(value)) && value.trim() !== '') {
@@ -117,7 +117,7 @@ export function getAllProjects() {
           performanceInsights: row.performanceInsights ? JSON.parse(row.performanceInsights) : null,
           hyperparameters: row.hyperparameters ? JSON.parse(row.hyperparameters) : null
         }));
-        
+
         resolve(projects);
       }
     });
@@ -131,12 +131,12 @@ export function createProject(projectData) {
     const id = uuidv4();
     const createdAt = new Date().toISOString();
     const status = 'Training';
-    
+
     const stmt = db.prepare(`
       INSERT INTO projects (id, name, status, modelType, dataSourceName, targetVariable, features, createdAt, csvFilePath, algorithm, hyperparameters)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
-    
+
     // Hyperparameter korrekt konvertieren (numerische Werte als Zahlen, nicht als Strings)
     const convertedHyperparameters = {};
     if (hyperparameters && typeof hyperparameters === 'object') {
@@ -148,23 +148,23 @@ export function createProject(projectData) {
         }
       }
     }
-    
+
     stmt.run([
-      id, name, status, modelType, dataSourceName, targetVariable, 
-      JSON.stringify(features), createdAt, csvFilePath || null, 
+      id, name, status, modelType, dataSourceName, targetVariable,
+      JSON.stringify(features), createdAt, csvFilePath || null,
       algorithm || 'RandomForest', JSON.stringify(convertedHyperparameters || {})
-    ], function(err) {
+    ], function (err) {
       if (err) {
         reject(err);
       } else {
         resolve({
           id, name, status, modelType, dataSourceName, targetVariable,
-          features, createdAt, performanceMetrics: null, pythonCode: null, modelPath: null, 
+          features, createdAt, performanceMetrics: null, pythonCode: null, modelPath: null,
           csvFilePath, algorithm: algorithm || 'RandomForest', hyperparameters: convertedHyperparameters || {}
         });
       }
     });
-    
+
     stmt.finalize();
   });
 }
@@ -176,12 +176,12 @@ export function createSmartProject(projectData) {
     const id = uuidv4();
     const createdAt = new Date().toISOString();
     const status = 'Training';
-    
+
     const stmt = db.prepare(`
       INSERT INTO projects (id, name, status, modelType, dataSourceName, targetVariable, features, createdAt, csvFilePath, algorithm, hyperparameters, llmRecommendations)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
-    
+
     // Hyperparameter korrekt konvertieren (numerische Werte als Zahlen, nicht als Strings)
     const convertedHyperparameters = {};
     if (recommendations.hyperparameters && typeof recommendations.hyperparameters === 'object') {
@@ -193,34 +193,34 @@ export function createSmartProject(projectData) {
         }
       }
     }
-    
+
     stmt.run([
-      id, name, status, recommendations.modelType, recommendations.dataSourceName, 
-      recommendations.targetVariable, JSON.stringify(recommendations.features), 
-      createdAt, csvFilePath, recommendations.algorithm, 
+      id, name, status, recommendations.modelType, recommendations.dataSourceName,
+      recommendations.targetVariable, JSON.stringify(recommendations.features),
+      createdAt, csvFilePath, recommendations.algorithm,
       JSON.stringify(convertedHyperparameters), JSON.stringify(recommendations)
-    ], function(err) {
+    ], function (err) {
       if (err) {
         reject(err);
       } else {
         resolve({
-          id, name, status, 
+          id, name, status,
           modelType: recommendations.modelType,
           dataSourceName: recommendations.dataSourceName,
           targetVariable: recommendations.targetVariable,
           features: recommendations.features,
-          createdAt, 
-          performanceMetrics: null, 
-          pythonCode: null, 
-          modelPath: null, 
-          csvFilePath, 
-          algorithm: recommendations.algorithm, 
+          createdAt,
+          performanceMetrics: null,
+          pythonCode: null,
+          modelPath: null,
+          csvFilePath,
+          algorithm: recommendations.algorithm,
           hyperparameters: convertedHyperparameters,
           recommendations: recommendations
         });
       }
     });
-    
+
     stmt.finalize();
   });
 }
@@ -229,13 +229,13 @@ export function createSmartProject(projectData) {
 export function updateProjectTraining(projectId, updateData) {
   return new Promise((resolve, reject) => {
     const { status, performanceMetrics, pythonCode, originalPythonCode, modelPath, hyperparameters } = updateData;
-    
+
     const stmt = db.prepare(`
       UPDATE projects 
       SET status = ?, performanceMetrics = ?, pythonCode = ?, originalPythonCode = ?, modelPath = ?, hyperparameters = ?
       WHERE id = ?
     `);
-    
+
     stmt.run([
       status,
       performanceMetrics ? JSON.stringify(performanceMetrics) : null,
@@ -244,14 +244,14 @@ export function updateProjectTraining(projectId, updateData) {
       modelPath,
       hyperparameters ? JSON.stringify(hyperparameters) : null,
       projectId
-    ], function(err) {
+    ], function (err) {
       if (err) {
         reject(err);
       } else {
         resolve({ changes: this.changes, lastID: this.lastID });
       }
     });
-    
+
     stmt.finalize();
   });
 }
@@ -259,7 +259,7 @@ export function updateProjectTraining(projectId, updateData) {
 // Projekt-Code aktualisieren
 export function updateProjectCode(projectId, pythonCode) {
   return new Promise((resolve, reject) => {
-    db.run('UPDATE projects SET pythonCode = ? WHERE id = ?', [pythonCode, projectId], function(err) {
+    db.run('UPDATE projects SET pythonCode = ? WHERE id = ?', [pythonCode, projectId], function (err) {
       if (err) {
         reject(err);
       } else {
@@ -272,7 +272,7 @@ export function updateProjectCode(projectId, pythonCode) {
 // Hyperparameter eines Projekts aktualisieren
 export function updateProjectHyperparameters(projectId, hyperparameters) {
   return new Promise((resolve, reject) => {
-    db.run('UPDATE projects SET hyperparameters = ? WHERE id = ?', [JSON.stringify(hyperparameters), projectId], function(err) {
+    db.run('UPDATE projects SET hyperparameters = ? WHERE id = ?', [JSON.stringify(hyperparameters), projectId], function (err) {
       if (err) {
         reject(err);
       } else {
@@ -284,7 +284,7 @@ export function updateProjectHyperparameters(projectId, hyperparameters) {
 
 export function updateProjectAlgorithm(projectId, algorithm) {
   return new Promise((resolve, reject) => {
-    db.run('UPDATE projects SET algorithm = ? WHERE id = ?', [algorithm, projectId], function(err) {
+    db.run('UPDATE projects SET algorithm = ? WHERE id = ?', [algorithm, projectId], function (err) {
       if (err) {
         reject(err);
       } else {
@@ -300,9 +300,9 @@ export async function updateHyperparametersAlgorithmInCode(projectId, hyperparam
   if (!project || !project.pythonCode) {
     throw new Error('Projekt oder Python-Code nicht in der Datenbank gefunden');
   }
-  
+
   const script = project.pythonCode;
-  
+
   // Übergebe alten Code an LLM sowie neue Hyperparameter und Algorithmus
   const prompt = `
   Du bist ein erfahrener Python-Programmierer.
@@ -320,11 +320,11 @@ export async function updateHyperparametersAlgorithmInCode(projectId, hyperparam
   Gib nur den aktualisierten Code zurück, ohne weitere Erklärungen.
   `;
 
-  const updatedScript = await callLLMAPI(prompt);
+  const updatedScript = await masClient.callLLM(prompt);
 
   // Aktualisierten Code in der Datenbank speichern statt in eine Datei
-  const updatedCode = updatedScript.result || updatedScript;
-  
+  const updatedCode = updatedScript?.result || updatedScript || '';
+
   // Code in der Datenbank aktualisieren
   return updateProjectCode(projectId, updatedCode);
 }
@@ -344,7 +344,7 @@ export function updateProjectAlgorithmAndHyperparameters(projectId, algorithm, h
 // Projekt-Status aktualisieren
 export function updateProjectStatus(projectId, status) {
   return new Promise((resolve, reject) => {
-    db.run('UPDATE projects SET status = ? WHERE id = ?', [status, projectId], function(err) {
+    db.run('UPDATE projects SET status = ? WHERE id = ?', [status, projectId], function (err) {
       if (err) {
         reject(err);
       } else {
@@ -360,7 +360,7 @@ export function updateProjectInsights(projectId, performanceInsights) {
     db.run(
       'UPDATE projects SET performanceInsights = ? WHERE id = ?',
       [JSON.stringify(performanceInsights), projectId],
-      function(err) {
+      function (err) {
         if (err) {
           reject(err);
         } else {
@@ -380,8 +380,8 @@ export function deleteProject(projectId) {
   if (modelPath) {
     fs.unlink(modelPath, (err) => {
       if (err) {
-          console.error('Fehler beim Löschen des Models:', err);
-        }
+        console.error('Fehler beim Löschen des Models:', err);
+      }
     });
   }
   if (scriptPath) {
@@ -393,7 +393,7 @@ export function deleteProject(projectId) {
   }
 
   return new Promise((resolve, reject) => {
-    db.run('DELETE FROM projects WHERE id = ?', [projectId], function(err) {
+    db.run('DELETE FROM projects WHERE id = ?', [projectId], function (err) {
       if (err) {
         reject(err);
       } else {

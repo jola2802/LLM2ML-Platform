@@ -1,16 +1,17 @@
-import { jobQueue } from '../../monitoring/job_queue.js';
+import { pythonClient } from '../../clients/python_client.js';
 import { logRESTAPIRequest } from '../../monitoring/log.js';
 
-export function setupWorkerStatusRoutes(app, pythonWorkerPool) {
-  
+export function setupWorkerStatusRoutes(app) {
+
   // Queue-Status abrufen
   app.get('/api/worker/queue-status', async (req, res) => {
     try {
       logRESTAPIRequest('get-queue-status', {});
-      
-      const queueStatus = jobQueue.getQueueStatus();
-      const poolStatus = pythonWorkerPool.getPoolStatus();
-      
+
+      const workerStatus = await pythonClient.getWorkerStatus();
+      const queueStatus = workerStatus.queue;
+      const poolStatus = workerStatus.pool;
+
       res.json({
         queue: queueStatus,
         workerPool: poolStatus,
@@ -22,7 +23,7 @@ export function setupWorkerStatusRoutes(app, pythonWorkerPool) {
           maxWorkers: poolStatus.maxWorkers
         }
       });
-      
+
     } catch (error) {
       console.error('Fehler beim Abrufen des Queue-Status:', error);
       res.status(500).json({ error: error.message });
@@ -33,12 +34,13 @@ export function setupWorkerStatusRoutes(app, pythonWorkerPool) {
   app.get('/api/worker/jobs', async (req, res) => {
     try {
       logRESTAPIRequest('get-all-jobs', req.query);
-      
+
       const limit = parseInt(req.query.limit) || 50;
-      const jobs = jobQueue.getAllJobs(limit);
-      
+      // Jobs werden jetzt über Python-Service verwaltet
+      const jobs = []; // TODO: API-Endpoint im Python-Service hinzufügen
+
       res.json({ jobs });
-      
+
     } catch (error) {
       console.error('Fehler beim Abrufen der Jobs:', error);
       res.status(500).json({ error: error.message });
@@ -49,13 +51,14 @@ export function setupWorkerStatusRoutes(app, pythonWorkerPool) {
   app.get('/api/worker/jobs/:type', async (req, res) => {
     try {
       logRESTAPIRequest('get-jobs-by-type', req.params);
-      
+
       const { type } = req.params;
       const limit = parseInt(req.query.limit) || 20;
-      const jobs = jobQueue.getJobsByType(type, limit);
-      
+      // Jobs werden jetzt über Python-Service verwaltet
+      const jobs = []; // TODO: API-Endpoint im Python-Service hinzufügen
+
       res.json({ jobs, type });
-      
+
     } catch (error) {
       console.error('Fehler beim Abrufen der Jobs nach Typ:', error);
       res.status(500).json({ error: error.message });
@@ -66,16 +69,16 @@ export function setupWorkerStatusRoutes(app, pythonWorkerPool) {
   app.get('/api/worker/job/:jobId', async (req, res) => {
     try {
       logRESTAPIRequest('get-job', req.params);
-      
+
       const { jobId } = req.params;
-      const job = jobQueue.getJob(jobId);
-      
+      const job = await pythonClient.getJobStatus(jobId);
+
       if (!job) {
         return res.status(404).json({ error: 'Job nicht gefunden' });
       }
-      
+
       res.json({ job });
-      
+
     } catch (error) {
       console.error('Fehler beim Abrufen des Jobs:', error);
       res.status(500).json({ error: error.message });
@@ -86,16 +89,17 @@ export function setupWorkerStatusRoutes(app, pythonWorkerPool) {
   app.post('/api/worker/job/:jobId/cancel', async (req, res) => {
     try {
       logRESTAPIRequest('cancel-job', req.params);
-      
+
       const { jobId } = req.params;
-      const success = jobQueue.cancelJob(jobId);
-      
+      // Job-Abbruch wird jetzt über Python-Service verwaltet
+      const success = false; // TODO: API-Endpoint im Python-Service hinzufügen
+
       if (success) {
         res.json({ message: 'Job erfolgreich abgebrochen', jobId });
       } else {
         res.status(400).json({ error: 'Job konnte nicht abgebrochen werden' });
       }
-      
+
     } catch (error) {
       console.error('Fehler beim Abbrechen des Jobs:', error);
       res.status(500).json({ error: error.message });
@@ -106,10 +110,11 @@ export function setupWorkerStatusRoutes(app, pythonWorkerPool) {
   app.get('/api/worker/stats', async (req, res) => {
     try {
       logRESTAPIRequest('get-worker-stats', {});
-      
-      const poolStatus = pythonWorkerPool.getPoolStatus();
-      const queueStatus = jobQueue.getQueueStatus();
-      
+
+      const workerStatus = await pythonClient.getWorkerStatus();
+      const poolStatus = workerStatus.pool;
+      const queueStatus = workerStatus.queue;
+
       const stats = {
         workerPool: {
           maxWorkers: poolStatus.maxWorkers,
@@ -127,17 +132,17 @@ export function setupWorkerStatusRoutes(app, pythonWorkerPool) {
           currentlyRunning: queueStatus.stats.currentlyRunning
         },
         performance: {
-          successRate: queueStatus.stats.totalJobs > 0 
-            ? Math.round((queueStatus.stats.completedJobs / queueStatus.stats.totalJobs) * 100) 
+          successRate: queueStatus.stats.totalJobs > 0
+            ? Math.round((queueStatus.stats.completedJobs / queueStatus.stats.totalJobs) * 100)
             : 0,
-          failureRate: queueStatus.stats.totalJobs > 0 
-            ? Math.round((queueStatus.stats.failedJobs / queueStatus.stats.totalJobs) * 100) 
+          failureRate: queueStatus.stats.totalJobs > 0
+            ? Math.round((queueStatus.stats.failedJobs / queueStatus.stats.totalJobs) * 100)
             : 0
         }
       };
-      
+
       res.json(stats);
-      
+
     } catch (error) {
       console.error('Fehler beim Abrufen der Worker-Statistiken:', error);
       res.status(500).json({ error: error.message });

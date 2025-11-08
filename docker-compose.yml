@@ -1,7 +1,7 @@
 version: '3.8'
 
 services:
-  # Combined Frontend + Backend Service
+  # Combined Frontend + Backend Service (API Gateway)
   ml-platform:
     build:
       context: .
@@ -11,13 +11,20 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=3000
-      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      # - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - PYTHON_SERVICE_URL=http://python-service:3003
+      - MAS_SERVICE_URL=http://mas-service:3002
+      - UPLOADS_DIR=/app/uploads
+      - MODELS_DIR=/app/models
+      - SCRIPT_DIR=/app/scripts
     volumes:
       - ./uploads:/app/uploads
       - ./models:/app/models
       - ./scripts:/app/scripts
       - ./logs:/app/logs
       - ./backend/projects.db:/app/projects.db
+    depends_on:
+      - python-service
     restart: unless-stopped
     networks:
       - ml-platform-network
@@ -28,6 +35,78 @@ services:
       retries: 3
       start_period: 40s
 
+  # Python Execution & Data Exploration Service
+  python-service:
+    build:
+      context: .
+      dockerfile: services/python-service/Dockerfile
+    ports:
+      - "3003:3003"
+    environment:
+      - NODE_ENV=production
+      - PORT=3003
+      - VENV_DIR=/opt/venv
+      - SCRIPT_DIR=/app/scripts
+      - UPLOADS_DIR=/app/uploads
+      - MODELS_DIR=/app/models
+      - API_GATEWAY_URL=http://ml-platform:3000
+    volumes:
+      - ./scripts:/app/scripts
+      - ./models:/app/models
+      - ./uploads:/app/uploads
+    restart: unless-stopped
+    networks:
+      - ml-platform-network
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3003/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Model Analysis Service (LLM Service)
+  mas-service:
+    build:
+      context: .
+      dockerfile: services/mas-service/Dockerfile
+    ports:
+      - "3002:3002"
+    environment:
+      - NODE_ENV=production
+      - PORT=3002
+      - OLLAMA_URL=http://ollama_ml_platform:11434
+      - API_GATEWAY_URL=http://ml-platform:3000
+      - PYTHON_SERVICE_URL=http://python-service:3003
+    volumes:
+      - ./logs:/app/logs
+    restart: unless-stopped
+    networks:
+      - ml-platform-network
+    depends_on:
+      - python-service
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3002/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # LLM Service
+  ollama:
+    container_name: ollama_ml_platform
+    image: ollama/ollama
+    runtime: nvidia
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=compute,utility
+    ports:
+      - "11434:11434"
+    # volumes:
+      # - ./ollama_data:/root/.ollama
+    networks:
+      - ml-platform-network
+    restart: unless-stopped
+
 networks:
   ml-platform-network:
-    driver: bridge 
+    driver: bridge

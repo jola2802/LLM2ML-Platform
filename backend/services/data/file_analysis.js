@@ -1,38 +1,38 @@
 import fs from 'fs/promises';
-import { callLLMAPI } from '../llm/api/llm.js';
-import { getCachedDataAnalysis } from './data_exploration.js';
+import { masClient } from '../clients/mas_client.js';
+import { pythonClient } from '../clients/python_client.js';
 
-const analysis_prompt = `Du bist ein extrem erfahrener Data Scientist. Analysiere die folgende automatische Datenübersicht und gib eine detaillierte Analyse der Daten zurück.
+const analysis_prompt = `You are an extremely experienced Data Scientist. Analyze the following automatic data overview and return a detailed analysis of the data.
 
-AUTOMATISCHE DATENÜBERSICHT:
+AUTOMATIC DATA OVERVIEW:
 {data_overview}
 
-AUFGABE: Basierend auf der automatischen Datenanalyse, gib eine professionelle Einschätzung der Datenqualität, möglichen Herausforderungen und Empfehlungen für das Machine Learning zurück.
+TASK: Based on the automatic data analysis, give a professional assessment of the data quality, possible challenges and recommendations for Machine Learning.
 
-Fokussiere dich auf:
-1. Datenqualität und -reinheit
-2. Identifizierte Probleme (fehlende Werte, Ausreißer, etc.)
-3. Beziehungen zwischen Variablen
-4. Empfehlungen für Preprocessing
-5. Potentielle ML-Anwendungsfälle
+Focus on:
+1. Data quality and purity
+2. Identified problems (missing values, outliers, etc.)
+3. Relationships between variables
+4. Recommendations for preprocessing
+5. Potential ML use cases
 
-Antworte in einem strukturierten, professionellen Format.`;
+Respond in a structured, professional format.`;
 
 // CSV-Datei-Analysefunktion
 export async function analyzeCsvFile(filePath, withLLMAnalysis = true) {
   try {
     const csvContent = await fs.readFile(filePath, 'utf-8');
     const lines = csvContent.split('\n').filter(line => line.trim());
-    
+
     if (lines.length < 2) {
-      throw new Error('CSV-Datei muss mindestens einen Header und eine Datenzeile enthalten');
+      throw new Error('CSV file must contain at least one header and one data line');
     }
-    
+
     const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
-    const sampleRows = lines.slice(1, Math.min(6, lines.length)).map(line => 
+    const sampleRows = lines.slice(1, Math.min(6, lines.length)).map(line =>
       line.split(',').map(cell => cell.trim().replace(/"/g, ''))
     );
-    
+
     // Datentypen erkennen
     const dataTypes = {};
     headers.forEach((header, index) => {
@@ -46,16 +46,19 @@ export async function analyzeCsvFile(filePath, withLLMAnalysis = true) {
     });
 
     // Automatische Datenexploration durchführen
-    const dataAnalysis = await getCachedDataAnalysis(filePath).catch(() => ({ success: false }));
-    
+    const dataAnalysis = await pythonClient.analyzeData(filePath).catch(() => ({ success: false }));
+
     let llmAnalysis = null;
-    
+
     // LLM-basierte Analyse nur wenn gewünscht und automatische Analyse erfolgreich
     if (withLLMAnalysis && dataAnalysis && dataAnalysis.success) {
       const prompt = analysis_prompt.replace('{data_overview}', dataAnalysis.llm_summary || 'Keine automatische Analyse verfügbar');
-      llmAnalysis = await callLLMAPI(prompt).catch(() => null);
+      llmAnalysis = await masClient.callLLM(prompt).catch(() => null);
+      if (llmAnalysis && llmAnalysis.result) {
+        llmAnalysis = llmAnalysis.result;
+      }
     }
-    
+
     return {
       columns: headers,
       rowCount: lines.length - 1,
@@ -65,7 +68,7 @@ export async function analyzeCsvFile(filePath, withLLMAnalysis = true) {
       automatic_analysis: dataAnalysis && dataAnalysis.success ? dataAnalysis.exploration : null,
       analysis_summary: dataAnalysis && dataAnalysis.success ? dataAnalysis.llm_summary : null
     };
-    
+
   } catch (error) {
     console.error('Fehler bei der CSV-Analyse:', error);
     throw error;
@@ -77,11 +80,11 @@ export async function analyzeJsonFile(filePath, withLLMAnalysis = true) {
   try {
     const jsonContent = await fs.readFile(filePath, 'utf-8');
     const data = JSON.parse(jsonContent);
-    
+
     let columns = [];
     let rowCount = 0;
     let sampleData = [];
-    
+
     // Verschiedene JSON-Strukturen behandeln
     if (Array.isArray(data)) {
       // Array von Objekten
@@ -96,7 +99,7 @@ export async function analyzeJsonFile(filePath, withLLMAnalysis = true) {
       rowCount = 1;
       sampleData = [Object.values(data)];
     }
-    
+
     // Datentypen erkennen
     const dataTypes = {};
     columns.forEach((column, index) => {
@@ -110,15 +113,16 @@ export async function analyzeJsonFile(filePath, withLLMAnalysis = true) {
     });
 
     // Automatische Datenexploration durchführen
-    const dataAnalysis = await getCachedDataAnalysis(filePath).catch(() => ({ success: false }));
-    
+    const dataAnalysis = await pythonClient.analyzeData(filePath).catch(() => ({ success: false }));
+
     // LLM-basierte Analyse
     let llm_analysis = null;
     if (withLLMAnalysis) {
       const prompt = analysis_prompt.replace('{data_overview}', dataAnalysis && dataAnalysis.success ? dataAnalysis.llm_summary : 'Keine automatische Analyse verfügbar');
-      llm_analysis = await callLLMAPI(prompt).catch(() => null);
+      let llmResponse = await masClient.callLLM(prompt).catch(() => null);
+      llm_analysis = llmResponse?.result || llmResponse || null;
     }
-    
+
     return {
       columns,
       rowCount,
@@ -137,14 +141,15 @@ export async function analyzeJsonFile(filePath, withLLMAnalysis = true) {
 export async function analyzeExcelFile(filePath, withLLMAnalysis = true) {
   try {
     // Automatische Datenexploration durchführen
-    const dataAnalysis = await getCachedDataAnalysis(filePath).catch(() => ({ success: false }));
-    
+    const dataAnalysis = await pythonClient.analyzeData(filePath).catch(() => ({ success: false }));
+
     let llm_analysis = null;
     if (withLLMAnalysis) {
       const prompt = analysis_prompt.replace('{data_overview}', dataAnalysis && dataAnalysis.success ? dataAnalysis.llm_summary : 'Keine automatische Analyse verfügbar');
-      llm_analysis = await callLLMAPI(prompt).catch(() => null);
+      let llmResponse = await masClient.callLLM(prompt).catch(() => null);
+      llm_analysis = llmResponse?.result || llmResponse || null;
     }
-    
+
     return {
       columns: dataAnalysis && dataAnalysis.success ? (dataAnalysis.exploration?.columns || []) : ['Excel-Spalten werden durch LLM analysiert'],
       rowCount: dataAnalysis && dataAnalysis.success ? (dataAnalysis.exploration?.dataset_info?.rows ?? 0) : 0,
@@ -164,16 +169,17 @@ export async function analyzeTextFile(filePath, withLLMAnalysis = true) {
   try {
     const textContent = await fs.readFile(filePath, 'utf-8');
     const lines = textContent.split('\n').filter(line => line.trim());
-    
+
     // Automatische Datenexploration durchführen
-    const dataAnalysis = await getCachedDataAnalysis(filePath).catch(() => ({ success: false }));
-    
+    const dataAnalysis = await pythonClient.analyzeData(filePath).catch(() => ({ success: false }));
+
     let llm_analysis = null;
     if (withLLMAnalysis) {
       const prompt = analysis_prompt.replace('{data_overview}', dataAnalysis && dataAnalysis.success ? dataAnalysis.llm_summary : 'Keine automatische Analyse verfügbar');
-      llm_analysis = await callLLMAPI(prompt).catch(() => null);
+      let llmResponse = await masClient.callLLM(prompt).catch(() => null);
+      llm_analysis = llmResponse?.result || llmResponse || null;
     }
-    
+
     return {
       columns: ['Text-Inhalt'],
       rowCount: lines.length,
@@ -193,13 +199,14 @@ export async function analyzeGenericFile(filePath, fileExtension, withLLMAnalysi
   try {
     // Automatische Datenexploration durchführen
     const dataAnalysis = await getCachedDataAnalysis(filePath);
-    
+
     let llm_analysis = null;
     if (withLLMAnalysis) {
       const prompt = analysis_prompt.replace('{data_overview}', dataAnalysis.success ? dataAnalysis.llm_summary : 'Keine automatische Analyse verfügbar');
-      llm_analysis = await callLLMAPI(prompt);
+      const llmResponse = await masClient.callLLM(prompt);
+      llm_analysis = llmResponse?.result || llmResponse;
     }
-    
+
     return {
       columns: dataAnalysis && dataAnalysis.success ? (dataAnalysis.exploration?.columns || []) : [`${fileExtension.substring(1).toUpperCase()}-Inhalt`],
       rowCount: dataAnalysis && dataAnalysis.success ? (dataAnalysis.exploration?.dataset_info?.rows ?? 0) : 0,

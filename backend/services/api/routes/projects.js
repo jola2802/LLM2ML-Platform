@@ -1,7 +1,7 @@
 import path from 'path';
 import fs from 'fs/promises';
 import { logRESTAPIRequest } from '../../monitoring/log.js';
-import { 
+import {
   getProject,
   getAllProjects,
   createProject,
@@ -10,9 +10,9 @@ import {
   updateProjectHyperparameters,
   updateProjectStatus,
   updateProjectInsights,
-  deleteProject 
+  deleteProject
 } from '../../database/db.js';
-import { evaluatePerformanceWithLLM } from '../../llm/api/llm_api.js';
+import { masClient } from '../../clients/mas_client.js';
 
 export function setupProjectRoutes(app, scriptDir, venvDir, trainModelAsync, retrainModelAsync) {
   // Intelligentes Projekt erstellen (mit LLM-Empfehlungen)
@@ -148,7 +148,7 @@ export function setupProjectRoutes(app, scriptDir, venvDir, trainModelAsync, ret
       const project = await getProject(id);
       if (!project) return res.status(404).json({ error: 'Projekt nicht gefunden' });
       if (!project.performanceMetrics) return res.status(400).json({ error: 'Keine Performance-Metriken verfügbar für Evaluation' });
-      const performanceInsights = await evaluatePerformanceWithLLM(project);
+      const performanceInsights = await masClient.evaluatePerformance(project);
       await updateProjectInsights(id, performanceInsights);
       res.json({ message: 'Performance-Evaluation erfolgreich abgeschlossen', insights: performanceInsights });
     } catch (error) {

@@ -1,5 +1,5 @@
 import { logRESTAPIRequest } from '../../monitoring/log.js';
-import { clearAnalysisCache, getAnalysisCacheStatus } from '../../data/data_exploration.js';
+import { pythonClient } from '../../clients/python_client.js';
 
 export function setupCacheRoutes(app) {
   // File-Cache (legacy – noop)
@@ -25,8 +25,12 @@ export function setupCacheRoutes(app) {
   app.post('/api/analysis-cache/clear', async (req, res) => {
     try {
       logRESTAPIRequest('clear-analysis-cache', req.body);
-      await clearAnalysisCache();
-      res.json({ message: 'Datenanalyse-Cache erfolgreich geleert' });
+      const response = await fetch(`${process.env.PYTHON_SERVICE_URL || 'http://localhost:3003'}/api/data/cache/clear`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      const result = await response.json();
+      res.json({ message: 'Datenanalyse-Cache erfolgreich geleert', ...result });
     } catch (error) {
       res.status(500).json({ error: 'Fehler beim Löschen des Datenanalyse-Caches: ' + error.message });
     }
@@ -35,7 +39,11 @@ export function setupCacheRoutes(app) {
   app.get('/api/analysis-cache/status', async (req, res) => {
     try {
       logRESTAPIRequest('get-analysis-cache-status', req.body);
-      const status = await getAnalysisCacheStatus();
+      const response = await fetch(`${process.env.PYTHON_SERVICE_URL || 'http://localhost:3003'}/api/data/cache/status`, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      const status = await response.json();
       res.json(status);
     } catch (error) {
       res.status(500).json({ error: 'Fehler beim Abrufen des Datenanalyse-Cache-Status: ' + error.message });

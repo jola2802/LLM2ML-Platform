@@ -1,12 +1,12 @@
 import { logRESTAPIRequest } from '../../monitoring/log.js';
-import { getLLMQueueStatus, cancelLLMRequest } from '../../llm/api/llm.js';
+import { masClient } from '../../clients/mas_client.js';
 
 export function setupQueueRoutes(app) {
   // LLM Queue Status abrufen
   app.get('/api/llm/queue/status', async (req, res) => {
     await logRESTAPIRequest('GET', '/api/llm/queue/status');
     try {
-      const status = getLLMQueueStatus();
+      const status = await masClient.getQueueStatus();
       res.json({ success: true, status, timestamp: new Date().toISOString() });
     } catch (error) {
       res.status(500).json({ success: false, error: 'Failed to get queue status: ' + error.message });
@@ -19,7 +19,7 @@ export function setupQueueRoutes(app) {
     try {
       const { requestId } = req.params;
       const { reason = 'User cancelled' } = req.body;
-      const cancelled = cancelLLMRequest(parseInt(requestId), reason);
+      const cancelled = await masClient.cancelRequest(parseInt(requestId), reason);
       if (cancelled) {
         res.json({ success: true, message: `Request ${requestId} cancelled`, requestId: parseInt(requestId) });
       } else {
