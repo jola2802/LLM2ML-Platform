@@ -1,9 +1,9 @@
 import axios from 'axios';
 
-const MAS_SERVICE_URL = process.env.MAS_SERVICE_URL || 'http://localhost:3002';
+const UNIFIED_SERVICE_URL = process.env.UNIFIED_SERVICE_URL || 'http://localhost:3002';
 
 const client = axios.create({
-    baseURL: MAS_SERVICE_URL,
+    baseURL: UNIFIED_SERVICE_URL,
     timeout: 300000, // 5 Minuten für LLM-Requests
     headers: {
         'Content-Type': 'application/json'
@@ -41,6 +41,23 @@ export const masClient = {
         } catch (error) {
             console.error('Fehler bei LLM-Empfehlungen:', error.message);
             throw new Error(`LLM-Empfehlungen fehlgeschlagen: ${error.response?.data?.error || error.message}`);
+        }
+    },
+
+    // Feature Engineering - NUR Feature-Generierung, keine ML-Konfiguration
+    async getFeatureEngineeringRecommendations(analysis, filePath = null, selectedFeatures = null, excludedFeatures = null, userPreferences = null) {
+        try {
+            const response = await client.post('/api/llm/feature-engineering', {
+                analysis,
+                filePath,
+                selectedFeatures,
+                excludedFeatures,
+                userPreferences
+            });
+            return response.data;
+        } catch (error) {
+            console.error('Fehler bei Feature Engineering:', error.message);
+            throw new Error(`Feature Engineering fehlgeschlagen: ${error.response?.data?.error || error.message}`);
         }
     },
 

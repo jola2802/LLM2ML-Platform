@@ -1,20 +1,31 @@
 // API-URL für Docker Deployment
 const getApiBaseUrl = () => {
-  // In der Entwicklung: Nutze Vite-Proxy (läuft auf gleicher Domain mit /api prefix)
-  if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-    // Nutze den Vite-Proxy - /api wird an localhost:3001 weitergeleitet
-    return '/api';
+  const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+  const isViteDev = window.location.port === '5173' || window.location.port === '5174' || window.location.port === '';
+
+  // In der Entwicklung mit Vite Dev Server: Nutze Vite-Proxy
+  if (isLocalhost && isViteDev) {
+    console.log('🔧 Development: Using Vite Proxy (/api -> http://localhost:3000/api)');
+    return 'http://localhost:3000/api';
   }
-  
-  // In Produktion: gleiche Domain mit /api prefix (wird durch nginx proxy gehandhabt)
+
+  // Fallback: Direkte Backend-URL wenn Proxy nicht verfügbar
+  if (isLocalhost) {
+    console.log('🔧 Development: Using direct backend URL (http://localhost:3000/api)');
+    return 'http://localhost:3000/api';
+  }
+
+  // In Produktion/Docker: Nginx-Proxy leitet /api an Backend weiter
+  console.log('🚀 Production: Using relative API path (/api) - Nginx Proxy');
   return '/api';
 };
 
 const API_BASE_URL = getApiBaseUrl();
 
 // Debug-Logging für URL
-console.log('API_BASE_URL:', API_BASE_URL);
-console.log('Window location:', window.location.hostname, window.location.port);
+console.log('🌐 API_BASE_URL:', API_BASE_URL);
+console.log('📍 Window location:', window.location.hostname, window.location.port);
+console.log('🔍 Full URL:', window.location.href);
 
 export interface ApiProject {
   id: string;
@@ -93,7 +104,7 @@ class ApiService {
       },
       body: JSON.stringify(projectData),
     });
-    
+
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
@@ -109,7 +120,7 @@ class ApiService {
       },
       body: JSON.stringify(projectData),
     });
-    
+
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
@@ -182,7 +193,7 @@ class ApiService {
     const response = await fetch(`${API_BASE_URL}/projects/${id}`, {
       method: 'DELETE',
     });
-    
+
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
@@ -206,7 +217,7 @@ class ApiService {
     return response.json();
   }
 
-  // LLM-Empfehlungen für manipulierte Daten
+  // LLM-Empfehlungen für manipulierte Daten (ohne Feature Engineering)
   async analyzeData(
     filePath: string,
     excludedColumns?: string[],
@@ -214,6 +225,34 @@ class ApiService {
     userPreferences?: string,
   ): Promise<any> {
     const response = await fetch(`${API_BASE_URL}/analyze-data`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        filePath,
+        excludedColumns,
+        excludedFeatures,
+        userPreferences,
+      }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+    }
+
+    return response.json();
+  }
+
+  // Feature Engineering - Fokus auf Generierung neuer Features
+  async generateFeatures(
+    filePath: string,
+    excludedColumns?: string[],
+    excludedFeatures?: string[],
+    userPreferences?: string,
+  ): Promise<any> {
+    const response = await fetch(`${API_BASE_URL}/feature-engineering`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -314,14 +353,14 @@ class ApiService {
   // Modell herunterladen
   async downloadModel(id: string, projectName: string): Promise<void> {
     const response = await fetch(`${API_BASE_URL}/projects/${id}/download`);
-    
+
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
-    
+
     // Blob aus Response erstellen
     const blob = await response.blob();
-    
+
     // Download auslösen
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -346,7 +385,7 @@ class ApiService {
   // ===== NEUE LLM API METHODEN =====
 
   // LLM-Konfiguration abrufen
-  async getLLMConfig(): Promise<{success: boolean, config: any}> {
+  async getLLMConfig(): Promise<{ success: boolean, config: any }> {
     try {
       const response = await fetch(`${API_BASE_URL}/llm/config`);
       if (!response.ok) {
@@ -364,23 +403,23 @@ class ApiService {
   async getLLMStatus(): Promise<any> {
     try {
       const response = await fetch(`${API_BASE_URL}/llm/status`);
-      
+
       // Prüfe Content-Type um sicherzustellen, dass wir JSON bekommen
       const contentType = response.headers.get('content-type');
       if (!contentType || !contentType.includes('application/json')) {
         console.warn('Server antwortet nicht mit JSON:', contentType);
         throw new Error(`Server antwortet nicht mit JSON (Content-Type: ${contentType})`);
       }
-      
+
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
       }
-      
+
       return response.json();
     } catch (error) {
       console.error('Fehler beim Abrufen des LLM-Status:', error);
-      
+
       // Fallback: Standard-Status zurückgeben
       const errorMessage = error instanceof Error ? error.message : 'Unbekannter Fehler';
       return {
@@ -398,7 +437,7 @@ class ApiService {
   }
 
   // Aktiven Provider setzen
-  async setLLMProvider(provider: string): Promise<{success: boolean, message?: string, error?: string}> {
+  async setLLMProvider(provider: string): Promise<{ success: boolean, message?: string, error?: string }> {
     try {
       const response = await fetch(`${API_BASE_URL}/llm/provider`, {
         method: 'POST',
@@ -407,7 +446,7 @@ class ApiService {
         },
         body: JSON.stringify({ provider }),
       });
-      
+
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
@@ -420,7 +459,7 @@ class ApiService {
   }
 
   // Ollama-Modelle abrufen
-  async getOllamaModels(): Promise<{success: boolean, models: any[], error?: string}> {
+  async getOllamaModels(): Promise<{ success: boolean, models: any[], error?: string }> {
     try {
       const response = await fetch(`${API_BASE_URL}/llm/ollama/models`);
       if (!response.ok) {
@@ -435,7 +474,7 @@ class ApiService {
   }
 
   // Ollama-Verbindung testen
-  async testOllamaConnection(): Promise<{success: boolean, connected: boolean, error?: string}> {
+  async testOllamaConnection(): Promise<{ success: boolean, connected: boolean, error?: string }> {
     try {
       const response = await fetch(`${API_BASE_URL}/llm/ollama/test`, {
         method: 'POST',
@@ -443,7 +482,7 @@ class ApiService {
           'Content-Type': 'application/json',
         },
       });
-      
+
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
@@ -456,7 +495,7 @@ class ApiService {
   }
 
   // Ollama-Konfiguration aktualisieren
-  async updateOllamaConfig(config: any): Promise<{success: boolean, message?: string, error?: string}> {
+  async updateOllamaConfig(config: any): Promise<{ success: boolean, message?: string, error?: string }> {
     try {
       const response = await fetch(`${API_BASE_URL}/llm/ollama/config`, {
         method: 'POST',
@@ -465,7 +504,7 @@ class ApiService {
         },
         body: JSON.stringify(config),
       });
-      
+
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
@@ -492,19 +531,19 @@ class ApiService {
     }
   }
 
-  async deleteFile(filePath: string, type: 'scripts' | 'models' | 'uploads'): Promise<{success: boolean, message?: string}> {
+  async deleteFile(filePath: string, type: 'scripts' | 'models' | 'uploads'): Promise<{ success: boolean, message?: string }> {
     try {
       const response = await fetch(`${API_BASE_URL}/files/${type}`, {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ filePath })
       });
-      
+
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
       }
-      
+
       return response.json();
     } catch (error) {
       console.error('Fehler beim Löschen der Datei:', error);

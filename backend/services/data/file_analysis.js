@@ -194,11 +194,11 @@ export async function analyzeTextFile(filePath, withLLMAnalysis = true) {
   }
 }
 
-// Generische Datei analysieren
-export async function analyzeGenericFile(filePath, fileExtension, withLLMAnalysis = true) {
-  try {
-    // Automatische Datenexploration durchführen
-    const dataAnalysis = await getCachedDataAnalysis(filePath);
+ // Generische Datei analysieren
+ export async function analyzeGenericFile(filePath, fileExtension, withLLMAnalysis = true) {
+   try {
+     // Automatische Datenexploration durchführen
+     const dataAnalysis = await pythonClient.analyzeData(filePath).catch(() => ({ success: false }));
 
     let llm_analysis = null;
     if (withLLMAnalysis) {

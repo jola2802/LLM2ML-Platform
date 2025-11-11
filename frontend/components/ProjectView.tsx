@@ -627,13 +627,13 @@ const ProjectView: React.FC<ProjectViewProps> = ({ project, onBack, onProjectUpd
           <div className="flex justify-between items-center">
             <div>
               <h3 className="text-lg font-semibold text-white mb-1">🧠 Auto-Tuning (LLM)</h3>
-              <p className="text-slate-300 text-sm">Lass das LLM eine verbesserte Konfiguration vorschlagen.</p>
+              <p className="text-slate-300 text-sm">Let the LLM propose an improved configuration.</p>
             </div>
             <div className="space-x-2">
-              <button onClick={handleAutoTune} className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-sm">Vorschlag abrufen</button>
+              <button onClick={handleAutoTune} className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-sm">Get proposal</button>
               {autoTuneProposal && (
                 <button onClick={handleApplyAutoTune} disabled={isApplyingAutoTune} className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm disabled:bg-slate-600">
-                  {isApplyingAutoTune ? 'Wird übernommen...' : 'Vorschlag übernehmen & trainieren'}
+                  {isApplyingAutoTune ? 'Applying...' : 'Apply proposal & train'}
                 </button>
               )}
             </div>
@@ -641,19 +641,19 @@ const ProjectView: React.FC<ProjectViewProps> = ({ project, onBack, onProjectUpd
           {autoTuneProposal && (
             <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="bg-slate-900/40 rounded p-4">
-                <div className="text-slate-400 text-xs mb-1">Vorgeschlagener Algorithmus</div>
+                <div className="text-slate-400 text-xs mb-1">Proposed algorithm</div>
                 <div className="text-white font-medium">{autoTuneProposal.algorithm}</div>
                 {typeof autoTuneProposal.expectedGain === 'number' && (
-                  <div className="text-slate-400 text-xs mt-1">Erwarteter Gewinn: {(autoTuneProposal.expectedGain * 100).toFixed(1)}%</div>
+                  <div className="text-slate-400 text-xs mt-1">Expected gain: {(autoTuneProposal.expectedGain * 100).toFixed(1)}%</div>
                 )}
               </div>
               <div className="bg-slate-900/40 rounded p-4">
-                <div className="text-slate-400 text-xs mb-1">Hyperparameter</div>
+                <div className="text-slate-400 text-xs mb-1">Hyperparameters</div>
                 <pre className="text-slate-300 text-xs whitespace-pre-wrap">{JSON.stringify(autoTuneProposal.hyperparameters, null, 2)}</pre>
               </div>
               {autoTuneProposal.rationale && (
                 <div className="md:col-span-2 bg-slate-900/40 rounded p-4">
-                  <div className="text-slate-400 text-xs mb-1">Begründung</div>
+                  <div className="text-slate-400 text-xs mb-1">Reasoning</div>
                   <div className="text-slate-200 text-sm">{autoTuneProposal.rationale}</div>
                 </div>
               )}
@@ -667,7 +667,7 @@ const ProjectView: React.FC<ProjectViewProps> = ({ project, onBack, onProjectUpd
             {/* Overall Score & Grade */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="bg-slate-800/50 rounded-lg p-6 text-center">
-                <h4 className="text-slate-400 text-sm font-medium mb-2">Gesamt-Score</h4>
+                <h4 className="text-slate-400 text-sm font-medium mb-2">Total score</h4>
                 <div className="text-4xl font-bold text-white mb-2">
                   {currentProject.performanceInsights?.overallScore ?
                     Number(currentProject.performanceInsights.overallScore).toFixed(1) :
@@ -688,7 +688,7 @@ const ProjectView: React.FC<ProjectViewProps> = ({ project, onBack, onProjectUpd
               </div>
 
               <div className="bg-slate-800/50 rounded-lg p-6 text-center">
-                <h4 className="text-slate-400 text-sm font-medium mb-2">Performance-Grade</h4>
+                <h4 className="text-slate-400 text-sm font-medium mb-2">Performance grade</h4>
                 <div className={`inline-flex items-center px-4 py-2 rounded-lg border text-lg font-semibold ${getGradeColor(currentProject.performanceInsights?.performanceGrade || 'Unknown')}`}>
                   {currentProject.performanceInsights?.performanceGrade || 'N/A'}
                 </div>
@@ -697,15 +697,15 @@ const ProjectView: React.FC<ProjectViewProps> = ({ project, onBack, onProjectUpd
 
             {/* Summary */}
             <div className="bg-slate-800/50 border border-slate-600/50 rounded-lg p-6">
-              <h4 className="text-slate-300 font-medium mb-3">📊 KI-Zusammenfassung</h4>
-              <p className="text-slate-200">{currentProject.performanceInsights?.summary || 'Keine Zusammenfassung verfügbar'}</p>
+              <h4 className="text-slate-300 font-medium mb-3">📊 AI summary</h4>
+              <p className="text-slate-200">{currentProject.performanceInsights?.summary || 'No summary available'}</p>
             </div>
 
             {/* Detailed Analysis */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               <div className="bg-slate-800/50 border border-slate-600/50 rounded-lg p-6">
                 <h4 className="text-emerald-400 font-medium mb-3 flex items-center">
-                  <span className="mr-2">✅</span>Stärken
+                  <span className="mr-2">✅</span>Strengths
                 </h4>
                 <ul className="space-y-2">
                   {(currentProject.performanceInsights?.detailedAnalysis?.strengths || []).map((strength, index) => (
@@ -719,7 +719,7 @@ const ProjectView: React.FC<ProjectViewProps> = ({ project, onBack, onProjectUpd
 
               <div className="bg-slate-800/50 border border-slate-600/50 rounded-lg p-6">
                 <h4 className="text-amber-400 font-medium mb-3 flex items-center">
-                  <span className="mr-2">⚠️</span>Schwächen
+                  <span className="mr-2">⚠️</span>Weaknesses
                 </h4>
                 <ul className="space-y-2">
                   {(currentProject.performanceInsights?.detailedAnalysis?.weaknesses || []).map((weakness, index) => (
@@ -733,7 +733,7 @@ const ProjectView: React.FC<ProjectViewProps> = ({ project, onBack, onProjectUpd
 
               <div className="bg-slate-800/50 border border-slate-600/50 rounded-lg p-6">
                 <h4 className="text-blue-400 font-medium mb-3 flex items-center">
-                  <span className="mr-2">🔍</span>Wichtige Erkenntnisse
+                  <span className="mr-2">🔍</span>Important findings
                 </h4>
                 <ul className="space-y-2">
                   {(currentProject.performanceInsights?.detailedAnalysis?.keyFindings || []).map((finding, index) => (
@@ -749,7 +749,7 @@ const ProjectView: React.FC<ProjectViewProps> = ({ project, onBack, onProjectUpd
             {/* Improvement Suggestions */}
             <div className="bg-slate-800/50 rounded-lg p-6">
               <h4 className="text-white font-medium mb-4 flex items-center">
-                <span className="mr-2">💡</span>Verbesserungsvorschläge
+                <span className="mr-2">💡</span>Improvement suggestions
               </h4>
               <div className="space-y-4">
                 {(currentProject.performanceInsights?.improvementSuggestions || []).map((suggestion, index) => (
@@ -758,13 +758,13 @@ const ProjectView: React.FC<ProjectViewProps> = ({ project, onBack, onProjectUpd
                       <div>
                         <span className="text-blue-400 text-sm font-medium">{suggestion.category}</span>
                         <div className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium ml-3 ${getImpactColor(suggestion.expectedImpact)}`}>
-                          {suggestion.expectedImpact} Impact
+                          {suggestion.expectedImpact} impact
                         </div>
                       </div>
                     </div>
                     <p className="text-slate-300 mb-2">{suggestion.suggestion}</p>
                     <details className="cursor-pointer">
-                      <summary className="text-slate-400 hover:text-slate-300 text-sm">Umsetzung anzeigen</summary>
+                      <summary className="text-slate-400 hover:text-slate-300 text-sm">Show implementation</summary>
                       <p className="text-slate-400 text-sm mt-2 pl-4 border-l-2 border-slate-600">
                         {suggestion.implementation}
                       </p>
@@ -781,20 +781,20 @@ const ProjectView: React.FC<ProjectViewProps> = ({ project, onBack, onProjectUpd
               </h4>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="text-center">
-                  <h5 className="text-slate-400 text-sm mb-2">Produktionsbereitschaft</h5>
+                  <h5 className="text-slate-400 text-sm mb-2">Production readiness</h5>
                   <span className={`font-medium ${getReadinessColor(currentProject.performanceInsights?.businessImpact?.readiness || 'Unknown')}`}>
                     {currentProject.performanceInsights?.businessImpact?.readiness || 'N/A'}
                   </span>
                 </div>
                 <div className="text-center">
-                  <h5 className="text-slate-400 text-sm mb-2">Risikobewertung</h5>
+                  <h5 className="text-slate-400 text-sm mb-2">Risk assessment</h5>
                   <span className={`font-medium ${currentProject.performanceInsights?.businessImpact?.riskAssessment === 'Low' ? 'text-emerald-400' : currentProject.performanceInsights?.businessImpact?.riskAssessment === 'Medium' ? 'text-amber-400' : 'text-red-400'}`}>
                     {currentProject.performanceInsights?.businessImpact?.riskAssessment || 'N/A'}
                   </span>
                 </div>
                 <div className="text-center md:col-span-1">
-                  <h5 className="text-slate-400 text-sm mb-2">Empfehlung</h5>
-                  <p className="text-slate-300 text-sm">{currentProject.performanceInsights?.businessImpact?.recommendation || 'Keine Empfehlung verfügbar'}</p>
+                  <h5 className="text-slate-400 text-sm mb-2">Recommendation</h5>
+                  <p className="text-slate-300 text-sm">{currentProject.performanceInsights?.businessImpact?.recommendation || 'No recommendation available'}</p>
                 </div>
               </div>
             </div>
@@ -892,7 +892,7 @@ const ProjectView: React.FC<ProjectViewProps> = ({ project, onBack, onProjectUpd
               disabled={isSavingCode || isRetraining}
               className="px-4 py-2 border border-gray-600 text-sm font-medium rounded-md text-gray-300 hover:bg-gray-700 disabled:opacity-50"
             >
-              🔄 Reset auf Original
+              🔄 Reset to original
             </button>
           )}
           <button
@@ -903,10 +903,10 @@ const ProjectView: React.FC<ProjectViewProps> = ({ project, onBack, onProjectUpd
             {isSavingCode ? (
               <div className="flex items-center space-x-2">
                 <Spinner size="sm" />
-                <span>Speichern...</span>
+                <span>Saving...</span>
               </div>
             ) : (
-              '💾 Code speichern'
+              '💾 Save code'
             )}
           </button>
           <button
@@ -917,10 +917,10 @@ const ProjectView: React.FC<ProjectViewProps> = ({ project, onBack, onProjectUpd
             {isRetraining ? (
               <div className="flex items-center space-x-2">
                 <Spinner size="sm" />
-                <span>Re-Training...</span>
+                <span>Re-training...</span>
               </div>
             ) : (
-              '🚀 Re-Training'
+              '🚀 Re-train'
             )}
           </button>
           {!pythonCode && project.status === ProjectStatus.Completed && (
@@ -928,7 +928,7 @@ const ProjectView: React.FC<ProjectViewProps> = ({ project, onBack, onProjectUpd
               onClick={loadPythonCodeFromServer}
               className="px-4 py-2 border border-yellow-600 text-sm font-medium rounded-md text-yellow-300 hover:bg-yellow-700 disabled:opacity-50"
             >
-              🔄 Code laden
+              🔄 Load code
             </button>
           )}
         </div>
@@ -939,9 +939,9 @@ const ProjectView: React.FC<ProjectViewProps> = ({ project, onBack, onProjectUpd
         <div className="bg-gradient-to-r from-purple-900/30 to-blue-900/30 border border-purple-500/50 rounded-lg p-4">
           <div className="flex justify-between items-center mb-4">
             <div>
-              <h4 className="text-lg font-medium text-white">⚙️ Hyperparameter anpassen</h4>
+              <h4 className="text-lg font-medium text-white">⚙️ Adapt hyperparameters</h4>
               <p className="text-purple-200 text-sm">
-                Passe die Hyperparameter für {project.algorithm} an
+                Adapt the hyperparameters for {project.algorithm}
               </p>
             </div>
             <button
@@ -949,7 +949,7 @@ const ProjectView: React.FC<ProjectViewProps> = ({ project, onBack, onProjectUpd
               disabled={isRetraining}
               className="px-4 py-2 border border-purple-500 text-sm font-medium rounded-md text-purple-300 hover:bg-purple-700 disabled:opacity-50"
             >
-              {showHyperparameterEditor ? '🔽 Ausblenden' : '⚙️ Anzeigen'}
+              {showHyperparameterEditor ? '🔽 Hide' : '⚙️ Show'}
             </button>
           </div>
 
@@ -995,22 +995,12 @@ const ProjectView: React.FC<ProjectViewProps> = ({ project, onBack, onProjectUpd
           placeholder="Python code wird hier angezeigt..."
         />
       </div>
-
-      <div className="bg-blue-900/20 border border-blue-500/50 rounded-lg p-4">
-        <h4 className="text-blue-400 font-medium mb-2">💡 Code-Editor Tipps</h4>
-        <ul className="text-blue-200 text-sm space-y-1">
-          <li>• Bearbeiten Sie den Python-Code nach Ihren Wünschen</li>
-          <li>• Speichern Sie Änderungen vor dem Re-Training</li>
-          <li>• Re-Training erstellt ein neues Modell mit Ihrem angepassten Code</li>
-          <li>• Das alte Modell wird automatisch als Backup gespeichert</li>
-        </ul>
-      </div>
     </div>
   );
 
   const renderApiTab = () => {
     const sampleBody = project.features.reduce((acc, f) => ({ ...acc, [f]: "sample_value" }), {});
-    const curlCommand = `curl -X POST 'http://localhost:3001/api/predict/${project.id}' \\
+    const curlCommand = `curl -X POST 'http://localhost:3000/api/predict/${project.id}' \\
     -H 'Content-Type: application/json' \\
     -d '${JSON.stringify({ inputs: sampleBody }, null, 2)}'`;
 
@@ -1019,7 +1009,7 @@ const ProjectView: React.FC<ProjectViewProps> = ({ project, onBack, onProjectUpd
         <div>
           <h3 className="text-lg font-medium text-white">API Endpoint</h3>
           <div className="mt-2 p-3 bg-gray-900 rounded-md font-mono text-sm text-blue-300">
-            POST http://localhost:3001/api/predict/{project.id}
+            POST http://localhost:3000/api/predict/{project.id}
           </div>
         </div>
         <div>
@@ -1082,9 +1072,9 @@ const ProjectView: React.FC<ProjectViewProps> = ({ project, onBack, onProjectUpd
             </div>
           </div>
           <details className="mt-3">
-            <summary className="cursor-pointer text-purple-200 hover:text-purple-100 text-sm">KI-Begründung anzeigen</summary>
+            <summary className="cursor-pointer text-purple-200 hover:text-purple-100 text-sm">Show AI Reasoning</summary>
             <p className="mt-2 text-purple-100 text-xs bg-purple-950/30 rounded p-2">
-              {project.recommendations.reasoning || 'Keine Begründung verfügbar'}
+              {project.recommendations.reasoning || 'No reasoning available'}
             </p>
           </details>
         </div>
@@ -1263,7 +1253,7 @@ const ProjectView: React.FC<ProjectViewProps> = ({ project, onBack, onProjectUpd
             {/* Sample Data Preview */}
             <div className="bg-gray-800/50 rounded-lg p-6">
               <h4 className="text-white font-medium mb-4 flex items-center">
-                <span className="mr-2">👀</span>Datenvorschau (erste {dataStatistics.sampleData.rows.length} Zeilen)
+                <span className="mr-2">👀</span>Data preview (first {dataStatistics.sampleData.rows.length} rows)
               </h4>
 
               <div className="overflow-x-auto">
@@ -1336,7 +1326,7 @@ const ProjectView: React.FC<ProjectViewProps> = ({ project, onBack, onProjectUpd
       <div className="bg-gray-800/50 rounded-lg shadow-xl p-6 sm:p-8 animate-fade-in">
         <button onClick={onBack} className="flex items-center text-sm text-blue-400 hover:text-blue-300 mb-6">
           <ChevronLeftIcon className="h-5 w-5 mr-1" />
-          Back to Dashboard
+          Back to projects
         </button>
 
         <div className="mb-6">
@@ -1346,8 +1336,8 @@ const ProjectView: React.FC<ProjectViewProps> = ({ project, onBack, onProjectUpd
               <p className="text-gray-400 mt-1">Model Type: {project.modelType}</p>
               <div className="flex items-center mt-2 space-x-4">
                 <span className={`px-3 py-1 rounded-full text-xs font-medium ${project.status === ProjectStatus.Completed ? 'bg-emerald-900/50 text-emerald-400 border border-emerald-500/50' :
-                    project.status === ProjectStatus.Training || project.status === ProjectStatus['Re-Training'] ? 'bg-blue-900/50 text-blue-400 border border-blue-500/50' :
-                      'bg-red-900/50 text-red-400 border border-red-500/50'
+                  project.status === ProjectStatus.Training || project.status === ProjectStatus['Re-Training'] ? 'bg-blue-900/50 text-blue-400 border border-blue-500/50' :
+                    'bg-red-900/50 text-red-400 border border-red-500/50'
                   }`}>
                   {project.status}
                 </span>
@@ -1366,8 +1356,8 @@ const ProjectView: React.FC<ProjectViewProps> = ({ project, onBack, onProjectUpd
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 className={`${activeTab === tab.id
-                    ? 'border-blue-500 text-blue-400'
-                    : 'border-transparent text-gray-400 hover:text-gray-200 hover:border-gray-500'
+                  ? 'border-blue-500 text-blue-400'
+                  : 'border-transparent text-gray-400 hover:text-gray-200 hover:border-gray-500'
                   } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors`}
               >
                 {tab.name}
@@ -1383,7 +1373,7 @@ const ProjectView: React.FC<ProjectViewProps> = ({ project, onBack, onProjectUpd
         <div className="mt-8">
           <ErrorBoundary fallback={
             <div className="bg-red-900/30 border border-red-500/50 rounded-lg p-6 text-center">
-              <p className="text-red-400">❌ Fehler beim Laden dieses Tabs. Bitte wählen Sie einen anderen Tab oder laden Sie die Seite neu.</p>
+              <p className="text-red-400">❌ Error loading this tab. Please select another tab or reload the page.</p>
             </div>
           }>
             {activeTab === 'predict' && renderPredictTab()}

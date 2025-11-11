@@ -21,11 +21,6 @@ Diese Anwendung ist jetzt in separate Docker-Container aufgeteilt:
 - Für lokale Text-Generierung und Code-Analyse
 
 ## Installation und Start
-
-### Voraussetzungen
-- Docker und Docker Compose installiert
-- Mindestens 4GB RAM verfügbar (für Ollama)
-
 ### Start der Anwendung
 
 ```bash
@@ -49,14 +44,6 @@ docker-compose down
 
 # Mit Volume-Löschung (Achtung: Daten gehen verloren!)
 docker-compose down -v
-```
-
-## Umgebungsvariablen
-
-Erstelle eine `.env` Datei im Root-Verzeichnis:
-
-```env
-GEMINI_API_KEY=dein_gemini_api_key_hier
 ```
 
 ## Ports

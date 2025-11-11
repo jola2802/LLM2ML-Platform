@@ -88,6 +88,89 @@ export function setupAnalyzeRoutes(app) {
       res.status(500).json({ error: 'Fehler bei der Datenanalyse: ' + error.message });
     }
   });
+
+  // Feature Engineering Endpoint - Fokus auf Feature-Generierung
+  app.post('/api/feature-engineering', async (req, res) => {
+    try {
+      logRESTAPIRequest('feature-engineering', req.body);
+      const { filePath, excludedColumns, excludedFeatures, selectedColumns, userPreferences } = req.body;
+
+      if (!filePath) {
+        return res.status(400).json({ error: 'filePath ist erforderlich' });
+      }
+
+      const fileExtension = path.extname(filePath).toLowerCase();
+
+      // Datei analysieren
+      let analysis;
+      if (fileExtension === '.csv') {
+        analysis = await analyzeCsvFile(filePath, false);
+        analysis.file_type = 'CSV';
+      } else if (fileExtension === '.json') {
+        analysis = await analyzeJsonFile(filePath, false);
+        analysis.file_type = 'JSON';
+      } else if (fileExtension === '.xlsx' || fileExtension === '.xls') {
+        analysis = await analyzeExcelFile(filePath, false);
+        analysis.file_type = 'Excel';
+      } else if (fileExtension === '.txt') {
+        analysis = await analyzeTextFile(filePath, false);
+        analysis.file_type = 'Text';
+      } else {
+        analysis = await analyzeGenericFile(filePath, fileExtension, false);
+        analysis.file_type = fileExtension.substring(1).toUpperCase();
+      }
+
+      // Spalten basierend auf Manipulationen anpassen
+      let manipulatedAnalysis = { ...analysis };
+
+      if (excludedColumns && excludedColumns.length > 0) {
+        manipulatedAnalysis.columns = analysis.columns.filter(col => !excludedColumns.includes(col));
+        manipulatedAnalysis.sampleData = analysis.sampleData.map(row =>
+          row.filter((_, index) => !excludedColumns.includes(analysis.columns[index]))
+        );
+      }
+
+      if (selectedColumns && selectedColumns.length > 0) {
+        manipulatedAnalysis.columns = selectedColumns;
+        manipulatedAnalysis.sampleData = analysis.sampleData.map(row =>
+          selectedColumns.map(col => row[analysis.columns.indexOf(col)])
+        );
+      }
+
+      if (excludedFeatures && excludedFeatures.length > 0) {
+        manipulatedAnalysis.columns = analysis.columns.filter(col => !excludedFeatures.includes(col));
+      }
+
+      // LLM-basierte Feature Engineering - NUR Feature-Generierung, keine ML-Konfiguration
+      const featureEngineeringResult = await masClient.getFeatureEngineeringRecommendations(
+        manipulatedAnalysis,
+        filePath,
+        selectedColumns,
+        excludedFeatures,
+        userPreferences
+      );
+
+      // Sicherstellen, dass generatedFeatures vorhanden ist
+      if (!featureEngineeringResult.generatedFeatures) {
+        featureEngineeringResult.generatedFeatures = [];
+      }
+
+      console.log('Feature Engineering Result:', {
+        generatedFeaturesCount: featureEngineeringResult.generatedFeatures?.length || 0,
+        reasoning: featureEngineeringResult.reasoning?.substring(0, 100) || 'N/A'
+      });
+
+      res.json({
+        analysis: manipulatedAnalysis,
+        generatedFeatures: featureEngineeringResult.generatedFeatures || [],
+        reasoning: featureEngineeringResult.reasoning || 'Feature Engineering abgeschlossen'
+      });
+
+    } catch (error) {
+      console.error('Fehler beim Feature Engineering:', error);
+      res.status(500).json({ error: 'Fehler beim Feature Engineering: ' + error.message });
+    }
+  });
 }
 
 

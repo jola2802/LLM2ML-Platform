@@ -1,19 +1,33 @@
 {
     "version": "0.2.0",
+    "compounds": [
+        {
+            "name": "Alle Services starten",
+            "configurations": [
+                "Backend starten",
+                "Frontend starten"
+            ]
+        }
+    ],
     "configurations": [
         {
             "type": "node",
             "request": "launch",
             "name": "Backend starten",
-            "skipFiles": [
-                "<node_internals>/**"
-            ],
             "program": "${workspaceFolder}/backend/server.js",
             "cwd": "${workspaceFolder}/backend",
-            "envFile": "${workspaceFolder}/.env.local",
             "env": {
-                "PORT": "3001"
-            }
+                "NODE_ENV": "development",
+                "PORT": "3000",
+                "UNIFIED_SERVICE_URL": "http://192.168.0.206:3002",
+                "FRONTEND_URL": "http://localhost:5173",
+                "UPLOADS_DIR": "${workspaceFolder}/uploads",
+                "MODELS_DIR": "${workspaceFolder}/models",
+                "SCRIPT_DIR": "${workspaceFolder}/scripts"
+            },
+            "skipFiles": [
+                "<node_internals>/**"
+            ]
         },
         {
             "type": "node",
@@ -21,17 +35,13 @@
             "name": "Frontend starten",
             "cwd": "${workspaceFolder}/frontend",
             "runtimeExecutable": "npm",
-            "runtimeArgs": ["run", "dev"],
-            "envFile": "${workspaceFolder}/.env.local",
+            "runtimeArgs": [
+                "run",
+                "dev"
+            ],
             "env": {
                 "VITE_API_URL": "http://localhost:3001/api"
             }
-        },
-    ],
-    "compounds": [
-        {
-            "name": "Full Stack",
-            "configurations": ["Backend starten", "Frontend starten"]
         }
     ]
-} 
+}

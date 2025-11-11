@@ -3,6 +3,9 @@
  */
 
 import { EventEmitter } from 'events';
+// Import-Pfad - im Container ist config unter /app/config gemountet
+// Lokal: config liegt im Root-Verzeichnis, von backend/services/monitoring/ aus: ../../../config/
+// Im Container: config liegt unter /app/config, von /app/services/monitoring/ aus: ../../config/
 import { getWorkerConfig } from '../../../config/worker_scaling_config.js';
 
 class ScalingMonitor extends EventEmitter {

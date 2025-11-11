@@ -48,10 +48,46 @@ await initializeLogging();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// CORS für Frontend
+// CORS für Frontend - erlaube mehrere Origins für Development und Docker
+const allowedOrigins = [
+  process.env.FRONTEND_URL,
+  'http://localhost:5173',
+  'http://localhost:5174',
+  'http://localhost:3000',
+  'http://127.0.0.1:5173',
+  'http://127.0.0.1:5174',
+  'http://127.0.0.1:3000',
+  'http://frontend:80',
+  'http://frontend',
+  'http://localhost:80'
+].filter(Boolean);
+
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
-  credentials: true
+  origin: (origin, callback) => {
+    // Erlaube Requests ohne Origin (z.B. Postman, curl, Server-to-Server)
+    if (!origin) {
+      return callback(null, true);
+    }
+
+    // Prüfe ob Origin erlaubt ist
+    if (allowedOrigins.some(allowed => origin.startsWith(allowed))) {
+      callback(null, true);
+    } else if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      console.log('⚠️ CORS blocked origin:', origin);
+      console.log('✅ Allowed origins:', allowedOrigins);
+      // In Development: Erlaube alle localhost Origins
+      if (origin.includes('localhost') || origin.includes('127.0.0.1')) {
+        callback(null, true);
+      } else {
+        callback(new Error('Not allowed by CORS'));
+      }
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
 }));
 
 app.use(express.json());
@@ -71,14 +107,31 @@ app.post('/api/webhooks/job-completed', async (req, res) => {
   try {
     const { jobId, jobType, projectId, result, status } = req.body;
 
+    console.log(`Webhook empfangen: Job ${jobId} (${jobType}) für Projekt ${projectId}, Status: ${status}`);
+
     if (status === 'completed') {
       if (jobType === 'training') {
-        await handleTrainingJobCompleted({ id: jobId, type: jobType, data: { projectId }, result });
+        await handleTrainingJobCompleted({
+          id: jobId,
+          type: jobType,
+          data: { projectId },
+          result: result || {}
+        });
       } else if (jobType === 'retraining') {
-        await handleRetrainingJobCompleted({ id: jobId, type: jobType, data: { projectId }, result });
+        await handleRetrainingJobCompleted({
+          id: jobId,
+          type: jobType,
+          data: { projectId },
+          result: result || {}
+        });
       }
     } else if (status === 'failed') {
-      await handleTrainingJobFailed({ id: jobId, type: jobType, data: { projectId }, error: result?.error });
+      await handleTrainingJobFailed({
+        id: jobId,
+        type: jobType,
+        data: { projectId },
+        error: result?.error || result || 'Unbekannter Fehler'
+      });
     }
 
     res.json({ success: true });
@@ -153,37 +206,14 @@ setupScalingRoutes(app);
 setupPredictCacheRoutes(app, scriptDir);
 setupPredictionEndpoint(app, scriptDir, null); // venvDir nicht mehr benötigt
 
-// Statische Dateien für Frontend servieren (NACH allen API-Routen)
-const frontendDistPath = path.join(__dirname, '..', 'frontend', 'dist');
-app.use(express.static(frontendDistPath));
-
-// Root-Route: Frontend index.html servieren
-app.get('/', (req, res) => {
-  const indexPath = path.join(frontendDistPath, 'index.html');
-  res.sendFile(indexPath, (err) => {
-    if (err) {
-      console.error('Fehler beim Servieren der index.html:', err);
-      res.status(404).json({
-        error: 'Frontend nicht gefunden. Bitte Frontend bauen: cd frontend && npm run build'
-      });
-    }
-  });
+// Health-Check Endpoint
+app.get('/health', (req, res) => {
+  res.json({ status: 'ok', service: 'backend' });
 });
 
-// Fallback für alle anderen Routen: Frontend index.html (für React Router)
-// WICHTIG: Diese Route muss NACH allen API-Routen kommen
-app.get('*', (req, res) => {
-  // Nur wenn es keine API-Route ist
-  if (!req.path.startsWith('/api')) {
-    const indexPath = path.join(frontendDistPath, 'index.html');
-    res.sendFile(indexPath, (err) => {
-      if (err) {
-        res.status(404).json({ error: 'Frontend nicht gefunden' });
-      }
-    });
-  } else {
-    res.status(404).json({ error: 'API-Route nicht gefunden' });
-  }
+// API-Route nicht gefunden
+app.get('/api/*', (req, res) => {
+  res.status(404).json({ error: 'API-Route nicht gefunden' });
 });
 
 // Job-Handler-Funktionen
@@ -197,20 +227,31 @@ async function handleTrainingJobCompleted(job) {
     return;
   }
 
-  const { output, stderr } = job.result;
+  const { output, stderr, metrics } = job.result;
+
+  console.log(`Job-Result für Projekt ${projectId}:`, {
+    hasOutput: !!output,
+    outputLength: output?.length || 0,
+    hasStderr: !!stderr,
+    hasMetrics: !!metrics,
+    metricsKeys: metrics ? Object.keys(metrics) : []
+  });
 
   try {
     const project = await getProject(projectId);
     if (!project) return;
 
     // Performance Metriken aus der Ausgabe extrahieren
-    let metrics = {};
+    let extractedMetrics = metrics || {};
     try {
-      metrics = extractMetricsFromOutput(output, project.modelType);
-      // console.log('Extrahierte Metriken:', metrics);
+      // Falls keine Metriken im Result, versuche aus Output zu extrahieren
+      if (!extractedMetrics || Object.keys(extractedMetrics).length === 0) {
+        extractedMetrics = extractMetricsFromOutput(output || '', project.modelType || 'classification');
+      }
+      console.log('Verwendete Metriken:', extractedMetrics);
     } catch (metricsError) {
       console.error('Fehler bei Metrik-Extraktion:', metricsError.message);
-      metrics = { error: 'Metrik-Extraktion fehlgeschlagen' };
+      extractedMetrics = extractedMetrics || { error: 'Metrik-Extraktion fehlgeschlagen' };
     }
 
     // Hyperparameter aus dem gespeicherten Python-Code extrahieren
@@ -233,12 +274,14 @@ async function handleTrainingJobCompleted(job) {
     // Projekt in DB aktualisieren
     await updateProjectTraining(projectId, {
       status: 'Completed',
-      performanceMetrics: metrics,
+      performanceMetrics: extractedMetrics,
       pythonCode: project.pythonCode, // Bereits in DB gespeichert
       originalPythonCode: project.pythonCode,
       modelPath: modelPath,
       hyperparameters: hyperparameters
     });
+
+    console.log(`Projekt ${projectId} erfolgreich als 'Completed' markiert`);
 
     // Automatische Performance-Evaluation
     try {
@@ -369,57 +412,62 @@ async function trainModelAsync(projectId) {
     const project = await getProject(projectId);
     if (!project) return;
 
-    // Python Script aus der Datenbank holen
-    let pythonCode = '';
+    // Status auf "Training" setzen
+    await updateProjectTraining(projectId, {
+      status: 'Training',
+      performanceMetrics: {},
+      pythonCode: project?.pythonCode || '',
+      originalPythonCode: project?.pythonCode || '',
+      modelPath: project?.modelPath || '',
+      hyperparameters: project?.hyperparameters || {}
+    });
+
+    console.log(`🚀 Starte Training für Projekt ${projectId} - Pipeline wird Code generieren und Training direkt starten`);
+
+    // Pipeline aufrufen - diese generiert Code und startet Training direkt im unified-service
     try {
-      if (!project.pythonCode) {
-        // throw new Error('Kein Python-Code in der Datenbank gefunden. Bitte zuerst die Agent-Pipeline ausführen.');
-        // Führe die Agent-Pipeline aus
-        const response = await masClient.runAgentPipeline(project);
-        pythonCode = response;
+      const pipelineResponse = await masClient.runAgentPipeline(project);
+
+      // Pipeline gibt zurück: { result: pythonCode, jobId: ..., projectId: ..., status: 'training_started' }
+      const pythonCode = pipelineResponse.result || pipelineResponse;
+      const jobId = pipelineResponse.jobId;
+
+      if (pythonCode && typeof pythonCode === 'string') {
+        // Speichere den generierten Code in der DB
+        await updateProjectCode(projectId, pythonCode);
+        console.log(`✅ Python-Code in DB gespeichert (${pythonCode.length} Zeichen)`);
+      }
+
+      if (jobId) {
+        console.log(`✅ Training-Job ${jobId} wurde direkt im unified-service gestartet`);
+        console.log(`⏳ Warte auf Training-Abschluss (Webhook wird benachrichtigen)`);
       } else {
-        pythonCode = project.pythonCode;
-        console.log(`Python-Code aus Datenbank geladen (${pythonCode.length} Zeichen)`);
+        console.log(`⚠️ Keine Job-ID zurückgegeben, aber Pipeline erfolgreich`);
       }
 
-      // Validiere Python-Code
-      if (!pythonCode || typeof pythonCode !== 'string') {
-        throw new Error('Ungültiger Python-Code in der Datenbank');
-      }
-
-
-    } catch (error) {
-      console.error('Fehler beim Laden des Python-Codes:', error.message);
+    } catch (pipelineError) {
+      console.error(`❌ Pipeline-Fehler: ${pipelineError.message}`);
       await updateProjectTraining(projectId, {
         status: 'Failed',
-        performanceMetrics: { error: `Python-Code nicht verfügbar: ${error.message}` },
-        pythonCode: '',
-        originalPythonCode: '',
-        modelPath: '',
+        performanceMetrics: { error: `Pipeline fehlgeschlagen: ${pipelineError.message}` },
+        pythonCode: project?.pythonCode || '',
+        originalPythonCode: project?.pythonCode || '',
+        modelPath: project?.modelPath || '',
         hyperparameters: project?.hyperparameters || {}
       });
-      return;
     }
 
-    // Python-Code in der DB speichern vor der Ausführung
-    await updateProjectCode(projectId, pythonCode);
-
-    // Job über Python-Service starten
-    const result = await pythonClient.startTraining(projectId, pythonCode);
-    const jobId = result.jobId;
-    // console.log(`Training-Job ${jobId} für Projekt ${projectId} gestartet`);
-
   } catch (error) {
-    console.error(`Fehler beim Vorbereiten des Trainings für Projekt ${projectId}:`, error.message);
+    console.error(`Fehler beim Starten des Trainings für Projekt ${projectId}:`, error.message);
 
     try {
       await updateProjectTraining(projectId, {
         status: 'Failed',
         performanceMetrics: { error: error.message },
-        pythonCode: '',
-        originalPythonCode: '',
-        modelPath: '',
-        hyperparameters: {}
+        pythonCode: project?.pythonCode || '',
+        originalPythonCode: project?.pythonCode || '',
+        modelPath: project?.modelPath || '',
+        hyperparameters: project?.hyperparameters || {}
       });
     } catch (dbError) {
       console.error('Fehler beim Markieren des Projekts als fehlgeschlagen:', dbError.message);
@@ -482,9 +530,9 @@ setTimeout(async () => {
   }
 }, 60000); // 60 Sekunden nach Server-Start
 
-// Server starten
-app.listen(PORT, () => {
-  console.log(`ML-Platform läuft auf Port ${PORT}`);
-  console.log(`Frontend: http://localhost:${PORT}`);
+// Server starten - auf 0.0.0.0 binden, damit er von außen erreichbar ist
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`Backend läuft auf Port ${PORT}`);
   console.log(`API: http://localhost:${PORT}/api`);
+  console.log(`Health: http://localhost:${PORT}/health`);
 });

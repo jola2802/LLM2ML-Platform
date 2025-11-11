@@ -25,7 +25,7 @@ export function setupCacheRoutes(app) {
   app.post('/api/analysis-cache/clear', async (req, res) => {
     try {
       logRESTAPIRequest('clear-analysis-cache', req.body);
-      const response = await fetch(`${process.env.PYTHON_SERVICE_URL || 'http://localhost:3003'}/api/data/cache/clear`, {
+      const response = await fetch(`${process.env.UNIFIED_SERVICE_URL || 'http://localhost:3002'}/api/data/cache/clear`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' }
       });
@@ -39,7 +39,7 @@ export function setupCacheRoutes(app) {
   app.get('/api/analysis-cache/status', async (req, res) => {
     try {
       logRESTAPIRequest('get-analysis-cache-status', req.body);
-      const response = await fetch(`${process.env.PYTHON_SERVICE_URL || 'http://localhost:3003'}/api/data/cache/status`, {
+      const response = await fetch(`${process.env.UNIFIED_SERVICE_URL || 'http://localhost:3002'}/api/data/cache/status`, {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' }
       });

@@ -1,111 +1,101 @@
-version: '3.8'
-
 services:
-  # Combined Frontend + Backend Service (API Gateway)
+  # ML-Platform Service:
   ml-platform:
     build:
-      context: .
+      context: ./backend
       dockerfile: Dockerfile
+    container_name: ml-platform-backend
     ports:
       - "3000:3000"
     environment:
       - NODE_ENV=production
       - PORT=3000
-      # - GEMINI_API_KEY=${GEMINI_API_KEY}
-      - PYTHON_SERVICE_URL=http://python-service:3003
-      - MAS_SERVICE_URL=http://mas-service:3002
+      - UNIFIED_SERVICE_URL=http://192.168.0.206:3002
+      - FRONTEND_URL=http://192.168.0.206:8080
       - UPLOADS_DIR=/app/uploads
       - MODELS_DIR=/app/models
       - SCRIPT_DIR=/app/scripts
     volumes:
+      # WICHTIG: Anonymer Volume für node_modules ZUERST, damit Windows node_modules nicht gemountet werden
+      - /app/node_modules
       - ./uploads:/app/uploads
       - ./models:/app/models
       - ./scripts:/app/scripts
       - ./logs:/app/logs
       - ./backend/projects.db:/app/projects.db
+      - ./config:/app/config
+      # Backend-Code als Volume mounten - Änderungen werden sofort übernommen ohne Rebuild
+      # NACH node_modules Volume, damit node_modules nicht überschrieben wird
+      - ./backend:/app
     depends_on:
-      - python-service
+      - unified-service
     restart: unless-stopped
     networks:
       - ml-platform-network
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000/"]
-      interval: 60s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
-
-  # Python Execution & Data Exploration Service
-  python-service:
-    build:
-      context: .
-      dockerfile: services/python-service/Dockerfile
-    ports:
-      - "3003:3003"
-    environment:
-      - NODE_ENV=production
-      - PORT=3003
-      - VENV_DIR=/opt/venv
-      - SCRIPT_DIR=/app/scripts
-      - UPLOADS_DIR=/app/uploads
-      - MODELS_DIR=/app/models
-      - API_GATEWAY_URL=http://ml-platform:3000
-    volumes:
-      - ./scripts:/app/scripts
-      - ./models:/app/models
-      - ./uploads:/app/uploads
-    restart: unless-stopped
-    networks:
-      - ml-platform-network
-    healthcheck:
-      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3003/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"]
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 40s
 
-  # Model Analysis Service (LLM Service)
-  mas-service:
+  # Frontend Service (Nginx)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: ml-platform-frontend
+    ports:
+      - "8080:80"
+    environment:
+      - NODE_ENV=production
+    depends_on:
+      ml-platform:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - ml-platform-network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+
+  # Unified ML Service
+  unified-service:
     build:
       context: .
-      dockerfile: services/mas-service/Dockerfile
+      dockerfile: services/unified-service/Dockerfile
+    container_name: ml-platform-unified
     ports:
       - "3002:3002"
     environment:
       - NODE_ENV=production
       - PORT=3002
-      - OLLAMA_URL=http://ollama_ml_platform:11434
-      - API_GATEWAY_URL=http://ml-platform:3000
-      - PYTHON_SERVICE_URL=http://python-service:3003
+      - OLLAMA_URL=http://192.168.0.206:11434
+      - API_GATEWAY_URL=http://192.168.0.206:3000
+      - VENV_DIR=/opt/venv
+      - SCRIPT_DIR=/app/scripts
+      - UPLOADS_DIR=/app/uploads
+      - MODELS_DIR=/app/models
     volumes:
+      - ./scripts:/app/scripts
+      - ./models:/app/models
+      - ./uploads:/app/uploads
       - ./logs:/app/logs
+      # Code als Volume mounten - Änderungen werden sofort übernommen ohne Rebuild
+      - ./services/unified-service:/app/services/unified-service
+      - ./config:/app/config
     restart: unless-stopped
     networks:
       - ml-platform-network
-    depends_on:
-      - python-service
     healthcheck:
-      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3002/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"]
+      test: ["CMD", "curl", "-f", "http://localhost:3002/health"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 40s
-
-  # LLM Service
-  ollama:
-    container_name: ollama_ml_platform
-    image: ollama/ollama
-    runtime: nvidia
-    environment:
-      - NVIDIA_VISIBLE_DEVICES=all
-      - NVIDIA_DRIVER_CAPABILITIES=compute,utility
-    ports:
-      - "11434:11434"
-    # volumes:
-      # - ./ollama_data:/root/.ollama
-    networks:
-      - ml-platform-network
-    restart: unless-stopped
 
 networks:
   ml-platform-network:

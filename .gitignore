@@ -2,6 +2,13 @@
 node_modules
 */node_modules
 
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
 # Backend folders to exclude
 # backend/node_modules/*
 backend/models/*
@@ -18,3 +25,9 @@ backend/services/python/.venv/
 .env.local
 backend/projects.db
 backend/services/logs/*
+backend/
+models
+uploads
+logs
+*.md
+backend/projects.db

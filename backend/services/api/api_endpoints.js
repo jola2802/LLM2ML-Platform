@@ -259,7 +259,7 @@ export function setupAPIEndpoints(app, upload, scriptDir, venvDir) {
     try {
       logRESTAPIRequest('clear-analysis-cache', req.body);
       // Cache wird über Python-Service verwaltet
-      const response = await fetch(`${process.env.PYTHON_SERVICE_URL || 'http://localhost:3003'}/api/data/cache/clear`, {
+      const response = await fetch(`${process.env.UNIFIED_SERVICE_URL || 'http://localhost:3002'}/api/data/cache/clear`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' }
       });
@@ -276,7 +276,7 @@ export function setupAPIEndpoints(app, upload, scriptDir, venvDir) {
     try {
       logRESTAPIRequest('get-analysis-cache-status', req.body);
       // Cache wird über Python-Service verwaltet
-      const response = await fetch(`${process.env.PYTHON_SERVICE_URL || 'http://localhost:3003'}/api/data/cache/status`, {
+      const response = await fetch(`${process.env.UNIFIED_SERVICE_URL || 'http://localhost:3002'}/api/data/cache/status`, {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' }
       });

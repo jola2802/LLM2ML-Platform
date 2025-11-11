@@ -28,10 +28,10 @@ interface LLMStatus {
   lastTested: string;
 }
 
-const LLMSettingsModal: React.FC<LLMSettingsModalProps> = ({ 
-  isOpen, 
-  onClose, 
-  onConfigUpdated 
+const LLMSettingsModal: React.FC<LLMSettingsModalProps> = ({
+  isOpen,
+  onClose,
+  onConfigUpdated
 }) => {
   const [config, setConfig] = useState<LLMConfig | null>(null);
   const [status, setStatus] = useState<LLMStatus | null>(null);
@@ -54,26 +54,26 @@ const LLMSettingsModal: React.FC<LLMSettingsModalProps> = ({
   const loadConfigAndStatus = async () => {
     try {
       setIsLoading(true);
-      
+
       // Lade Konfiguration
       const configResponse = await apiService.getLLMConfig();
       console.log('Konfiguration geladen:', configResponse);
       setConfig(configResponse.config);
-      
+
       // Setze lokale States basierend auf der geladenen Konfiguration
       if (configResponse.config) {
         setOllamaHost(configResponse.config.ollama?.host || '');
         setSelectedOllamaModel(configResponse.config.ollama?.defaultModel || '');
       }
-      
+
       // Lade Status
       const statusResponse = await apiService.getLLMStatus();
       console.log('Status geladen:', statusResponse);
       setStatus(statusResponse);
-      
+
       // Lade verfügbare Ollama-Modelle
       await loadOllamaModels();
-      
+
     } catch (error) {
       console.error('Fehler beim Laden der Konfiguration:', error);
       setMessage({
@@ -120,20 +120,20 @@ const LLMSettingsModal: React.FC<LLMSettingsModalProps> = ({
     try {
       setIsLoading(true);
       setMessage(null);
-      
+
       console.log(`Wechsle Provider zu: ${provider}`);
       const result = await apiService.setLLMProvider(provider);
       console.log('Provider-Wechsel Ergebnis:', result);
-      
+
       if (result.success) {
         setMessage({
           type: 'success',
           text: `Provider erfolgreich auf ${provider} gewechselt`
         });
-        
+
         // Aktualisiere Konfiguration und Status
         await loadConfigAndStatus();
-        
+
         if (onConfigUpdated) {
           onConfigUpdated();
         }
@@ -159,24 +159,24 @@ const LLMSettingsModal: React.FC<LLMSettingsModalProps> = ({
     try {
       setIsLoading(true);
       setMessage(null);
-      
+
       const config: any = {};
       if (ollamaHost) config.host = ollamaHost;
       if (selectedOllamaModel) config.defaultModel = selectedOllamaModel;
-      
+
       console.log('Speichere Ollama-Konfiguration:', config);
       const result = await apiService.updateOllamaConfig(config);
       console.log('Ollama-Konfiguration Ergebnis:', result);
-      
+
       if (result.success) {
         setMessage({
           type: 'success',
           text: 'Ollama-Konfiguration erfolgreich gespeichert'
         });
-        
+
         // Aktualisiere Konfiguration und lade Modelle neu
         await loadConfigAndStatus();
-        
+
         if (onConfigUpdated) {
           onConfigUpdated();
         }
@@ -202,18 +202,18 @@ const LLMSettingsModal: React.FC<LLMSettingsModalProps> = ({
     try {
       setIsLoading(true);
       setMessage(null);
-      
+
       console.log(`Teste ${provider} Verbindung...`);
       const result = await apiService.testOllamaConnection();
-      
+
       console.log(`${provider} Test Ergebnis:`, result);
-      
+
       if (result.success && result.connected) {
         setMessage({
           type: 'success',
           text: `${provider} Verbindung erfolgreich!`
         });
-        
+
         // Aktualisiere Status nach erfolgreichem Test
         await loadConfigAndStatus();
       } else {
@@ -257,9 +257,8 @@ const LLMSettingsModal: React.FC<LLMSettingsModalProps> = ({
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-gray-300">Aktiver Provider:</span>
-                  <span className={`px-2 py-1 rounded text-sm font-mono ${
-                    status.activeProvider === 'ollama' ? 'bg-blue-600 text-blue-200' : 'bg-green-600 text-green-200'
-                  }`}>
+                  <span className={`px-2 py-1 rounded text-sm font-mono ${status.activeProvider === 'ollama' ? 'bg-blue-600 text-blue-200' : 'bg-green-600 text-green-200'
+                    }`}>
                     {status.activeProvider}
                   </span>
                 </div>
@@ -295,7 +294,7 @@ const LLMSettingsModal: React.FC<LLMSettingsModalProps> = ({
           {/* Ollama-Konfiguration */}
           <div className="p-4 bg-gray-700 rounded border border-gray-600">
             <h3 className="font-semibold text-gray-200 mb-4">Ollama-Konfiguration</h3>
-            
+
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-200 mb-2">
@@ -322,7 +321,7 @@ const LLMSettingsModal: React.FC<LLMSettingsModalProps> = ({
                     className="w-full px-3 py-2 bg-gray-600 border border-gray-500 text-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     disabled={isLoading}
                   >
-                    <option value="">Modell auswählen...</option>
+                    <option value="">Select model...</option>
                     {availableOllamaModels.map((model) => (
                       <option key={model.name} value={model.name}>
                         {model.name} ({Math.round((model.size || 0) / 1024 / 1024)}MB)
@@ -331,13 +330,13 @@ const LLMSettingsModal: React.FC<LLMSettingsModalProps> = ({
                   </select>
                 ) : (
                   <div className="w-full px-3 py-2 bg-gray-600 border border-gray-500 text-gray-400 rounded-md">
-                    Keine Modelle verfügbar - Ollama nicht verbunden oder keine Modelle installiert
+                    No models available - Ollama not connected or no models installed
                   </div>
                 )}
                 <p className="text-xs text-gray-400 mt-1">
-                  Verfügbare Modelle: {availableOllamaModels.length}
+                  Available models: {availableOllamaModels.length}
                   {status?.ollama?.error && (
-                    <span className="text-red-400 ml-2">Fehler: {status.ollama.error}</span>
+                    <span className="text-red-400 ml-2">Error: {status.ollama.error}</span>
                   )}
                 </p>
               </div>
@@ -348,14 +347,14 @@ const LLMSettingsModal: React.FC<LLMSettingsModalProps> = ({
                   disabled={isLoading}
                   className="px-4 py-2 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 disabled:opacity-50"
                 >
-                  {isLoading ? 'Teste...' : 'Verbindung testen'}
+                  {isLoading ? 'Test...' : 'Test connection'}
                 </button>
                 <button
                   onClick={handleOllamaConfigSave}
                   disabled={isLoading}
                   className="px-4 py-2 bg-green-600 text-white text-sm rounded hover:bg-green-700 disabled:opacity-50"
                 >
-                  {isLoading ? 'Speichere...' : 'Speichern'}
+                  {isLoading ? 'Save...' : 'Save'}
                 </button>
               </div>
             </div>
@@ -365,11 +364,10 @@ const LLMSettingsModal: React.FC<LLMSettingsModalProps> = ({
 
         {/* Nachricht anzeigen */}
         {message && (
-          <div className={`mt-6 p-4 rounded border ${
-            message.type === 'success' ? 'bg-green-800 text-green-200 border-green-600' :
-            message.type === 'error' ? 'bg-red-800 text-red-200 border-red-600' :
-            'bg-blue-800 text-blue-200 border-blue-600'
-          }`}>
+          <div className={`mt-6 p-4 rounded border ${message.type === 'success' ? 'bg-green-800 text-green-200 border-green-600' :
+              message.type === 'error' ? 'bg-red-800 text-red-200 border-red-600' :
+                'bg-blue-800 text-blue-200 border-blue-600'
+            }`}>
             {message.text}
           </div>
         )}
@@ -381,7 +379,7 @@ const LLMSettingsModal: React.FC<LLMSettingsModalProps> = ({
             disabled={isLoading}
             className="px-6 py-2 text-gray-300 border border-gray-600 rounded hover:bg-gray-700 disabled:opacity-50 transition-colors"
           >
-            Schließen
+            Close
           </button>
         </div>
       </div>

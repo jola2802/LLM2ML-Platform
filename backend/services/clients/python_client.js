@@ -1,9 +1,9 @@
 import axios from 'axios';
 
-const PYTHON_SERVICE_URL = process.env.PYTHON_SERVICE_URL || 'http://localhost:3003';
+const UNIFIED_SERVICE_URL = process.env.UNIFIED_SERVICE_URL || 'http://localhost:3002';
 
 const client = axios.create({
-    baseURL: PYTHON_SERVICE_URL,
+    baseURL: UNIFIED_SERVICE_URL,
     timeout: 600000, // 10 Minuten für Training
     headers: {
         'Content-Type': 'application/json'
