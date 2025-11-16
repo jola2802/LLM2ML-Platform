@@ -1,9 +1,11 @@
 import axios from 'axios';
 
-const UNIFIED_SERVICE_URL = process.env.UNIFIED_SERVICE_URL || 'http://localhost:3002';
+// Unterstütze beide Umgebungsvariablen für Flexibilität
+// MAS_SERVICE_URL als Fallback (für externe Zugriffe)
+const MAS_SERVICE_URL = process.env.MAS_SERVICE_URL || 'http://localhost:3002';
 
 const client = axios.create({
-    baseURL: UNIFIED_SERVICE_URL,
+    baseURL: MAS_SERVICE_URL,
     timeout: 300000, // 5 Minuten für LLM-Requests
     headers: {
         'Content-Type': 'application/json'

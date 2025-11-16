@@ -3,10 +3,40 @@
  */
 
 import { EventEmitter } from 'events';
-// Import-Pfad - im Container ist config unter /app/config gemountet
-// Lokal: config liegt im Root-Verzeichnis, von backend/services/monitoring/ aus: ../../../config/
-// Im Container: config liegt unter /app/config, von /app/services/monitoring/ aus: ../../config/
-import { getWorkerConfig } from '../../../config/worker_scaling_config.js';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+import { existsSync } from 'fs';
+
+// Dynamischer Import-Pfad - funktioniert sowohl lokal als auch im Container
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+// Bestimme den korrekten Pfad zur Konfigurationsdatei
+// Im Container: /app/config/worker_scaling_config.js (absoluter Pfad)
+// Lokal: ../../../config/worker_scaling_config.js (relativer Pfad von backend/services/monitoring/)
+let configPath;
+if (existsSync('/app/config/worker_scaling_config.js')) {
+  // Container-Umgebung - verwende absoluten Pfad
+  configPath = 'file:///app/config/worker_scaling_config.js';
+} else {
+  // Lokale Entwicklungsumgebung - verwende relativen Pfad
+  const localPath = join(__dirname, '../../../config/worker_scaling_config.js');
+  if (existsSync(localPath)) {
+    configPath = 'file://' + localPath;
+  } else {
+    // Fallback: Versuche von process.cwd()
+    const fallbackPath = join(process.cwd(), 'config/worker_scaling_config.js');
+    if (existsSync(fallbackPath)) {
+      configPath = 'file://' + fallbackPath;
+    } else {
+      throw new Error(`Konfigurationsdatei worker_scaling_config.js nicht gefunden. Gesuchte Pfade: /app/config/worker_scaling_config.js, ${localPath}, ${fallbackPath}`);
+    }
+  }
+}
+
+// Importiere die Konfiguration (top-level await wird in ES-Modulen unterstützt)
+const configModule = await import(configPath);
+const { getWorkerConfig } = configModule;
 
 class ScalingMonitor extends EventEmitter {
   constructor() {

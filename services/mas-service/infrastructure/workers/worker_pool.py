@@ -54,9 +54,9 @@ class PythonWorkerPool:
     
     def _setup_queue_listeners(self):
         """Richte Job Queue Event-Listener ein"""
-        print('Registriere executeJob Event-Listener im Worker Pool')
+        # print('Registriere executeJob Event-Listener im Worker Pool')
         job_queue.on('executeJob', self._execute_job)
-        print(f'Event-Listener registriert. Anzahl Listener: {len(job_queue.listeners.get("executeJob", []))}')
+        # print(f'Event-Listener registriert. Anzahl Listener: {len(job_queue.listeners.get("executeJob", []))}')
     
     def _execute_job(self, job: Dict[str, Any]):
         """Führt einen Job aus"""

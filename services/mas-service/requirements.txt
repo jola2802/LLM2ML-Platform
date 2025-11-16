@@ -10,7 +10,7 @@ numpy==1.26.0
 xgboost==2.0.2
 matplotlib==3.10.7
 seaborn==0.12.2
-torch==2.5.1
-torchvision==0.20.1
+# PyTorch CPU-only (deutlich kleiner als CUDA-Version)
+# Wird im Dockerfile separat installiert
 openpyxl==3.1.2
 

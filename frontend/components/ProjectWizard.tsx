@@ -332,9 +332,15 @@ const ProjectWizard: React.FC<ProjectWizardProps> = ({ onBack, onSubmit }) => {
         setLlmRecommendations(result.recommendations);
         console.log('✅ LLM-Empfehlungen gesetzt:', result.recommendations);
 
-        // Setze selectedTargetVariable wenn in Empfehlungen vorhanden und noch nicht gesetzt
+        // Automatisch ML Configuration aus Empfehlungen setzen
         if (result.recommendations.targetVariable && !selectedTargetVariable) {
           setSelectedTargetVariable(result.recommendations.targetVariable);
+        }
+        if (result.recommendations.modelType && !selectedModelType) {
+          setSelectedModelType(result.recommendations.modelType);
+        }
+        if (result.recommendations.algorithm && !selectedAlgorithm) {
+          setSelectedAlgorithm(result.recommendations.algorithm);
         }
       }
 
@@ -397,6 +403,17 @@ const ProjectWizard: React.FC<ProjectWizardProps> = ({ onBack, onSubmit }) => {
 
       console.log('🔍 New recommendations:', newRecommendations);
       setLlmRecommendations(newRecommendations);
+
+      // Automatisch ML Configuration aus Empfehlungen setzen, falls noch nicht gesetzt
+      if (newRecommendations.targetVariable && !selectedTargetVariable) {
+        setSelectedTargetVariable(newRecommendations.targetVariable);
+      }
+      if (newRecommendations.modelType && !selectedModelType) {
+        setSelectedModelType(newRecommendations.modelType);
+      }
+      if (newRecommendations.algorithm && !selectedAlgorithm) {
+        setSelectedAlgorithm(newRecommendations.algorithm);
+      }
 
       // Alle generierten Features standardmäßig auswählen
       if (generatedFeatures.length > 0) {
@@ -514,24 +531,60 @@ const ProjectWizard: React.FC<ProjectWizardProps> = ({ onBack, onSubmit }) => {
 
   const nextStep = async () => {
     if (step === 2) {
-      // Beim Übergang von Schritt 2 zu 3: Basis-Datenmanipulation durchführen
+      // Beim Übergang von Schritt 2 zu 3: 
+      // 1. Basis-Datenmanipulation durchführen
       await handleDataManipulation();
+
+      // 2. Automatisch Feature Engineering im Hintergrund starten
+      if (csvAnalysis && !isGeneratingFeatures) {
+        console.log('🔄 Auto-starting Feature Engineering in background...');
+        handleFeatureEngineering().then(() => {
+          // 3. Nach Feature Engineering automatisch ML Configuration aus LLM-Empfehlungen setzen
+          if (llmRecommendations) {
+            console.log('⚙️ Auto-setting ML Configuration from recommendations...');
+            if (llmRecommendations.targetVariable && !selectedTargetVariable) {
+              setSelectedTargetVariable(llmRecommendations.targetVariable);
+            }
+            if (llmRecommendations.modelType && !selectedModelType) {
+              setSelectedModelType(llmRecommendations.modelType);
+            }
+            if (llmRecommendations.algorithm && !selectedAlgorithm) {
+              setSelectedAlgorithm(llmRecommendations.algorithm);
+            }
+          }
+        });
+      }
     }
     setStep(s => s + 1);
   };
 
-  // Automatisches Feature Engineering beim Erscheinen von Schritt 3
+  // Automatisches Feature Engineering und ML Configuration nach Data Manipulation
   useEffect(() => {
-    if (step === 3 && csvAnalysis && !isGeneratingFeatures && !llmRecommendations?.generatedFeatures) {
-      console.log('🔄 Auto-starting Feature Engineering in Step 3...');
-      // Kleine Verzögerung, damit der UI-State aktualisiert werden kann
+    // Wenn Data Manipulation abgeschlossen ist und LLM-Empfehlungen vorhanden sind,
+    // aber noch keine Feature Engineering durchgeführt wurde
+    if (manipulatedData && llmRecommendations && !isGeneratingFeatures && !llmRecommendations?.generatedFeatures) {
+      console.log('🔄 Auto-starting Feature Engineering after Data Manipulation...');
       const timer = setTimeout(() => {
-        handleFeatureEngineering();
-      }, 100);
+        handleFeatureEngineering().then(() => {
+          // Automatisch ML Configuration setzen
+          if (llmRecommendations) {
+            console.log('⚙️ Auto-setting ML Configuration from recommendations...');
+            if (llmRecommendations.targetVariable && !selectedTargetVariable) {
+              setSelectedTargetVariable(llmRecommendations.targetVariable);
+            }
+            if (llmRecommendations.modelType && !selectedModelType) {
+              setSelectedModelType(llmRecommendations.modelType);
+            }
+            if (llmRecommendations.algorithm && !selectedAlgorithm) {
+              setSelectedAlgorithm(llmRecommendations.algorithm);
+            }
+          }
+        });
+      }, 500);
       return () => clearTimeout(timer);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [step, csvAnalysis]);
+  }, [manipulatedData, llmRecommendations]);
 
   const prevStep = () => setStep(s => s - 1);
 
@@ -825,474 +878,25 @@ const ProjectWizard: React.FC<ProjectWizardProps> = ({ onBack, onSubmit }) => {
 
   const renderStep3 = () => (
     <div>
-      <h3 className="text-xl font-semibold text-white mb-2">✨ Feature Engineering</h3>
-
-      <div className="space-y-6">
-        {/* Debug: Zeige aktuellen State */}
-        {process.env.NODE_ENV === 'development' && llmRecommendations && (
-          <div className="bg-gray-900/50 p-3 rounded text-xs text-gray-400 mb-4">
-            <p>Debug: llmRecommendations vorhanden: {llmRecommendations ? 'Ja' : 'Nein'}</p>
-            <p>Debug: generatedFeatures vorhanden: {llmRecommendations.generatedFeatures ? 'Ja' : 'Nein'}</p>
-            <p>Debug: Ist Array: {Array.isArray(llmRecommendations.generatedFeatures) ? 'Ja' : 'Nein'}</p>
-            <p>Debug: Anzahl: {llmRecommendations.generatedFeatures?.length || 0}</p>
-          </div>
-        )}
-
-        {/* Generierte Features anzeigen mit Interaktionsmöglichkeiten */}
-        {llmRecommendations?.generatedFeatures && Array.isArray(llmRecommendations.generatedFeatures) && llmRecommendations.generatedFeatures.length > 0 && (
-          <div className="bg-gradient-to-r from-green-900/40 to-blue-900/40 border border-green-500/50 rounded-lg p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h4 className="text-green-400 font-bold flex items-center">
-                ✨ AI-generated features ({llmRecommendations.generatedFeatures.length})
-              </h4>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => setSelectedGeneratedFeatures(new Set(llmRecommendations.generatedFeatures.map((_: any, i: number) => i)))}
-                  className="text-xs px-2 py-1 bg-green-700 hover:bg-green-600 text-white rounded"
-                >
-                  Select all
-                </button>
-                <button
-                  onClick={() => setSelectedGeneratedFeatures(new Set())}
-                  className="text-xs px-2 py-1 bg-slate-700 hover:bg-slate-600 text-white rounded"
-                >
-                  Deselect all
-                </button>
-              </div>
-            </div>
-            {llmRecommendations.reasoning && (
-              <div className="bg-green-900/20 border border-green-500/30 rounded-lg p-3 mb-4">
-                <p className="text-green-200 text-sm italic">
-                  💡 <strong>AI Strategy:</strong> {llmRecommendations.reasoning}
-                </p>
-              </div>
-            )}
-            <div className="bg-green-900/20 border border-green-500/30 rounded-lg p-3 mb-4">
-              <p className="text-green-200 text-sm">
-                ✅ <strong>{selectedGeneratedFeatures.size} von {llmRecommendations.generatedFeatures.length}</strong> Features selected
-              </p>
-              <p className="text-green-300 text-xs mt-1">
-                Select the features that should be used for training. You can change them at any time.
-              </p>
-            </div>
-            <div className="space-y-4">
-              {llmRecommendations.generatedFeatures.map((feature: any, index: number) => {
-                const isSelected = selectedGeneratedFeatures.has(index);
-                return (
-                  <div
-                    key={index}
-                    className={`bg-green-900/20 border rounded-lg p-5 transition-all ${isSelected
-                      ? 'border-green-500/50 bg-green-900/30'
-                      : 'border-green-500/20 bg-green-900/10 opacity-60'
-                      }`}
-                  >
-                    <div className="flex items-start gap-3">
-                      {/* Checkbox */}
-                      <input
-                        type="checkbox"
-                        checked={isSelected}
-                        onChange={() => toggleGeneratedFeature(index)}
-                        className="mt-1 w-5 h-5 text-green-600 bg-slate-700 border-slate-600 rounded focus:ring-green-500"
-                      />
-                      <div className="flex-1">
-                        {/* Feature Name */}
-                        <div className="flex items-center mb-2">
-                          <span className="text-green-400 font-bold text-lg mr-2">#{index + 1}</span>
-                          <p className="text-green-200 text-base font-bold">{feature.name || `Feature ${index + 1}`}</p>
-                        </div>
-
-                        {/* Description */}
-                        {feature.description && (
-                          <p className="text-green-300 text-sm mb-3 leading-relaxed">{feature.description}</p>
-                        )}
-
-                        {/* Kombinierte Spalten */}
-                        {feature.formula && (() => {
-                          const columnMatches = feature.formula.match(/data\['([^']+)'\]/g) || [];
-                          const columns = columnMatches.map((match: string) => match.replace(/data\['|'\]/g, ''));
-                          return columns.length > 0 ? (
-                            <div className="bg-blue-900/20 border border-blue-500/30 rounded-lg p-3 mb-3">
-                              <p className="text-blue-300 text-xs font-semibold mb-2">🔗 Kombinierte Spalten:</p>
-                              <div className="flex flex-wrap gap-2">
-                                {columns.map((col: string, colIndex: number) => (
-                                  <span key={colIndex} className="bg-blue-800/50 text-blue-200 text-xs px-2 py-1 rounded border border-blue-500/50">
-                                    {col}
-                                  </span>
-                                ))}
-                              </div>
-                            </div>
-                          ) : null;
-                        })()}
-
-                        {/* Formula */}
-                        {feature.formula && (
-                          <div className="bg-green-900/40 border border-green-500/50 p-4 rounded-lg mb-3">
-                            <p className="text-green-400 text-xs font-semibold mb-2 uppercase tracking-wide">🐍 Python Formel:</p>
-                            <p className="text-green-300 text-sm font-mono break-all bg-green-950/50 p-2 rounded border border-green-500/30">
-                              {feature.formula}
-                            </p>
-                          </div>
-                        )}
-
-                        {/* Reasoning */}
-                        {feature.reasoning && (
-                          <div className="bg-blue-900/20 border border-blue-500/30 rounded-lg p-3">
-                            <p className="text-blue-300 text-xs leading-relaxed">
-                              <span className="font-semibold">💡 Reasoning:</span> {feature.reasoning}
-                            </p>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
-        {/* Manuell hinzugefügte Features */}
-        <div className="bg-slate-900/50 p-6 rounded-lg border border-slate-700">
-          <div className="flex items-center justify-between mb-4">
-            <h4 className="font-semibold text-white">➕ Eigene Features hinzufügen</h4>
-            <button
-              onClick={() => setShowAddFeatureForm(!showAddFeatureForm)}
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-md transition-colors"
-            >
-              {showAddFeatureForm ? 'Abbrechen' : '+ Neues Feature'}
-            </button>
-          </div>
-
-          {showAddFeatureForm && (
-            <AddFeatureForm
-              availableColumns={csvAnalysis?.columns.filter((col: string) => !excludedColumns.includes(col) && !excludedFeatures.includes(col)) || []}
-              onAdd={handleAddCustomFeature}
-              onCancel={() => setShowAddFeatureForm(false)}
-            />
-          )}
-
-          {customFeatures.length > 0 && (
-            <div className="mt-4 space-y-3">
-              <p className="text-slate-300 text-sm font-medium mb-2">Deine eigenen Features ({customFeatures.length}):</p>
-              {customFeatures.map((feature: any, index: number) => (
-                <div key={index} className="bg-slate-800/50 border border-slate-600 rounded-lg p-4">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center mb-2">
-                        <span className="text-blue-400 font-bold mr-2">#{index + 1}</span>
-                        <p className="text-blue-200 font-bold">{feature.name}</p>
-                      </div>
-                      {feature.description && (
-                        <p className="text-slate-300 text-sm mb-2">{feature.description}</p>
-                      )}
-                      {feature.formula && (
-                        <p className="text-slate-400 text-xs font-mono bg-slate-900/50 p-2 rounded">{feature.formula}</p>
-                      )}
-                    </div>
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => setEditingFeatureIndex(index)}
-                        className="text-xs px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded"
-                      >
-                        Bearbeiten
-                      </button>
-                      <button
-                        onClick={() => handleDeleteCustomFeature(index)}
-                        className="text-xs px-2 py-1 bg-red-600 hover:bg-red-700 text-white rounded"
-                      >
-                        Löschen
-                      </button>
-                    </div>
-                  </div>
-                  {editingFeatureIndex === index && (
-                    <EditFeatureForm
-                      feature={feature}
-                      availableColumns={csvAnalysis?.columns.filter((col: string) => !excludedColumns.includes(col) && !excludedFeatures.includes(col)) || []}
-                      onSave={(updated) => handleEditCustomFeature(index, updated)}
-                      onCancel={() => setEditingFeatureIndex(null)}
-                    />
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Vorschau der finalen Features */}
-        {getFinalFeatures().length > 0 && (
-          <div className="bg-gradient-to-r from-purple-900/40 to-indigo-900/40 border border-purple-500/50 rounded-lg p-6">
-            <h4 className="text-purple-400 font-bold mb-4 flex items-center">
-              📋 Preview: Final feature list ({getFinalFeatures().length})
-            </h4>
-            <p className="text-purple-200 text-sm mb-4">
-              These features will be used for training:
-            </p>
-            <div className="space-y-2">
-              {getFinalFeatures().map((feature: any, index: number) => (
-                <div key={index} className="bg-purple-900/20 border border-purple-500/30 rounded-lg p-3">
-                  <div className="flex items-center gap-2">
-                    <span className="text-purple-400 font-bold">#{index + 1}</span>
-                    <p className="text-purple-200 font-medium">{feature.name}</p>
-                    {feature.formula && (
-                      <span className="text-purple-400 text-xs font-mono ml-auto">{feature.formula}</span>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {!llmRecommendations && !isGeneratingFeatures && (
-          <div className="bg-blue-900/30 border border-blue-500/50 rounded-lg p-6">
-            <p className="text-blue-300 text-sm text-center">
-              Click on "🚀 Start feature engineering" above to start the AI analysis.
-            </p>
-          </div>
-        )}
-
-        {llmRecommendations && (!llmRecommendations.generatedFeatures || !Array.isArray(llmRecommendations.generatedFeatures) || llmRecommendations.generatedFeatures.length === 0) && !isGeneratingFeatures && (
-          <div className="bg-yellow-900/30 border border-yellow-500/50 rounded-lg p-6">
-            <p className="text-yellow-300 text-sm text-center">
-              ℹ️ The AI has not proposed any new features. The existing columns will be used directly.
-            </p>
-            {llmRecommendations.reasoning && (
-              <p className="text-yellow-200 text-xs text-center mt-2 italic">
-                {llmRecommendations.reasoning}
-              </p>
-            )}
-          </div>
-        )}
-
-        {/* Verfügbare Spalten anzeigen */}
-        {/* {csvAnalysis && (
-          <div className="bg-slate-900/50 p-6 rounded-lg border border-slate-700">
-            <h4 className="font-semibold text-white mb-3">📊 Available columns for feature engineering</h4>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-              {csvAnalysis.columns
-                .filter(col => !excludedColumns.includes(col) && !excludedFeatures.includes(col))
-                .map((column) => (
-                  <div key={column} className="bg-slate-800/50 border border-slate-600 rounded p-2">
-                    <p className="text-slate-300 text-xs font-medium">{column}</p>
-                    <p className="text-slate-400 text-xs">{csvAnalysis.dataTypes[column]}</p>
-                  </div>
-                ))}
-            </div>
-          </div>
-        )} */}
-      </div>
-    </div>
-  );
-
-  const renderStep4 = () => (
-    <div>
-      <h3 className="text-xl font-semibold text-white mb-2">⚙️ Hyperparameters & ML configuration</h3>
-      <p className="text-sm text-gray-400 mb-6">
-        Select algorithm, target variable and other machine learning parameters.
-      </p>
-
-      <div className="space-y-6">
-        <div className="bg-gray-900/50 p-6 rounded-lg border border-gray-700">
-          <h4 className="font-semibold text-white mb-4">🎯 Select target variable</h4>
-          <p className="text-sm text-gray-400 mb-4">
-            Select the variable that should be predicted.
-          </p>
-
-          <select
-            value={selectedTargetVariable}
-            onChange={(e) => setSelectedTargetVariable(e.target.value)}
-            className="w-full bg-gray-700 border-gray-600 rounded-md p-3 text-white focus:ring-blue-500 focus:border-blue-500"
-          >
-            <option value="">-- Select target variable --</option>
-            {csvAnalysis?.columns
-              .filter(col => !excludedColumns.includes(col) && !excludedFeatures.includes(col))
-              .map((column) => (
-                <option key={column} value={column}>
-                  {column} ({csvAnalysis.dataTypes[column]})
-                </option>
-              ))}
-          </select>
-
-          {llmRecommendations?.targetVariable && (
-            <div className="mt-3 p-3 bg-green-900/20 border border-green-500/30 rounded">
-              <p className="text-green-300 text-sm">
-                💡 <strong>Recommendation:</strong> {llmRecommendations.targetVariable}
-                {llmRecommendations.targetVariable !== selectedTargetVariable && selectedTargetVariable && (
-                  <button
-                    onClick={() => setSelectedTargetVariable(llmRecommendations.targetVariable)}
-                    className="ml-2 text-xs px-2 py-1 bg-green-600 text-white rounded hover:bg-green-700"
-                  >
-                    Accept
-                  </button>
-                )}
-              </p>
-            </div>
-          )}
-        </div>
-
-        <div className="bg-gray-900/50 p-6 rounded-lg border border-gray-700">
-          <h4 className="font-semibold text-white mb-4">🤖 Select model type</h4>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-            <div
-              onClick={() => setSelectedModelType('Classification')}
-              className={`p-4 rounded-lg border cursor-pointer transition-all ${selectedModelType === 'Classification'
-                ? 'bg-blue-900/40 border-blue-500 text-blue-300'
-                : 'bg-gray-800/50 border-gray-600 text-gray-300 hover:bg-gray-700/50'
-                }`}
-            >
-              <h5 className="font-medium">🏷️ Classification</h5>
-              <p className="text-sm mt-1 opacity-75">
-                Predict categories (e.g. spam/not spam, cancer diagnosis)
-              </p>
-            </div>
-
-            <div
-              onClick={() => setSelectedModelType('Regression')}
-              className={`p-4 rounded-lg border cursor-pointer transition-all ${selectedModelType === 'Regression'
-                ? 'bg-purple-900/40 border-purple-500 text-purple-300'
-                : 'bg-gray-800/50 border-gray-600 text-gray-300 hover:bg-gray-700/50'
-                }`}
-            >
-              <h5 className="font-medium">📈 Regression</h5>
-              <p className="text-sm mt-1 opacity-75">
-                Predict numerical values (e.g. prices, temperatures)
-              </p>
-            </div>
-          </div>
-
-          {llmRecommendations?.modelType && (
-            <div className="p-3 bg-green-900/20 border border-green-500/30 rounded">
-              <p className="text-green-300 text-sm">
-                💡 <strong>Recommendation:</strong> {llmRecommendations.modelType}
-                {llmRecommendations.modelType !== selectedModelType && selectedModelType && (
-                  <button
-                    onClick={() => setSelectedModelType(llmRecommendations.modelType)}
-                    className="ml-2 text-xs px-2 py-1 bg-green-600 text-white rounded hover:bg-green-700"
-                  >
-                    Accept
-                  </button>
-                )}
-              </p>
-            </div>
-          )}
-        </div>
-
-        {selectedModelType && (
-          <div className="bg-gray-900/50 p-6 rounded-lg border border-gray-700">
-            <h4 className="font-semibold text-white mb-4">🧮 Select algorithm</h4>
-            <p className="text-sm text-gray-400 mb-4">
-              Select the machine learning algorithm for your {selectedModelType}-problem.
-            </p>
-
-            <select
-              value={selectedAlgorithm}
-              onChange={(e) => setSelectedAlgorithm(e.target.value)}
-              className="w-full bg-gray-700 border-gray-600 rounded-md p-3 text-white focus:ring-blue-500 focus:border-blue-500"
-            >
-              <option value="">-- Select algorithm --</option>
-              {Object.entries(ALGORITHMS)
-                .filter(([_, algo]) => algo.type === selectedModelType)
-                .map(([key, algo]) => (
-                  <option key={key} value={key}>
-                    {algo.name}
-                  </option>
-                ))}
-            </select>
-
-            {llmRecommendations?.algorithm && (
-              <div className="mt-3 p-3 bg-green-900/20 border border-green-500/30 rounded">
-                <p className="text-green-300 text-sm">
-                  💡 <strong>Recommendation:</strong> {ALGORITHMS[llmRecommendations.algorithm]?.name || llmRecommendations.algorithm}
-                  {llmRecommendations.algorithm !== selectedAlgorithm && selectedAlgorithm && (
-                    <button
-                      onClick={() => setSelectedAlgorithm(llmRecommendations.algorithm)}
-                      className="ml-2 text-xs px-2 py-1 bg-green-600 text-white rounded hover:bg-green-700"
-                    >
-                      Accept
-                    </button>
-                  )}
-                </p>
-              </div>
-            )}
-          </div>
-        )}
-
-        {llmRecommendations && (
-          <div className="bg-gradient-to-r from-green-900/40 to-blue-900/40 border border-green-500/50 rounded-lg p-6">
-            <h4 className="text-green-400 font-bold mb-4 flex items-center">
-              🎯 Recommendations
-            </h4>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm mb-4">
-              <div className="space-y-3">
-                <div>
-                  <p className="text-gray-300 font-medium">Recommended features ({(availableFeatures || []).filter(f => f !== selectedTargetVariable && !excludedFeatures.includes(f)).length}):</p>
-                  <div className="text-green-300 text-xs max-h-20 overflow-y-auto">
-                    {(availableFeatures || [])
-                      .filter(f => f !== selectedTargetVariable && !excludedFeatures.includes(f))
-                      .join(', ') || 'No features available'}
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-3">
-                <div>
-                  <p className="text-gray-300 font-medium">Reasoning:</p>
-                  <div className="text-green-300 text-xs max-h-20 overflow-y-auto">
-                    {llmRecommendations.reasoning || 'No reasoning available'}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Generierte Features anzeigen */}
-            {llmRecommendations.generatedFeatures && llmRecommendations.generatedFeatures.length > 0 && (
-              <div className="mt-4 pt-4 border-t border-green-500/30">
-                <p className="text-gray-300 font-medium mb-3">
-                  ✨ Generierte Features ({llmRecommendations.generatedFeatures.length}):
-                </p>
-                <div className="space-y-3">
-                  {llmRecommendations.generatedFeatures.map((feature: any, index: number) => (
-                    <div key={index} className="bg-green-900/20 border border-green-500/30 rounded-lg p-3">
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <p className="text-green-300 font-semibold text-sm">{feature.name}</p>
-                          <p className="text-green-200 text-xs mt-1">{feature.description}</p>
-                          <p className="text-green-400 text-xs mt-2 font-mono bg-green-900/30 p-2 rounded">
-                            {feature.formula}
-                          </p>
-                          {feature.reasoning && (
-                            <p className="text-green-300 text-xs mt-2 italic">
-                              💡 {feature.reasoning}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                <p className="text-green-300 text-xs mt-3 italic">
-                  Diese Features werden automatisch aus vorhandenen Spalten generiert, um die Modellleistung zu verbessern.
-                </p>
-              </div>
-            )}
-          </div>
-        )}
-
-        {analysisError && (
-          <div className="bg-red-900/30 border border-red-500/50 rounded-lg p-4">
-            <p className="text-red-400">❌ {analysisError}</p>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-
-  const renderStep5 = () => (
-    <div>
       <h3 className="text-xl font-semibold text-white mb-4">✅ Confirm & start training</h3>
-      <p className="text-gray-400 mb-6">Check your configuration before training.</p>
+      <p className="text-gray-400 mb-6">Check your configuration before training. Feature Engineering and ML Configuration were automatically configured.</p>
+
+      {/* Status-Anzeige für automatische Prozesse */}
+      {(isGeneratingFeatures || isProcessingData) && (
+        <div className="bg-blue-900/30 border border-blue-500/50 rounded-lg p-4 mb-6">
+          <div className="flex items-center space-x-3">
+            <Spinner size="sm" />
+            <div>
+              <p className="text-blue-300 font-medium">
+                {isGeneratingFeatures ? 'Generating features...' : isProcessingData ? 'Analyzing data...' : 'Processing...'}
+              </p>
+              <p className="text-blue-400 text-sm mt-1">
+                Please wait while we prepare your ML configuration automatically.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="space-y-6">
         <div className="bg-gray-900/50 p-6 rounded-lg border border-gray-700">
@@ -1331,7 +935,7 @@ const ProjectWizard: React.FC<ProjectWizardProps> = ({ onBack, onSubmit }) => {
                 <span className="text-green-400">{selectedTargetVariable}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-400 font-medium">Used features:</span>
+                <span className="text-gray-400 font-medium">Used columns:</span>
                 <span className="text-cyan-400">
                   {(availableFeatures || []).filter(f => f !== selectedTargetVariable && !excludedFeatures.includes(f)).length}
                 </span>
@@ -1363,17 +967,29 @@ const ProjectWizard: React.FC<ProjectWizardProps> = ({ onBack, onSubmit }) => {
           </div>
         </div>
 
-        {/* <div className="bg-yellow-900/30 border border-yellow-500/50 rounded-lg p-4">
-          <div className="flex items-start space-x-3">
-            <span className="text-yellow-400 text-xl">⚡</span>
-            <div>
-              <h5 className="text-yellow-400 font-medium">Automatisches Training</h5>
-              <p className="text-yellow-200 text-sm mt-1">
-                Das Training startet nach der Erstellung. Sie können den Fortschritt im Dashboard verfolgen.
-              </p>
+        {/* Automatisch generierte Features anzeigen */}
+        {llmRecommendations?.generatedFeatures && llmRecommendations.generatedFeatures.length > 0 && (
+          <div className="bg-green-900/30 border border-green-500/50 rounded-lg p-6">
+            <h5 className="text-green-400 font-medium mb-3 flex items-center">
+              ✨ Automatically Generated Features ({llmRecommendations.generatedFeatures.length})
+            </h5>
+            <div className="space-y-2 max-h-60 overflow-y-auto">
+              {llmRecommendations.generatedFeatures.map((feature: any, index: number) => (
+                <div key={index} className="bg-green-900/20 border border-green-500/30 rounded-lg p-3">
+                  <p className="text-green-300 font-semibold text-sm">{feature.name}</p>
+                  {feature.description && (
+                    <p className="text-green-200 text-xs mt-1">{feature.description}</p>
+                  )}
+                  {feature.formula && (
+                    <p className="text-green-400 text-xs mt-2 font-mono bg-green-900/30 p-2 rounded">
+                      {feature.formula}
+                    </p>
+                  )}
+                </div>
+              ))}
             </div>
           </div>
-        </div> */}
+        )}
       </div>
     </div>
   );
@@ -1387,27 +1003,15 @@ const ProjectWizard: React.FC<ProjectWizardProps> = ({ onBack, onSubmit }) => {
     },
     {
       num: 2,
-      title: 'Data manipulation',
+      title: 'Data Manipulation',
       content: renderStep2(),
-      canProceed: !!(csvAnalysis)
+      canProceed: !!(csvAnalysis && (!isProcessingData && !isGeneratingFeatures))
     },
     {
       num: 3,
-      title: 'Feature Engineering',
+      title: 'Confirm & Start Training',
       content: renderStep3(),
-      canProceed: true // Optional, kann übersprungen werden (Features werden trotzdem generiert wenn vorhanden)
-    },
-    {
-      num: 4,
-      title: 'ML configuration',
-      content: renderStep4(),
-      canProceed: !!(selectedTargetVariable && selectedAlgorithm && selectedModelType && !isGeneratingFeatures)
-    },
-    {
-      num: 5,
-      title: 'Confirm & start training',
-      content: renderStep5(),
-      canProceed: true
+      canProceed: !!(selectedTargetVariable && selectedAlgorithm && selectedModelType)
     },
   ];
 
@@ -1460,13 +1064,15 @@ const ProjectWizard: React.FC<ProjectWizardProps> = ({ onBack, onSubmit }) => {
         {step < steps.length ? (
           <button
             onClick={nextStep}
-            disabled={!steps[step - 1].canProceed || isAnalyzing || isProcessingData || isGeneratingFeatures}
+            disabled={!steps[step - 1].canProceed || isAnalyzing || (step === 2 && (isProcessingData || isGeneratingFeatures))}
             className="px-6 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 disabled:bg-slate-500 disabled:cursor-not-allowed transition-colors"
           >
-            {(step === 2 && isProcessingData) || (step === 3 && isGeneratingFeatures) ? (
+            {(step === 2 && (isProcessingData || isGeneratingFeatures)) ? (
               <div className="flex items-center space-x-2">
                 <Spinner size="sm" />
-                <span>Analyzing...</span>
+                <span>
+                  {isProcessingData ? 'Analyzing data...' : isGeneratingFeatures ? 'Generating features...' : 'Processing...'}
+                </span>
               </div>
             ) : (
               'Next'

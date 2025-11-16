@@ -25,7 +25,7 @@ WORKER_AGENTS = {
         'model': 'cogito:8b',
         'description': 'Suggests optimal hyperparameters and features',
         'temperature': 0.1,
-        'maxTokens': 2048,
+        'maxTokens': 4096,
         'retries': 3,
         'timeout': 60000,
         'category': 'optimization',

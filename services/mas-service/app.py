@@ -33,11 +33,9 @@ UPLOADS_DIR = os.getenv('UPLOADS_DIR', '/app/uploads')
 MODELS_DIR = os.getenv('MODELS_DIR', '/app/models')
 
 # Python Worker Pool initialisieren
-print(f'Initialisiere Python Worker Pool...')
-print(f'Script-Dir: {SCRIPT_DIR}')
-print(f'Venv-Dir: {VENV_DIR}')
+# print(f'Script-Dir: {SCRIPT_DIR}')
+# print(f'Venv-Dir: {VENV_DIR}')
 python_worker_pool = PythonWorkerPool(SCRIPT_DIR, VENV_DIR, 5)
-print(f'Python Worker Pool initialisiert')
 
 # Job-Completion-Handler - Sendet Webhook an API Gateway
 def on_job_completed(job):
@@ -103,12 +101,15 @@ signal.signal(signal.SIGINT, signal_handler)
 if __name__ == '__main__':
     # Initialisiere Ollama-Modelle beim Start
     initialize_ollama_models()
+
+    print( '=' * 50)
     
     print(f'Unified ML Service läuft auf Port {PORT}')
     print(f'OLLAMA_URL: {os.getenv("OLLAMA_URL", "http://192.168.0.206:11434")}')
     print(f'Script-Dir: {SCRIPT_DIR}')
     print(f'Venv-Dir: {VENV_DIR}')
     print(f'Uploads-Dir: {UPLOADS_DIR}')
+
+    print( '=' * 50)
     
     app.run(host='0.0.0.0', port=PORT, debug=False)
-

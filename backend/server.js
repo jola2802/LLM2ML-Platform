@@ -424,7 +424,7 @@ async function trainModelAsync(projectId) {
 
     console.log(`🚀 Starte Training für Projekt ${projectId} - Pipeline wird Code generieren und Training direkt starten`);
 
-    // Pipeline aufrufen - diese generiert Code und startet Training direkt im unified-service
+    // Pipeline aufrufen - diese generiert Code und startet Training direkt
     try {
       const pipelineResponse = await masClient.runAgentPipeline(project);
 
@@ -439,7 +439,7 @@ async function trainModelAsync(projectId) {
       }
 
       if (jobId) {
-        console.log(`✅ Training-Job ${jobId} wurde direkt im unified-service gestartet`);
+        console.log(`✅ Training-Job ${jobId} wurde direkt im mas-service gestartet`);
         console.log(`⏳ Warte auf Training-Abschluss (Webhook wird benachrichtigen)`);
       } else {
         console.log(`⚠️ Keine Job-ID zurückgegeben, aber Pipeline erfolgreich`);

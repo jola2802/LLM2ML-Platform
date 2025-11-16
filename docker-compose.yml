@@ -1,34 +1,31 @@
 services:
   # ML-Platform Service:
-  ml-platform:
+  backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: ml-platform-backend
+    container_name: backend
     ports:
       - "3000:3000"
     environment:
       - NODE_ENV=production
       - PORT=3000
-      - UNIFIED_SERVICE_URL=http://192.168.0.206:3002
+      - MAS_SERVICE_URL=http://192.168.0.206:3002
       - FRONTEND_URL=http://192.168.0.206:8080
       - UPLOADS_DIR=/app/uploads
       - MODELS_DIR=/app/models
       - SCRIPT_DIR=/app/scripts
     volumes:
-      # WICHTIG: Anonymer Volume für node_modules ZUERST, damit Windows node_modules nicht gemountet werden
-      - /app/node_modules
       - ./uploads:/app/uploads
       - ./models:/app/models
       - ./scripts:/app/scripts
       - ./logs:/app/logs
       - ./backend/projects.db:/app/projects.db
       - ./config:/app/config
-      # Backend-Code als Volume mounten - Änderungen werden sofort übernommen ohne Rebuild
-      # NACH node_modules Volume, damit node_modules nicht überschrieben wird
       - ./backend:/app
+      - /app/node_modules
     depends_on:
-      - unified-service
+      - mas-service
     restart: unless-stopped
     networks:
       - ml-platform-network
@@ -39,18 +36,20 @@ services:
       retries: 3
       start_period: 40s
 
-  # Frontend Service (Nginx)
+  # Frontend Service:
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    container_name: ml-platform-frontend
+    container_name: frontend
+    volumes:
+      - ./frontend:/app/
     ports:
       - "8080:80"
     environment:
       - NODE_ENV=production
     depends_on:
-      ml-platform:
+      backend:
         condition: service_healthy
     restart: unless-stopped
     networks:
@@ -62,12 +61,12 @@ services:
       retries: 3
       start_period: 5s
 
-  # Unified ML Service
-  unified-service:
+  # MAS Service:
+  mas-service:
     build:
       context: .
-      dockerfile: services/unified-service/Dockerfile
-    container_name: ml-platform-unified
+      dockerfile: services/mas-service/Dockerfile
+    container_name: ml-platform-mas
     ports:
       - "3002:3002"
     environment:
@@ -85,7 +84,7 @@ services:
       - ./uploads:/app/uploads
       - ./logs:/app/logs
       # Code als Volume mounten - Änderungen werden sofort übernommen ohne Rebuild
-      - ./services/unified-service:/app/services/unified-service
+      - ./services/mas-service:/app/services/mas-service
       - ./config:/app/config
     restart: unless-stopped
     networks:
