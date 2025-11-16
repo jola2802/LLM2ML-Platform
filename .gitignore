@@ -17,6 +17,9 @@ backend/scripts/*
 backend/logs
 backend/services/python/.venv/
 
+# Root level uploads folder
+uploads/*
+
 */projects.db
 
 # Python virtual environment
