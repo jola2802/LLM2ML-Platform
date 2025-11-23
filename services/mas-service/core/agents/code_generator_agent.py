@@ -21,22 +21,22 @@ class CodeGeneratorWorker(BaseWorker):
         hyperparameter_suggestions = results.get('HYPERPARAMETER_OPTIMIZER', {})
         
         # Generiere Python-Code mit Template
-        code = self.generate_python_code(project, hyperparameter_suggestions)
+        code = self.generate_python_code(project, hyperparameter_suggestions, pipeline_state)
         
         self.log('success', 'Code-Generierung erfolgreich')
         return code
     
-    def generate_python_code(self, project: Dict[str, Any], hyperparameter_suggestions: Dict[str, Any]) -> str:
+    def generate_python_code(self, project: Dict[str, Any], hyperparameter_suggestions: Dict[str, Any], pipeline_state: Dict[str, Any]) -> str:
         """Generiert Python-Code aus Template"""
         # Hole Template
         code = CODE_TEMPLATE
         
         # Adaptiere Header
-        adapted_code = self.adapt_header(code, project, hyperparameter_suggestions)
+        adapted_code = self.adapt_header(code, project, hyperparameter_suggestions, pipeline_state)
         
         return adapted_code
     
-    def adapt_header(self, code: str, project: Dict[str, Any], hyperparameter_suggestions: Dict[str, Any]) -> str:
+    def adapt_header(self, code: str, project: Dict[str, Any], hyperparameter_suggestions: Dict[str, Any], pipeline_state: Dict[str, Any]) -> str:
         """Passt Template-Header an Projekt an"""
         llm_recommendations = project.get('llmRecommendations', {})
         
@@ -72,9 +72,30 @@ class CodeGeneratorWorker(BaseWorker):
         adapted_code = adapted_code.replace('MODEL_PARAMS', self.convert_to_python_syntax(params))
         adapted_code = adapted_code.replace('MODEL_SAVE_PATH', f"model_{project.get('id', 'unknown')}.pkl")
         
-        # Generierte Features
-        generated_features = llm_recommendations.get('generatedFeatures', [])
-        adapted_code = adapted_code.replace('GENERATED_FEATURES', self.convert_to_python_syntax(generated_features))
+        # Generierte Features (aus Feature Engineer oder LLM Recommendations)
+        results = pipeline_state.get('results', {})
+        feature_engineer_result = results.get('FEATURE_ENGINEER', {})
+        generated_features = feature_engineer_result.get('generatedFeatures', [])
+        
+        # Fallback: Falls keine Features vom Feature Engineer, verwende aus LLM Recommendations
+        if not generated_features:
+            generated_features = llm_recommendations.get('generatedFeatures', [])
+        
+        # Konvertiere Feature-Format für Template
+        # AutoFeat gibt Feature-Namen (Strings) zurück, die bereits im DataFrame vorhanden sind
+        # Das Template erwartet eine Liste von Dicts mit 'name' und 'formula' Keys für NEUE Features
+        # Da AutoFeat-Features bereits generiert wurden, geben wir eine leere Liste zurück
+        formatted_features = []
+        if generated_features and isinstance(generated_features, list) and len(generated_features) > 0:
+            # Prüfe ob erste Feature ein String ist (AutoFeat-Format)
+            if isinstance(generated_features[0], str):
+                # AutoFeat-Features sind bereits im DataFrame - keine Neugenerierung nötig
+                formatted_features = []
+            elif isinstance(generated_features[0], dict):
+                # Bereits im richtigen Format (von LLM)
+                formatted_features = generated_features
+        
+        adapted_code = adapted_code.replace('GENERATED_FEATURES', self.convert_to_python_syntax(formatted_features))
         
         return adapted_code
     

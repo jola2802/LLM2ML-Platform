@@ -2,6 +2,37 @@
 Zentrale Sammlung aller Prompts für die LLM-Agents
 """
 
+DATA_ANALYSIS_PROMPT = """IMPORTANT: Respond ONLY with JSON, no explanations.
+
+Analyze dataset and return JSON:
+
+{{
+  "summary": "2-3 sentence dataset summary",
+  "dataQuality": {{
+    "missingValues": "Missing values assessment",
+    "dataCompleteness": "Completeness percentage/assessment",
+    "potentialIssues": ["Issue1", "Issue2"]
+  }},
+  "dataCharacteristics": {{
+    "numericColumns": ["col1", "col2"],
+    "categoricalColumns": ["col3"],
+    "keyInsights": ["Insight1", "Insight2"]
+  }},
+  "recommendations": {{
+    "preprocessing": ["Step1", "Step2"],
+    "featureEngineering": ["Suggestion1"],
+    "modelType": "Classification|Regression"
+  }},
+  "targetVariableSuggestion": "target_var_name",
+  "reasoning": "Brief analysis explanation"
+}}
+
+DATASET: Rows: {rowCount} | Cols: {columnCount} | Columns: {columns}
+TYPES: {dataTypes}
+NUMERIC: {numericStats}
+CATEGORICAL: {categoricalStats}
+SAMPLE: {sampleData}"""
+
 LLM_RECOMMENDATIONS_PROMPT = """You are an experienced Machine Learning Expert. 
 Analyze this automatic data overview and return PRECISE recommendations.
 
@@ -37,94 +68,60 @@ TASK: Analyze the data and return EXACTLY the following recommendations in JSON 
 
 IMPORTANT: Respond ONLY with the JSON object, no additional explanations."""
 
-FEATURE_ENGINEER_PROMPT = """You are an experienced Machine Learning Expert specializing in Feature Engineering. 
-Your task is to analyze the data and suggest NEW features that can be generated from existing columns.
+FEATURE_ENGINEER_PROMPT = """IMPORTANT: Respond ONLY with JSON (and tool calls if needed).
 
-AUTOMATIC DATA OVERVIEW (ONLY ALLOWED FEATURES):
-{dataOverview}
-
-USER PREFERENCES (if provided):
-{userPreferences}
-
-TASK: Analyze the data and return EXACTLY the following JSON format:
+Suggest new features from existing columns. Return JSON:
 
 {{
   "generatedFeatures": [
     {{
-      "name": "[Feature name]",
-      "description": "[Description]",
-      "formula": "[Python code]",
-      "reasoning": "[Reasoning]"
+      "name": "feature_name",
+      "description": "Description",
+      "formula": "Python code",
+      "reasoning": "Why this feature helps"
     }}
   ],
-  "reasoning": "[Explanation]"
+  "reasoning": "Brief explanation"
 }}
 
-IMPORTANT: Respond ONLY with the JSON object."""
+DATA: {dataOverview}
+PREFERENCES: {userPreferences}
 
-HYPERPARAMETER_OPTIMIZATION_PROMPT = """You are an experienced Machine Learning Expert specializing in Hyperparameter Optimization.
-Your task is to analyze the project context and suggest OPTIMAL hyperparameters for the given algorithm.
+TOOLS: drop_columns, merge_columns, add_column, filter_rows, rename_columns"""
 
-PROJECT CONTEXT:
-- Algorithm: {algorithm}
-- Model Type: {modelType}
-- Target Variable: {targetVariable}
-- Number of Features: {numFeatures}
-- Number of Training Samples: {numSamples}
-- Problem Type: {problemType}
+HYPERPARAMETER_OPTIMIZATION_PROMPT = """IMPORTANT: Respond ONLY with JSON.
 
-DATA CHARACTERISTICS:
-{dataCharacteristics}
-
-AVAILABLE HYPERPARAMETERS FOR {algorithm}:
-{hyperparameterInfo}
-
-CURRENT HYPERPARAMETERS (if any):
-{currentHyperparameters}
-
-TASK: Analyze the context and return EXACTLY the following JSON format with OPTIMIZED hyperparameters:
+Return optimized hyperparameters as JSON:
 
 {{
   "hyperparameters": {{
-    "[ParameterName]": [OptimalValue],
-    "[ParameterName2]": [OptimalValue2]
+    "param1": value1,
+    "param2": value2
   }},
-  "reasoning": "Detailed explanation why these hyperparameters are optimal for this specific dataset and problem",
-  "expectedPerformance": "Expected performance improvement or characteristics",
-  "tuningStrategy": "Brief description of the tuning strategy used"
+  "reasoning": "Why these are optimal",
+  "expectedPerformance": "Expected improvement",
+  "tuningStrategy": "Strategy used"
 }}
 
-IMPORTANT GUIDELINES:
-1. Consider the dataset size: For small datasets (< 1000 samples), use simpler models with fewer parameters
-2. Consider the number of features: For high-dimensional data, consider regularization
-3. Consider the problem type: Classification vs Regression have different optimal parameters
-4. Use reasonable default values that work well in practice
-5. Avoid overfitting: Don't set parameters that are too complex for the dataset size
-6. Respond ONLY with the JSON object, no additional explanations."""
+CONTEXT: Algorithm={algorithm} | Type={modelType} | Target={targetVariable} | Features={numFeatures} | Samples={numSamples} | Problem={problemType}
+DATA: {dataCharacteristics}
+HYPERPARAMETERS: {hyperparameterInfo}
+CURRENT: {currentHyperparameters}
 
-PERFORMANCE_EVALUATION_PROMPT = """You are an experienced Machine Learning Expert. Evaluate the performance metrics.
+GUIDELINES: Small datasets (<1000) → simpler params | High dimensions → regularization | Match problem type | Avoid overfitting"""
 
-PROJECT CONTEXT:
-- Project name: {projectName}
-- Algorithm: {algorithm}
-- Model type: {modelType}
-- Target variable: {targetVariable}
-- Features: {features}
+PERFORMANCE_EVALUATION_PROMPT = """IMPORTANT: Respond ONLY with JSON.
 
-PERFORMANCE METRICS:
-{performanceMetrics}
+Evaluate performance and return JSON:
 
-TASK: Perform a thorough performance analysis.
-
-Respond in JSON format:
 {{
   "overallScore": 0.0-10.0,
   "performanceGrade": "Excellent|Good|Fair|Poor",
-  "summary": "Short summary",
+  "summary": "Brief summary",
   "detailedAnalysis": {{
-    "strengths": ["Strength 1"],
-    "weaknesses": ["Weakness 1"],
-    "keyFindings": ["Finding 1"]
+    "strengths": ["Strength1"],
+    "weaknesses": ["Weakness1"],
+    "keyFindings": ["Finding1"]
   }},
   "improvementSuggestions": [
     {{
@@ -135,20 +132,110 @@ Respond in JSON format:
   ]
 }}
 
-IMPORTANT: Respond ONLY with the JSON object."""
+PROJECT: {projectName} | Algorithm: {algorithm} | Type: {modelType} | Target: {targetVariable} | Features: {features}
+METRICS: {performanceMetrics}"""
+
+DECISION_PROMPT = """IMPORTANT: Respond ONLY with JSON.
+
+Decide if pipeline should loop again. Return JSON:
+
+{{
+  "shouldContinue": true|false,
+  "reason": "Why continue or stop",
+  "suggestions": ["Suggestion1", "Suggestion2"]
+}}
+
+PROJECT: {projectName} | Iteration: {iteration}/{maxIterations}
+SCORE: {overallScore}/10.0 | Grade: {performanceGrade} | Summary: {summary}
+STRENGTHS: {strengths} | WEAKNESSES: {weaknesses} | SUGGESTIONS: {improvementSuggestions}
+
+CRITERIA: Score >= 7.0 is good | Clear improvements available? | Max iterations reached? | Good enough for use case?"""
 
 BASE_WORKER_TEST_PROMPT = """You are {agentName}. 
 Respond with "OK" if you receive this message."""
 
-CODE_GENERATION_PROMPT = """Generate Python code for Machine Learning Training.
+DATA_CLEANING_PROMPT = """IMPORTANT: Respond ONLY with JSON.
 
-Project: {projectName}
-File path: {csvFilePath}
-Target: {targetVariable}
-Algorithm: {algorithm}
-Hyperparameters: {hyperparameters}
+Create cleaning plan. Return JSON:
 
-Generate complete Python code following best practices."""
+{{
+  "operations": [
+    {{
+      "type": "dropMissingRows|fillMissing|dropColumn|removeOutliers|encodeCategorial",
+      "columns": ["col1", "col2"],
+      "method": "mean|median|mode|constant|drop",
+      "value": null,
+      "threshold": 0.5,
+      "reasoning": "Why needed"
+    }}
+  ],
+  "reasoning": "Cleaning strategy",
+  "priority": "high|medium|low"
+}}
+
+FILE: Rows: {rowCount} | Cols: {columnCount}
+QUALITY: {qualitySummary}
+MISSING: {missingValues}
+
+OPS: dropMissingRows, fillMissing (mean/median/mode/constant), dropColumn, removeOutliers (iqr/zscore), encodeCategorical (onehot/label)
+RULES: Preserve data > remove | Prefer fillMissing | Drop column only if >50% missing"""
+
+CODE_REVIEW_PROMPT = """You are an experienced Software Engineer and ML Expert specializing in Code Review.
+Your task is to review generated ML code for correctness, security, and best practices.
+
+PROJECT CONTEXT:
+{context}
+
+STATIC ANALYSIS RESULTS:
+{staticAnalysis}
+
+CODE TO REVIEW:
+```python
+{code}
+```
+
+TASK: Perform a comprehensive code review and return EXACTLY the following JSON format:
+
+{{
+  "issues": [
+    {{
+      "type": "syntax|logic|security|performance|style",
+      "severity": "critical|high|medium|low",
+      "message": "Description of the issue",
+      "line": 10,
+      "suggestion": "How to fix it"
+    }}
+  ],
+  "recommendations": [
+    "Recommendation 1: Improve error handling",
+    "Recommendation 2: Add input validation"
+  ],
+  "improvedCode": "```python\\n# Improved version of the code\\n```",
+  "securityScore": 8.5,
+  "qualityScore": 7.0,
+  "reasoning": "Detailed explanation of the review findings"
+}}
+
+REVIEW CHECKLIST:
+1. **Correctness**: Does the code do what it's supposed to do?
+2. **Security**: Are there any security vulnerabilities? (eval, exec, SQL injection, etc.)
+3. **Error Handling**: Are exceptions properly handled?
+4. **ML Best Practices**: 
+   - Is there a train-test split?
+   - Are features properly scaled (if needed)?
+   - Are metrics appropriate for the problem type?
+5. **Code Quality**: Is the code readable, maintainable, and well-structured?
+6. **Performance**: Are there any obvious performance issues?
+
+SCORING:
+- securityScore: 0-10 (10 = perfectly secure, 0 = critical vulnerabilities)
+- qualityScore: 0-10 (10 = excellent code quality, 0 = poor quality)
+
+IMPORTANT: 
+- If static analysis found critical issues, address them in your review
+- Provide specific, actionable suggestions
+- If code is good, say so and give a high score
+- Respond ONLY with the JSON object"""
 
 def format_prompt(template: str, variables: dict) -> str:
     """Formatiere Prompt mit Variablen"""

@@ -1,0 +1,58 @@
+data_analysis_task:
+  description: >
+    Analysiere die Daten aus der CSV-Datei {csv_path} und erstelle eine detaillierte Analyse. 
+    WICHTIG: Verwende das csv_reader Tool NUR EINMAL, um die Daten zu laden. Das Tool gibt dir 
+    alle notwendigen Informationen (Spalten, Datentypen, Statistiken, fehlende Werte) in einer 
+    vollständigen Zusammenfassung zurück. Verwende diese Informationen direkt für deine Analyse. 
+    Analysiere die Spalten, die Verteilung der Daten, fehlende Werte und potenzielle Probleme 
+    basierend auf den vom Tool erhaltenen Informationen.
+  expected_output: >
+    Eine detaillierte Analyse der Daten aus der CSV-Datei, einschließlich Spaltenübersicht, 
+    Datenverteilung, fehlende Werte und erste Erkenntnisse.
+  agent: data_analyst
+
+data_cleaning_task:
+  description: >
+    Bereinige die Daten aus der CSV-Datei {csv_path} und bereite sie für die Analyse vor. 
+    Identifiziere und behebe fehlende Werte, Ausreißer und Inkonsistenzen.
+  expected_output: >
+    Ein bereinigter und vorbereiteter Datensatz mit Beschreibung der durchgeführten Bereinigungen.
+  agent: data_cleaner
+
+feature_engineering_task:
+  description: >
+    Generiere neue Features aus den Daten der CSV-Datei {csv_path}, um die Modellleistung zu verbessern.
+    Analysiere die vorhandenen Features und schlage neue, sinnvolle Features vor.
+  expected_output: >
+    Eine Liste neuer Features für die Daten mit Begründung, warum diese Features die Modellleistung verbessern.
+  agent: feature_engineer
+
+algorithm_selection_task:
+  description: >
+    Wähle den besten Algorithmus für die Daten aus der CSV-Datei {csv_path} und das Problem aus.
+    Berücksichtige die Art der Daten (Klassifikation/Regression) und die Eigenschaften des Datensatzes.
+  expected_output: >
+    Der beste Algorithmus für die Daten und das Problem mit Begründung der Auswahl.
+  agent: algorithm_selector
+
+hyperparameter_optimization_task:
+  description: >
+    Optimiere die Hyperparameter des ausgewählten Algorithmus für die Daten aus {csv_path}, 
+    um die Modellleistung zu verbessern.
+  expected_output: >
+    Die optimierten Hyperparameter für den Algorithmus und die erwartete Leistungsverbesserung.
+  agent: hyperparameter_optimizer
+
+performance_analysis_task:
+  description: >
+    Analysiere die Leistung des Modells für die Daten aus {csv_path} und erstelle einen Bericht.
+  expected_output: >
+    Ein Bericht über die Leistung des Modells mit Metriken und Bewertung.
+  agent: performance_analyzer
+
+decision_task:
+  description: >
+    Entscheide, ob das Modell für die Daten aus {csv_path} gut genug performt.
+  expected_output: >
+    Eine Entscheidung, ob mit dem aktuellen Modell fortgefahren oder ein neues Modell trainiert werden soll.
+  agent: decision_maker

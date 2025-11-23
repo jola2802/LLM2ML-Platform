@@ -7,6 +7,26 @@ import subprocess
 from typing import Dict, Any, Optional
 from .code_validator import validate_python_code, apply_deterministic_fixes
 
+def _has_real_error(stderr: str, returncode: int) -> bool:
+    """Prüft ob es sich um einen echten Fehler handelt"""
+    # Wenn Returncode != 0, ist es ein Fehler
+    if returncode != 0:
+        return True
+    
+    # Prüfe auf bekannte Fehler-Indikatoren
+    if not stderr or not stderr.strip():
+        return False
+    
+    error_indicators = [
+        'Error:', 'Exception:', 'Traceback', 'SyntaxError',
+        'ImportError', 'ModuleNotFoundError', 'FileNotFoundError',
+        'PermissionError', 'exit(1)', 'sys.exit(1)',
+        'IndentationError', 'NameError', 'TypeError', 'ValueError',
+        'KeyError', 'AttributeError', 'RuntimeError'
+    ]
+    
+    return any(error_indicator in stderr for error_indicator in error_indicators)
+
 def execute_python_script(
     script_path: str,
     script_dir: str,
@@ -38,10 +58,27 @@ def execute_python_script(
                 print(f'Code-Validierungsfehler: {validation_error}')
             
             # Bestimme Python-Executable
-            if os.name == 'nt':  # Windows
-                venv_path = os.path.join(venv_dir, 'Scripts', 'python.exe')
-            else:  # Unix/Linux/Mac
-                venv_path = os.path.join(venv_dir, 'bin', 'python')
+            if venv_dir and os.path.exists(venv_dir):
+                if os.name == 'nt':  # Windows
+                    venv_path = os.path.join(venv_dir, 'Scripts', 'python.exe')
+                else:  # Unix/Linux/Mac
+                    venv_path = os.path.join(venv_dir, 'bin', 'python')
+                
+                # Prüfe ob venv_path existiert
+                if not os.path.exists(venv_path):
+                    venv_path = None
+            else:
+                venv_path = None
+            
+            # Fallback: Verwende aktuelles Python-Executable
+            if not venv_path:
+                import sys
+                venv_path = sys.executable
+                print(f'Verwende System-Python: {venv_path}')
+            
+            # Prüfe ob Python-Executable existiert
+            if not os.path.exists(venv_path):
+                raise FileNotFoundError(f'Python-Executable nicht gefunden: {venv_path}')
             
             # Führe Script aus
             result = subprocess.run(
@@ -49,7 +86,7 @@ def execute_python_script(
                 cwd=script_dir,
                 capture_output=True,
                 text=True,
-                timeout=600  # 10 Minuten Timeout
+                timeout=600  # 5 Minuten Timeout
             )
             
             stdout = result.stdout or ''
@@ -57,17 +94,10 @@ def execute_python_script(
             full_output = stdout + stderr
             
             # Prüfe auf echte Fehler
-            has_real_error = stderr.strip() and any(
-                error_indicator in stderr
-                for error_indicator in [
-                    'Error:', 'Exception:', 'Traceback', 'SyntaxError',
-                    'ImportError', 'ModuleNotFoundError', 'FileNotFoundError',
-                    'PermissionError', 'exit(1)', 'sys.exit(1)'
-                ]
-            )
+            has_real_error = _has_real_error(stderr, result.returncode)
             
             if has_real_error:
-                print(f'Echter Fehler bei Ausführung (Versuch {attempt}): {stderr}')
+                print(f'Echter Fehler bei Ausführung (Versuch {attempt}): {stderr[:500]}')
                 
                 # Versuche deterministische Korrekturen
                 deterministically_fixed = apply_deterministic_fixes(current_code, stderr)
@@ -79,10 +109,20 @@ def execute_python_script(
                     continue  # Erneut versuchen
                 
                 if attempt >= max_retries:
-                    return {'stdout': full_output, 'stderr': stderr}
+                    return {
+                        'stdout': full_output, 
+                        'stderr': stderr,
+                        'success': False,
+                        'returncode': result.returncode
+                    }
             
             # Erfolgreiche Ausführung
-            return {'stdout': full_output, 'stderr': ''}
+            return {
+                'stdout': full_output, 
+                'stderr': '',
+                'success': True,
+                'returncode': result.returncode
+            }
             
         except subprocess.TimeoutExpired:
             print(f'Timeout bei Ausführung (Versuch {attempt})')

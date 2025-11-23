@@ -194,21 +194,37 @@ class HyperparameterOptimizerWorker(BaseWorker):
         for param_name, param_value in hyperparameters.items():
             # Prüfe ob Parameter für diesen Algorithmus gültig ist
             if param_name in expected_params:
+                # Normalisiere Wert: Extrahiere aus Listen, konvertiere None-Strings
+                normalized_value = self._normalize_hyperparameter_value(param_value)
+                
                 # Validiere Typ und Wert
                 expected_type = type(expected_params[param_name])
                 
                 try:
                     # Konvertiere zu erwartetem Typ
                     if expected_type == int:
-                        validated[param_name] = int(float(param_value))
+                        # Wenn Liste, nimm ersten Wert
+                        if isinstance(normalized_value, list) and len(normalized_value) > 0:
+                            normalized_value = normalized_value[0]
+                        validated[param_name] = int(float(normalized_value))
                     elif expected_type == float:
-                        validated[param_name] = float(param_value)
+                        if isinstance(normalized_value, list) and len(normalized_value) > 0:
+                            normalized_value = normalized_value[0]
+                        validated[param_name] = float(normalized_value)
                     elif expected_type == bool:
-                        validated[param_name] = bool(param_value)
-                    elif param_value is None:
+                        if isinstance(normalized_value, list) and len(normalized_value) > 0:
+                            normalized_value = normalized_value[0]
+                        validated[param_name] = bool(normalized_value)
+                    elif normalized_value is None:
                         validated[param_name] = None
+                    elif isinstance(normalized_value, str):
+                        # String-Werte: Konvertiere "None" zu None, "sqrt" bleibt "sqrt"
+                        if normalized_value.strip() == 'None' or normalized_value.strip() == 'null':
+                            validated[param_name] = None
+                        else:
+                            validated[param_name] = normalized_value
                     else:
-                        validated[param_name] = param_value
+                        validated[param_name] = normalized_value
                     
                     # Zusätzliche Validierungen für spezifische Parameter
                     validated[param_name] = self._validate_specific_parameter(
@@ -230,6 +246,29 @@ class HyperparameterOptimizerWorker(BaseWorker):
                 validated[param_name] = default_value
         
         return validated
+    
+    def _normalize_hyperparameter_value(self, value: Any) -> Any:
+        """Normalisiert Hyperparameter-Wert: Extrahiert aus Listen, konvertiert None-Strings"""
+        # Wenn Liste mit einem Element, extrahiere das Element
+        if isinstance(value, list):
+            if len(value) == 1:
+                return value[0]
+            elif len(value) > 1:
+                # Wenn mehrere Werte, nimm den ersten (könnte GridSearch-Parameter sein)
+                self.log('warning', f'Hyperparameter-Wert ist Liste mit mehreren Elementen, verwende ersten Wert')
+                return value[0]
+            else:
+                # Leere Liste
+                return None
+        
+        # Wenn String "None" oder "null", konvertiere zu None
+        if isinstance(value, str):
+            if value.strip() == 'None' or value.strip() == 'null':
+                return None
+            # Wenn String "sqrt", "log2", etc., behalte als String
+            return value
+        
+        return value
     
     def _validate_specific_parameter(
         self,

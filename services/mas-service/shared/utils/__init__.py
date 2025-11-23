@@ -19,6 +19,10 @@ from shared.utils.data_processing import (
     extract_and_validate_json,
     build_data_overview
 )
+from shared.utils.csv_manipulator import (
+    CSVManipulator,
+    manipulate_csv
+)
 from shared.utils.algorithms import ALGORITHMS
 
 __all__ = [
@@ -27,5 +31,5 @@ __all__ = [
     'validate_project_request', 'validate_training_request', 'validate_prediction_request',
     'validate_execution_request', 'validate_file_path',
     'filter_columns', 'filter_data_overview_for_features', 'extract_and_validate_json',
-    'build_data_overview', 'ALGORITHMS'
+    'build_data_overview', 'CSVManipulator', 'manipulate_csv', 'ALGORITHMS'
 ]

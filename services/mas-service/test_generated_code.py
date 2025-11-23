@@ -1,19 +1,21 @@
-"""
-Template-Code für ML-Training
-"""
 
-CODE_TEMPLATE = """
 # ==============================================================================
 # 🎯 Projekt-Einstellungen
 # ==============================================================================
-project_name = PROJECT_NAME
-file_path = FILE_PATH
-target_column = TARGET_COLUMN
-problem_type = (PROBLEM_TYPE).lower()
-model_type = MODEL_TYPE
-model_lib = MODEL_LIB
-model_params = MODEL_PARAMS
-model_save_path = r'/app/models/MODEL_SAVE_PATH'
+project_name = 'Test Projekt - Kreditwürdigkeit'
+file_path = r'test_dataset.csv'
+target_column = 'creditworthy'
+problem_type = ('Classification').lower()
+model_type = 'RandomForestClassifier'
+model_lib = 'sklearn'
+model_params = {
+    'n_estimators': 100,
+    'max_depth': 2,
+    'min_samples_split': 2,
+    'min_samples_leaf': 1,
+    'max_features': 4
+}
+model_save_path = r'/app/models/model_test_project_001.pkl'
 
 # ==============================================================================
 # 🐍 BASIS IMPORTE
@@ -51,7 +53,7 @@ if model_lib == 'pytorch':
 # ==============================================================================
 
 def preprocess_target_variable(y, problem_type: str):
-    # "\"\"\"Bereinigt und konvertiert die Zielvariable für verschiedene Modelltypen.\"\"\""
+    # """"Bereinigt und konvertiert die Zielvariable für verschiedene Modelltypen.""""
     from sklearn.preprocessing import LabelEncoder
     
     if problem_type == 'classification':
@@ -85,7 +87,7 @@ def preprocess_target_variable(y, problem_type: str):
         return y.values, None
 
 def load_and_split_data(file_path: str, target_column: str, problem_type: str = 'classification', generated_features: list = None):
-    # "\"\"\"Lädt Daten und teilt sie in Trainings- und Testsets auf (Schritt 1).\"\"\""
+    # """"Lädt Daten und teilt sie in Trainings- und Testsets auf (Schritt 1).""""
     # print(f"Lade Daten von: {file_path}")
     try:
         data = pd.read_csv(file_path)
@@ -145,7 +147,7 @@ def load_and_split_data(file_path: str, target_column: str, problem_type: str = 
 
 
 def instantiate_and_train_model_dynamic(model_type_str: str, model_lib: str, params: dict, X_train, y_train, problem_type: str):
-    # "\"\"\"Instanziiert und trainiert das Modell dynamisch (Schritt 2).\"\"\""
+    # """"Instanziiert und trainiert das Modell dynamisch (Schritt 2).""""
     
     if model_lib == 'pytorch':
         return None 
@@ -187,7 +189,7 @@ def instantiate_and_train_model_dynamic(model_type_str: str, model_lib: str, par
 
 
 def evaluate_model(model, X_train, y_train, X_test, y_test, problem_type: str, label_encoder=None):
-    # "\"\"\"Bewertet das Modell und gibt Metriken aus (Schritt 4).\"\"\""
+    # """"Bewertet das Modell und gibt Metriken aus (Schritt 4).""""
     
     # Vorhersagen
     y_pred_test = model.predict(X_test)
@@ -241,7 +243,7 @@ def evaluate_model(model, X_train, y_train, X_test, y_test, problem_type: str, l
         print(f"R2: {r2:.4f}")
 
 def save_model(model, save_path: str, model_lib: str, label_encoder=None):
-    # "\"\"\"Speichert das trainierte Modell und optional den Label-Encoder (Schritt 5).\"\"\""
+    # """"Speichert das trainierte Modell und optional den Label-Encoder (Schritt 5).""""
     # print(f"Speichere Modell unter: {save_path}")
     
     if model_lib in ['sklearn', 'xgboost']:
@@ -280,7 +282,7 @@ if __name__ == "__main__":
     print(f"--- Starte ML-Projekt: {project_name} (Typ: {problem_type.upper()}, Lib: {model_lib}) ---")
     
     # 1. DATEN LADEN UND AUFTEILEN
-    generated_features = GENERATED_FEATURES
+    generated_features = []
     result = load_and_split_data(file_path, target_column, problem_type, generated_features)
     
     if result is None or result[0] is None:
@@ -441,4 +443,3 @@ if __name__ == "__main__":
         print("FEHLER: Unbekannter model_lib. Bitte auf 'sklearn', 'xgboost' oder 'pytorch' setzen.")
 
     print(f"--- ML-Projekt: {project_name} ABGESCHLOSSEN ---")
-"""

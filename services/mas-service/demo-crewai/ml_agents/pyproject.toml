@@ -1,0 +1,32 @@
+[project]
+name = "ml_agents"
+version = "0.1.0"
+description = "ml-agents using crewAI"
+authors = [{ name = "Your Name", email = "you@example.com" }]
+requires-python = ">=3.10,<3.14"
+dependencies = [
+    "crewai[tools]==1.5.0",
+    "pandas>=2.0.0"
+]
+
+[project.optional-dependencies]
+test = [
+    "pytest>=7.0.0",
+    "pytest-mock>=3.10.0",
+    "requests>=2.28.0"
+]
+
+[project.scripts]
+ml_agents = "ml_agents.main:run"
+run_crew = "ml_agents.main:run"
+train = "ml_agents.main:train"
+replay = "ml_agents.main:replay"
+test = "ml_agents.main:test"
+run_with_trigger = "ml_agents.main:run_with_trigger"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.crewai]
+type = "crew"

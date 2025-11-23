@@ -8,6 +8,7 @@ import asyncio
 from typing import Optional, Dict, Any, List
 import ollama
 from datetime import datetime
+import re
 
 # LLM Provider Enum
 LLM_PROVIDERS = {
@@ -26,6 +27,11 @@ llm_config = {
 
 # File-Cache für bereits hochgeladene Dateien
 file_cache = {}
+
+# Thinking-Modelle (Modelle mit Reasoning/Thinking-Tokens)
+THINKING_MODELS = [
+    'deepseek-r1:8b',
+]
 
 # ===== KONFIGURATION FUNKTIONEN =====
 
@@ -81,6 +87,107 @@ def get_available_ollama_models() -> Dict[str, Any]:
             'models': [],
             'availableModels': []
         }
+
+def is_thinking_model(model: str) -> bool:
+    """
+    Prüft ob ein Modell ein Thinking-Modell ist (mit Reasoning-Tokens)
+    
+    Args:
+        model: Modell-Name (z.B. 'deepseek-r1:8b')
+    
+    Returns:
+        True wenn es ein Thinking-Modell ist
+    """
+    return any(thinking_model in model.lower() for thinking_model in THINKING_MODELS)
+
+def extract_thinking_content(response_text: str) -> Dict[str, Any]:
+    """
+    Extrahiert Thinking-Tokens und finale Antwort aus Thinking-Modell-Response
+    
+    Thinking-Modelle (wie DeepSeek-R1) geben oft Antworten mit Reasoning-Steps.
+    Diese Funktion extrahiert:
+    - Thinking-Tokens (Reasoning-Prozess)
+    - Finale Antwort (nach dem Thinking)
+    
+    Unterstützte Formate:
+    - <think>...</think> XML-Tags
+    - [THINKING]...[/THINKING] Marker
+    - Reasoning-Tokens vor der finalen Antwort
+    
+    Args:
+        response_text: Rohe Response vom LLM
+    
+    Returns:
+        Dictionary mit:
+        - 'result': Finale Antwort (ohne Thinking-Tokens)
+        - 'thinking': Thinking-Tokens (falls vorhanden)
+        - 'has_thinking': Boolean ob Thinking-Tokens gefunden wurden
+    """
+    import re
+    
+    if not response_text:
+        return {
+            'result': '',
+            'thinking': '',
+            'has_thinking': False
+        }
+    
+    thinking_content = ''
+    final_answer = response_text
+    
+    # Format 1: XML-Tags <think>...</think>
+    think_pattern_xml = r'<think>(.*?)</think>'
+    think_matches_xml = re.findall(think_pattern_xml, response_text, re.DOTALL | re.IGNORECASE)
+    
+    if think_matches_xml:
+        thinking_content = '\n\n'.join(think_matches_xml)
+        # Entferne Thinking-Tags aus finaler Antwort
+        final_answer = re.sub(think_pattern_xml, '', response_text, flags=re.DOTALL | re.IGNORECASE).strip()
+    
+    # Format 2: [THINKING]...[/THINKING] Marker
+    if not thinking_content:
+        think_pattern_marker = r'\[THINKING\](.*?)\[/THINKING\]'
+        think_matches_marker = re.findall(think_pattern_marker, response_text, re.DOTALL | re.IGNORECASE)
+        
+        if think_matches_marker:
+            thinking_content = '\n\n'.join(think_matches_marker)
+            final_answer = re.sub(think_pattern_marker, '', response_text, flags=re.DOTALL | re.IGNORECASE).strip()
+    
+    # Format 3: DeepSeek-R1 spezifisches Format
+    # DeepSeek-R1 gibt manchmal Reasoning-Tokens mit speziellen Markern
+    if not thinking_content:
+        # Suche nach häufigen Reasoning-Markern
+        reasoning_patterns = [
+            r'Reasoning:(.*?)(?=Answer:|Final Answer:|$)',  # "Reasoning: ... Answer: ..."
+            r'Let me think:(.*?)(?=Answer:|Final Answer:|$)',  # "Let me think: ... Answer: ..."
+            r'Step by step:(.*?)(?=Answer:|Final Answer:|$)',  # "Step by step: ... Answer: ..."
+        ]
+        
+        for pattern in reasoning_patterns:
+            matches = re.findall(pattern, response_text, re.DOTALL | re.IGNORECASE)
+            if matches:
+                thinking_content = '\n\n'.join(matches)
+                # Extrahiere finale Antwort nach "Answer:" oder "Final Answer:"
+                answer_match = re.search(r'(?:Answer|Final Answer):\s*(.*?)$', response_text, re.DOTALL | re.IGNORECASE)
+                if answer_match:
+                    final_answer = answer_match.group(1).strip()
+                else:
+                    # Entferne Reasoning-Teil
+                    final_answer = re.sub(pattern, '', response_text, flags=re.DOTALL | re.IGNORECASE).strip()
+                break
+    
+    # Wenn kein Thinking gefunden wurde, verwende gesamte Antwort
+    if not thinking_content:
+        final_answer = response_text.strip()
+    
+    # Bereinige finale Antwort (entferne leere Zeilen am Anfang/Ende)
+    final_answer = final_answer.strip()
+    
+    return {
+        'result': final_answer,
+        'thinking': thinking_content.strip() if thinking_content else '',
+        'has_thinking': bool(thinking_content)
+    }
 
 def test_ollama_connection() -> Dict[str, Any]:
     """Ollama-Verbindung testen"""
@@ -140,11 +247,35 @@ async def call_llm_api_async(
                 messages=[{'role': 'user', 'content': prompt}]
             )
             
-            result_text = response.get('message', {}).get('content', '') or response.get('content', '')
+            # Delete the thinking tokens
+            response['message']['content'] = re.sub(r'<think>.*?</think>', '', response['message']['content'], flags=re.DOTALL)
+
+            result_text = response['message']['content']
+            # result_text = response.get('message', {}).get('content', '') or response.get('content', '')
             
             # Validiere Response
             if not result_text:
                 raise ValueError('Leere Response vom LLM erhalten')
+            
+            # Prüfe ob es ein Thinking-Modell ist und extrahiere Thinking-Tokens
+            is_thinking = is_thinking_model(model)
+            if is_thinking:
+                extracted = extract_thinking_content(result_text)
+                result_text = extracted['result']
+                
+                # Log Thinking-Informationen (optional, für Debugging)
+                if extracted['has_thinking']:
+                    thinking_length = len(extracted['thinking'])
+                    print(f'🧠 Thinking-Modell erkannt: {thinking_length} Zeichen Thinking-Tokens extrahiert')
+                    # Optional: Thinking-Tokens in separatem Feld zurückgeben
+                    return {
+                        'result': result_text,
+                        'thinking': extracted['thinking'],
+                        'has_thinking': True,
+                        'file_uploaded': bool(file_path),
+                        'provider': provider,
+                        'model': model
+                    }
             
             return {
                 'result': result_text,

@@ -1,8 +1,4 @@
-"""
-Template-Code für ML-Training
-"""
 
-CODE_TEMPLATE = """
 # ==============================================================================
 # 🎯 Projekt-Einstellungen
 # ==============================================================================
@@ -51,7 +47,7 @@ if model_lib == 'pytorch':
 # ==============================================================================
 
 def preprocess_target_variable(y, problem_type: str):
-    # "\"\"\"Bereinigt und konvertiert die Zielvariable für verschiedene Modelltypen.\"\"\""
+    # """Bereinigt und konvertiert die Zielvariable für verschiedene Modelltypen."""
     from sklearn.preprocessing import LabelEncoder
     
     if problem_type == 'classification':
@@ -85,7 +81,7 @@ def preprocess_target_variable(y, problem_type: str):
         return y.values, None
 
 def load_and_split_data(file_path: str, target_column: str, problem_type: str = 'classification', generated_features: list = None):
-    # "\"\"\"Lädt Daten und teilt sie in Trainings- und Testsets auf (Schritt 1).\"\"\""
+    # """Lädt Daten und teilt sie in Trainings- und Testsets auf (Schritt 1)."""
     # print(f"Lade Daten von: {file_path}")
     try:
         data = pd.read_csv(file_path)
@@ -99,25 +95,21 @@ def load_and_split_data(file_path: str, target_column: str, problem_type: str = 
         print(f"Verfügbare Spalten: {list(data.columns)}")
         return None, None, None, None, None
     
-    # Feature Engineering: Nur wenn explizit neue Features generiert werden sollen
-    # (AutoFeat-Features sind bereits im DataFrame vorhanden)
+    # Feature Engineering: Generiere neue Features aus vorhandenen Spalten
     if generated_features and len(generated_features) > 0:
-        # Prüfe ob es Dicts sind (neue Features) oder Strings (bereits vorhandene Features)
-        if isinstance(generated_features[0], dict):
-            print(f"Generiere {len(generated_features)} neue Feature(s)...")
-            for feature_def in generated_features:
-                try:
-                    feature_name = feature_def.get('name', '')
-                    feature_formula = feature_def.get('formula', '')
-                    if feature_name and feature_formula:
-                        # Führe die Formel aus, um das neue Feature zu erstellen
-                        exec(f"data['{feature_name}'] = {feature_formula}")
-                        print(f"  ✓ Feature '{feature_name}' erstellt: {feature_def.get('description', '')}")
-                except Exception as e:
-                    print(f"  ✗ Fehler beim Erstellen von Feature '{feature_name}': {e}")
-        # Wenn Strings: Features sind bereits vorhanden (z.B. von AutoFeat), nichts zu tun
+        print(f"Generiere {len(generated_features)} neue Feature(s)...")
+        for feature_def in generated_features:
+            try:
+                feature_name = feature_def.get('name', '')
+                feature_formula = feature_def.get('formula', '')
+                if feature_name and feature_formula:
+                    # Führe die Formel aus, um das neue Feature zu erstellen
+                    # Die Formel sollte auf einem DataFrame namens 'data' arbeiten
+                    exec(f"data['{feature_name}'] = {feature_formula}")
+                    print(f"  ✓ Feature '{feature_name}' erstellt: {feature_def.get('description', '')}")
+            except Exception as e:
+                print(f"  ✗ Fehler beim Erstellen von Feature '{feature_name}': {e}")
     
-    # Features und Zielvariable extrahieren
     X = data.drop(columns=[target_column])
     y = data[target_column]
     
@@ -145,7 +137,7 @@ def load_and_split_data(file_path: str, target_column: str, problem_type: str = 
 
 
 def instantiate_and_train_model_dynamic(model_type_str: str, model_lib: str, params: dict, X_train, y_train, problem_type: str):
-    # "\"\"\"Instanziiert und trainiert das Modell dynamisch (Schritt 2).\"\"\""
+    # """Instanziiert und trainiert das Modell dynamisch (Schritt 2)."""
     
     if model_lib == 'pytorch':
         return None 
@@ -187,7 +179,7 @@ def instantiate_and_train_model_dynamic(model_type_str: str, model_lib: str, par
 
 
 def evaluate_model(model, X_train, y_train, X_test, y_test, problem_type: str, label_encoder=None):
-    # "\"\"\"Bewertet das Modell und gibt Metriken aus (Schritt 4).\"\"\""
+    # """Bewertet das Modell und gibt Metriken aus (Schritt 4)."""
     
     # Vorhersagen
     y_pred_test = model.predict(X_test)
@@ -241,7 +233,7 @@ def evaluate_model(model, X_train, y_train, X_test, y_test, problem_type: str, l
         print(f"R2: {r2:.4f}")
 
 def save_model(model, save_path: str, model_lib: str, label_encoder=None):
-    # "\"\"\"Speichert das trainierte Modell und optional den Label-Encoder (Schritt 5).\"\"\""
+    \"\"\"Speichert das trainierte Modell und optional den Label-Encoder (Schritt 5).\"\"\"
     # print(f"Speichere Modell unter: {save_path}")
     
     if model_lib in ['sklearn', 'xgboost']:
@@ -441,4 +433,3 @@ if __name__ == "__main__":
         print("FEHLER: Unbekannter model_lib. Bitte auf 'sklearn', 'xgboost' oder 'pytorch' setzen.")
 
     print(f"--- ML-Projekt: {project_name} ABGESCHLOSSEN ---")
-"""
